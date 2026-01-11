@@ -2,3 +2,11 @@ node_modules
 .env
 dist
 .DS_Store
+node_modules
+.next
+dist
+build
+.env
+.wwebjs_auth
+.wwebjs_cache
+repomix-output.xml
