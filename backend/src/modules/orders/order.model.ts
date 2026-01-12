@@ -1,52 +1,72 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IOrder extends Document {
-    customerName: string;
-    source: string;
-    status: 'pendiente' | 'imprimiendo' | 'terminado' | 'entregado' | 'cancelado';
+    clientName: string;
+    origin: string;
+    status: string;
+    paymentMethod: string;
+    deposit: number;
+    total: number;
+    notes: string;
+    
+    // 🆕 DATOS CLAVE
+    chatLink?: string; // Link al chat del cliente
+    dueDate?: Date;    // Fecha de entrega
+    files: Array<{ name: string; url: string }>; // Archivos adjuntos
+    
     items: Array<{
-        productId?: mongoose.Types.ObjectId;
+        productId?: string;
         productName: string;
         quantity: number;
         price: number;
+        isCustom: boolean;
     }>;
-    totalAmount: number; // Ingreso Venta
-    totalCost: number;   // Costo Producción
-    profit: number;      // Ganancia Neta
-    printTimeMinutes: number;
+
+    // Producción y Sistema
+    printTimeMinutes?: number;
     startedAt?: Date;
     finishedAt?: Date;
-    dueDate?: Date;
-    adminNotified: boolean;
-    notes?: string;
+    adminNotified?: boolean;
+    isSaleRegistered: boolean;
     tenantId: string;
     createdAt: Date;
+    updatedAt: Date;
 }
 
 const OrderSchema: Schema = new Schema({
-    customerName: { type: String, required: true },
-    source: { type: String, default: 'local' },
+    clientName: { type: String, required: true },
+    origin: { type: String, default: "Local" },
     status: { 
         type: String, 
-        enum: ['pendiente', 'imprimiendo', 'terminado', 'entregado', 'cancelado'], 
-        default: 'pendiente' 
+        enum: ['pending', 'in_progress', 'completed', 'delivered', 'cancelled'], 
+        default: 'pending' 
     },
-    items: [{
-        productId: { type: Schema.Types.ObjectId, ref: 'Product' },
-        productName: String,
-        quantity: Number,
-        price: Number
-    }],
-    totalAmount: { type: Number, required: true },
-    totalCost: { type: Number, default: 0 }, // 👈 Nuevo
-    profit: { type: Number, default: 0 },    // 👈 Nuevo
+    paymentMethod: { type: String, default: "Efectivo" },
+    deposit: { type: Number, default: 0 },
+    total: { type: Number, required: true },
+    notes: { type: String, default: "" },
     
+    // 🆕 NUEVOS CAMPOS (Asegurados)
+    chatLink: { type: String, default: "" },
+    dueDate: { type: Date }, 
+    files: [{ 
+        name: { type: String }, 
+        url: { type: String } 
+    }],
+
+    items: [{
+        productId: { type: Schema.Types.ObjectId, ref: "Product" },
+        productName: { type: String, required: true },
+        quantity: { type: Number, required: true },
+        price: { type: Number, required: true },
+        isCustom: { type: Boolean, default: false }
+    }],
+
     printTimeMinutes: { type: Number, default: 0 },
     startedAt: { type: Date },
     finishedAt: { type: Date },
-    dueDate: { type: Date },
     adminNotified: { type: Boolean, default: false },
-    notes: { type: String },
+    isSaleRegistered: { type: Boolean, default: false },
     tenantId: { type: String, required: true }
 }, { timestamps: true });
 

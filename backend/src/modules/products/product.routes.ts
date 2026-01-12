@@ -1,15 +1,24 @@
+// product.routes.ts
 import { Router } from 'express';
-import { getProducts, getPublicProducts, createProduct, deleteProduct } from './product.controller';
-import { protect, adminOnly } from '../auth/auth.middleware'; // 👈 Importar
+import { 
+    getProducts, 
+    createProduct, 
+    deleteProduct, 
+    updateProduct, 
+    quickSell, // 👈 Importante
+    getPublicProducts,
+    bulkAddStock
+} from './product.controller';
+
+import { protect } from '../auth/auth.middleware';
 
 const router = Router();
-
-// Rutas Públicas
-router.get('/storefront', getPublicProducts);
-
-// Rutas Privadas (SOLO ADMIN PUEDE TOCAR EL INVENTARIO)
-router.get('/', protect, adminOnly, getProducts);
-router.post('/', protect, adminOnly, createProduct); // Crear
-router.delete('/:id', protect, adminOnly, deleteProduct); // Borrar
+router.post('/bulk-stock', protect, bulkAddStock);
+router.get('/', protect, getProducts); // Admin
+router.get('/public', getPublicProducts); // Tienda
+router.post('/', protect, createProduct); // Crear/Fusionar
+router.delete('/:id', protect, deleteProduct);
+router.put('/:id', protect, updateProduct);
+router.post('/:id/sell', protect, quickSell); // 👈 Ruta necesaria para el botón VENDER
 
 export default router;

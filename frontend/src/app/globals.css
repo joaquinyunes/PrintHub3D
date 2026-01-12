@@ -44,3 +44,21 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+:root {
+  --bg-main: #0b0b0d;
+  --bg-card: #121214;
+  --bg-soft: #18181b;
+
+  --border-soft: rgba(255,255,255,0.06);
+
+  --text-main: #ffffff;
+  --text-muted: #9ca3af;
+
+  --accent: #0a84ff; /* Apple blue */
+}
+
+body {
+  background: var(--bg-main);
+  color: var(--text-main);
+}

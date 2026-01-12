@@ -1,37 +1,46 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
-// 👇 ESTA ES LA PARTE IMPORTANTE (La Interfaz)
-// Si no agregas los campos aquí, TypeScript marcará error en el controlador.
+// 1. 👇 Agrega 'sku' a la Interfaz (TypeScript)
 export interface IProduct extends Document {
-    name: string;
-    category: string;
-    description?: string; // 👈 Campo Nuevo
-    imageUrl?: string;    // 👈 Campo Nuevo
-    isPublic: boolean;    // 👈 Campo Nuevo
-    price: number;
-    cost: number;
-    stock: number;
-    minStock: number;
-    tenantId: string;
+  name: string;
+  category: string;
+  description?: string;
+  imageUrl?: string;
+  price: number;
+  cost?: number;
+  stock: number;
+  minStock: number;
+  isPublic: boolean;
+  tenantId: string;
+  sku?: string; // 👈 ESTO ES LO QUE TE FALTA AQUI
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const ProductSchema: Schema = new Schema({
+const ProductSchema: Schema = new Schema(
+  {
     name: { type: String, required: true },
-    category: { type: String, default: 'General' },
-    
-    // Campos nuevos en la Base de Datos
-    description: { type: String, default: '' },
-    imageUrl: { type: String, default: '' },
-    isPublic: { type: Boolean, default: false },
-
+    category: { type: String, default: "General" },
+    description: { type: String },
+    imageUrl: { type: String },
     price: { type: Number, required: true },
     cost: { type: Number, default: 0 },
-    stock: { type: Number, default: 0 },
+    stock: { type: Number, required: true, default: 0 },
     minStock: { type: Number, default: 5 },
-    tenantId: { type: String, required: true }
-}, { timestamps: true });
+    isPublic: { type: Boolean, default: false },
+    tenantId: { type: String, required: true, index: true },
+    
+    // 2. 👇 Agrega 'sku' al Schema (Base de Datos)
+    sku: { type: String, required: false, default: "" }, 
+  },
+  {
+    timestamps: true,
+  }
+);
 
-// Índice de texto para búsquedas
-ProductSchema.index({ name: 'text' });
 
-export default mongoose.model<IProduct>('Product', ProductSchema);
+
+// 🔍 Búsqueda por texto
+ProductSchema.index({ name: "text" });
+
+export default mongoose.model<IProduct>("Product", ProductSchema);

@@ -1,66 +1,178 @@
-import React from 'react';
-import { ArrowRight, Box, Activity, Layers } from 'lucide-react';
+"use client";
 
-export default function Home() {
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { ShoppingCart, Box } from "lucide-react";
+
+interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  imageUrl?: string;
+  category: string;
+  description?: string;
+}
+
+interface User {
+  name: string;
+  role: "admin" | "user";
+}
+
+export default function HomePage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // 1️⃣ USUARIO
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) setUser(JSON.parse(storedUser));
+    } catch {
+      localStorage.removeItem("user");
+    }
+
+    // 2️⃣ PRODUCTOS (RUTA PÚBLICA CORRECTA)
+    const loadProducts = async () => {
+      try {
+        const res = await fetch(
+          "http://localhost:5000/api/products/storefront?tenantId=global3d_hq"
+        );
+
+        if (!res.ok) {
+          console.error("Error HTTP:", res.status);
+          setProducts([]);
+          return;
+        }
+
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          setProducts(data);
+        } else {
+          console.warn("La API no devolvió un array:", data);
+          setProducts([]);
+        }
+      } catch (err) {
+        console.error("Error de conexión:", err);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  const handleWhatsAppBuy = (product: Product) => {
+    const phone = "5493794000000";
+    const text = `Hola! 👋 Quiero comprar: *${product.name}* ($${product.price}).`;
+    window.open(
+      `https://wa.me/${phone}?text=${encodeURIComponent(text)}`,
+      "_blank"
+    );
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24 relative overflow-hidden bg-background">
-      
-      {/* Fondo Grid */}
-      <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px] opacity-20" />
-      
-      {/* Navbar simulado */}
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex absolute top-10">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-white/10 bg-black/50 pb-6 pt-8 backdrop-blur-2xl lg:static lg:w-auto lg:rounded-xl lg:border lg:bg-gray-900/50 lg:p-4">
-          PrintHub 3D&nbsp;
-          <span className="font-bold text-green-500">v1.0.0</span>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-black via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <div className="flex place-items-center gap-2 p-8 lg:p-0 text-white/60">
-            System: <span className="text-green-400 font-bold">ONLINE</span>
+    <div className="min-h-screen bg-black text-white font-sans">
+
+      {/* NAVBAR */}
+      <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            Global 3D
+          </span>
+
+          {user ? (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-300 hidden md:block">
+                {user.name}
+              </span>
+
+              {user.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className="px-3 py-1 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-full text-xs font-bold uppercase"
+                >
+                  Panel Admin
+                </Link>
+              )}
+
+              <button
+                onClick={() => {
+                  localStorage.clear();
+                  window.location.href = "/admin/login";
+                }}
+                className="text-xs text-red-400 hover:text-red-300"
+              >
+                Salir
+              </button>
+            </div>
+          ) : (
+            <Link href="/admin/login" className="text-sm text-gray-300">
+              Ingresar
+            </Link>
+          )}
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <header className="pt-32 pb-12 text-center">
+        <h1 className="text-5xl font-bold mb-4">Catálogo Online</h1>
+        <p className="text-gray-400">Modelos 3D de alta calidad</p>
+      </header>
+
+      {/* PRODUCTOS */}
+      <section className="max-w-7xl mx-auto px-6 pb-20">
+        {loading ? (
+          <p className="text-center text-gray-500">
+            Cargando catálogo...
+          </p>
+        ) : products.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <div
+                key={product._id}
+                className="bg-zinc-900 border border-white/10 rounded-xl p-4 hover:border-blue-500/50 transition"
+              >
+                <div className="aspect-square bg-zinc-800 rounded-lg mb-4 overflow-hidden">
+                  {product.imageUrl ? (
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                      <Box />
+                    </div>
+                  )}
+                </div>
+
+                <h3 className="font-bold truncate">{product.name}</h3>
+
+                <div className="flex justify-between items-center mt-3">
+                  <span className="text-lg font-bold text-blue-400">
+                    ${product.price}
+                  </span>
+                  <button
+                    onClick={() => handleWhatsAppBuy(product)}
+                    className="bg-white text-black p-2 rounded-lg hover:bg-gray-200"
+                  >
+                    <ShoppingCart size={18} />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      </div>
-
-      {/* Centro Hero */}
-      <div className="relative flex flex-col place-items-center z-10 mt-10">
-        <h1 className="text-6xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-600 sm:text-8xl">
-          PrintHub 3D
-        </h1>
-        <p className="mt-6 text-xl text-gray-400 max-w-lg text-center">
-          Sistema Operativo Integral para Manufactura Aditiva.
-          Control total de tu granja de impresión.
-        </p>
-
-        <div className="mt-10 flex gap-4">
-          <button className="h-12 px-8 rounded-md bg-white text-black font-bold hover:bg-gray-200 transition">
-            Iniciar Dashboard
-          </button>
-          <button className="h-12 px-8 rounded-md border border-white/20 hover:bg-white/10 transition">
-            Documentación
-          </button>
-        </div>
-      </div>
-
-      {/* Tarjetas */}
-      <div className="grid text-center lg:max-w-5xl lg:w-full lg:grid-cols-3 lg:text-left mt-24 gap-6">
-        <div className="group rounded-lg border border-white/10 px-5 py-6 transition-colors hover:border-white/30 hover:bg-white/5">
-          <Box className="h-8 w-8 text-blue-400 mb-4" />
-          <h2 className="mb-2 text-2xl font-semibold text-white">Slicer Cloud</h2>
-          <p className="text-sm text-gray-400">Cotización automática basada en geometría STL real.</p>
-        </div>
-
-        <div className="group rounded-lg border border-white/10 px-5 py-6 transition-colors hover:border-white/30 hover:bg-white/5">
-          <Activity className="h-8 w-8 text-green-400 mb-4" />
-          <h2 className="mb-2 text-2xl font-semibold text-white">IoT Bridge</h2>
-          <p className="text-sm text-gray-400">Telemetría en tiempo real de OctoPrint y Klipper.</p>
-        </div>
-
-        <div className="group rounded-lg border border-white/10 px-5 py-6 transition-colors hover:border-white/30 hover:bg-white/5">
-          <Layers className="h-8 w-8 text-purple-400 mb-4" />
-          <h2 className="mb-2 text-2xl font-semibold text-white">IA Manager</h2>
-          <p className="text-sm text-gray-400">Detección de fallos y optimización de colas.</p>
-        </div>
-      </div>
-    </main>
+        ) : (
+          <div className="text-center py-10 border border-dashed border-white/10 rounded-xl">
+            <p className="text-gray-500">
+              No hay productos disponibles.
+            </p>
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
