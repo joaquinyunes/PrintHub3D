@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   Printer,
-  BarChart3 // 👈 Importamos el ícono para Reportes
+  BarChart3,
+  DollarSign // 👈 AGREGADO: Ícono para gastos
 } from "lucide-react";
 
 interface StoredUser {
@@ -28,11 +29,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Controla el menú en móvil
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // --- 1. SEGURIDAD ROBUSTA ---
+  // --- 1. SEGURIDAD ---
   useEffect(() => {
-    // Excepción: Login siempre permitido
     if (pathname === "/admin/login") {
       setIsAuthorized(true);
       return;
@@ -47,15 +47,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     try {
       const session: StoredUser = JSON.parse(stored);
-
-      // Validar Token y Rol Admin
       if (!session.token || session.user?.role !== "admin") {
         localStorage.clear();
         router.replace("/admin/login");
         return;
       }
-
-      // Usuario autorizado
       setIsAuthorized(true);
     } catch {
       localStorage.clear();
@@ -69,13 +65,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   // --- 2. RENDERIZADO ---
-
-  // Si es la página de Login, no mostramos el Layout de Admin
   if (pathname === "/admin/login") {
     return <main className="min-h-screen bg-black">{children}</main>;
   }
 
-  // Pantalla de Carga mientras verifica seguridad
   if (!isAuthorized) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-black text-white">
@@ -91,7 +84,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-screen bg-[#0a0a0a] text-white font-sans">
       
-      {/* SIDEBAR (Menú Lateral) */}
+      {/* SIDEBAR */}
       <aside 
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#111] border-r border-white/10 transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -107,7 +100,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 PrintHub 3D
             </span>
           </div>
-          {/* Botón cerrar en móvil */}
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
             <X size={20} />
           </button>
@@ -119,9 +111,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavItem href="/admin/products" icon={<Package size={20} />} label="Inventario" active={pathname.includes("/products")} />
           <NavItem href="/admin/orders" icon={<ShoppingCart size={20} />} label="Pedidos" active={pathname.includes("/orders")} />
           <NavItem href="/admin/production" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/production")} />
-          <NavItem href="/admin/clients" icon={<Users size={20} />} label="Clientes" active={pathname.includes("/clients")} />
           
-          {/* 👇 AQUÍ ESTÁ EL NUEVO ENLACE DE REPORTES */}
+          {/* 👇 AQUÍ AGREGAMOS GASTOS 👇 */}
+          <NavItem href="/admin/expenses" icon={<DollarSign size={20} />} label="Gastos" active={pathname.includes("/expenses")} />
+          
+          <NavItem href="/admin/clients" icon={<Users size={20} />} label="Clientes" active={pathname.includes("/clients")} />
           <NavItem href="/admin/analytics" icon={<BarChart3 size={20} />} label="Reportes" active={pathname.includes("/analytics")} />
           
           <div className="my-4 h-px bg-white/5 mx-2" />
@@ -143,7 +137,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* CONTENIDO PRINCIPAL */}
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
-        {/* Header Móvil */}
         <header className="lg:hidden flex h-16 items-center px-4 border-b border-white/10 bg-[#111]">
           <button onClick={() => setIsSidebarOpen(true)} className="text-gray-400 hover:text-white p-2">
             <Menu size={24} />
@@ -151,13 +144,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <span className="ml-4 font-bold text-white">Panel Admin</span>
         </header>
 
-        {/* Página hija (Children) */}
         <main className="flex-1 overflow-auto bg-[#0a0a0a]">
           {children}
         </main>
       </div>
       
-      {/* Overlay para cerrar menú en móvil */}
       {isSidebarOpen && (
         <div 
             className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
@@ -168,7 +159,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 }
 
-// Componente auxiliar para los links (Más limpio)
+// Componente NavItem
 function NavItem({ href, icon, label, active }: { href: string; icon: React.ReactNode; label: string; active: boolean }) {
   return (
     <Link

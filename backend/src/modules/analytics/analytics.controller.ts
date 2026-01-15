@@ -2,50 +2,50 @@ import { Request, Response } from 'express';
 import Order from '../orders/order.model';
 import Product from '../products/product.model';
 import Client from '../clients/client.model';
+import Expense from '../expense/expense.model'; // 👈 IMPORTAR GASTOS
+import Sale from '../sales/sale.model';           // 👈 IMPORTAR VENTAS
 
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
         const tenantId = 'global3d_hq';
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        // 1. Calcular Finanzas (Ingresos y Ganancias)
-        const financials = await Order.aggregate([
-            { $match: { tenantId } }, // Filtramos por tu empresa
-            { $group: { 
-                _id: null, 
-                totalIncome: { $sum: "$totalAmount" },
-                totalProfit: { $sum: "$profit" } // 👈 Suma total de ganancias
-            }}
+        // 1. Ingresos por Pedidos (Custom Prints)
+        const orderStats = await Order.aggregate([
+            { $match: { tenantId, createdAt: { $gte: startOfMonth }, status: { $ne: 'cancelled' } } },
+            { $group: { _id: null, total: { $sum: "$totalAmount" } } }
         ]);
 
-        const income = financials.length > 0 ? financials[0].totalIncome : 0;
-        const profit = financials.length > 0 ? financials[0].totalProfit : 0;
+        // 2. Ingresos por Ventas (Filamentos/Insumos)
+        const saleStats = await Sale.aggregate([
+            { $match: { tenantId, createdAt: { $gte: startOfMonth } } },
+            { $group: { _id: null, total: { $sum: "$total" } } }
+        ]);
 
-        // 2. Contar Pedidos Activos (Pendientes o Imprimiendo)
-        const ordersPending = await Order.countDocuments({ 
-            tenantId, 
-            status: { $in: ['pendiente', 'imprimiendo'] } 
-        });
+        // 3. Gastos Totales
+        const expenseStats = await Expense.aggregate([
+            { $match: { tenantId, date: { $gte: startOfMonth } } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
 
-        // 3. Contar Alertas de Stock
-        const lowStock = await Product.countDocuments({
-            tenantId,
-            $expr: { $lte: ["$stock", "$minStock"] }
-        });
+        const incomeOrders = orderStats[0]?.total || 0;
+        const incomeSales = saleStats[0]?.total || 0;
+        const totalExpenses = expenseStats[0]?.total || 0;
 
-        // 4. Contar Clientes Totales
-        const totalClients = await Client.countDocuments({ tenantId });
+        // Cálculo Final: (Pedidos + Filamentos) - Gastos
+        const netProfit = (incomeOrders + incomeSales) - totalExpenses;
 
-        // Enviar respuesta al Frontend
         res.json({
-            income,
-            profit, 
-            orders: ordersPending,
-            stockWarning: lowStock,
-            clients: totalClients
+            income: incomeOrders + incomeSales, // Ingreso Bruto
+            profit: netProfit,                  // Ganancia Real (Neta)
+            expenses: totalExpenses,
+            ordersPending: await Order.countDocuments({ tenantId, status: 'pending' }),
+            stockWarning: await Product.countDocuments({ tenantId, $expr: { $lte: ["$stock", "$minStock"] } }),
+            clients: await Client.countDocuments({ tenantId })
         });
 
     } catch (error) {
-        console.error("Error analytics:", error);
-        res.status(500).json({ message: 'Error analytics' });
+        res.status(500).json({ message: 'Error en reportes' });
     }
 };

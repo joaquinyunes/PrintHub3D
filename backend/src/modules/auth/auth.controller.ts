@@ -47,6 +47,14 @@ export const login = async (req: Request, res: Response) => {
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ message: 'Usuario no encontrado' });
 
+        // 👇👇👇 ZONA DE DEPURACIÓN (DEBUG) 👇👇👇
+        console.log("----------------------------------------------------");
+        console.log("🕵️‍♂️ INTENTO DE LOGIN RECIBIDO:");
+        console.log(`👤 Email: ${user.email}`);
+        console.log(`🔑 ROL EN LA BASE DE DATOS: >>>> ${user.role} <<<<`); 
+        console.log("----------------------------------------------------");
+        // 👆👆👆 SI AQUÍ DICE "client", EL SCRIPT NO FUNCIONÓ 👆👆👆
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: 'Contraseña incorrecta' });
 
@@ -67,6 +75,7 @@ export const login = async (req: Request, res: Response) => {
         });
 
     } catch (error) {
+        console.error("Error en login:", error);
         res.status(500).json({ message: 'Error en login' });
     }
 };

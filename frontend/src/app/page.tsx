@@ -36,7 +36,8 @@ export default function HomePage() {
     const loadProducts = async () => {
       try {
         const res = await fetch(
-          "http://localhost:5000/api/products/storefront?tenantId=global3d_hq"
+        
+          "http://localhost:5000/api/products/public?tenantId=global3d_hq" // ✅ CORRECTO: Coincide con tu product.routes.ts
         );
 
         if (!res.ok) {
