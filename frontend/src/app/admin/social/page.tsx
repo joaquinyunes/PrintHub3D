@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Search, Send, ShoppingCart, User, MessageCircle, Instagram, Facebook, Phone } from 'lucide-react';
+import { Search, Send, ShoppingCart, User, MessageCircle, Instagram, Facebook } from 'lucide-react';
 
 // Tipos de datos
 interface ChatPreview {
@@ -42,6 +42,10 @@ export default function SocialHubPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const scrollToBottom = () => {
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+  };
+
   // 2. Cargar mensajes cuando seleccionas a alguien
   useEffect(() => {
     if (selectedChat) {
@@ -53,10 +57,6 @@ export default function SocialHubPage() {
             });
     }
   }, [selectedChat]);
-
-  const scrollToBottom = () => {
-    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-  };
 
   // 3. ENVIAR MENSAJE
   const handleSendMessage = async () => {

@@ -7,13 +7,15 @@ import {
     updateProduct, 
     quickSell, // 👈 Importante
     getPublicProducts,
-    bulkAddStock
+    bulkAddStock,
+    getProductsSummary
 } from './product.controller';
 
 import { protect } from '../auth/auth.middleware';
 
 const router = Router();
 router.post('/bulk-stock', protect, bulkAddStock);
+router.get('/summary', protect, getProductsSummary);
 router.get('/', protect, getProducts); // Admin
 router.get('/public', getPublicProducts); // Tienda
 router.post('/', protect, createProduct); // Crear/Fusionar
