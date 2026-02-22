@@ -12,8 +12,29 @@ export const getProducts = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "No autorizado" });
     }
 
-    const products = await Product.find({ tenantId }).sort({
-      category: 1, 
+    const search = String(req.query.search || "").trim();
+    const category = String(req.query.category || "").trim();
+    const lowStock = String(req.query.lowStock || "false") === "true";
+
+    const query: any = { tenantId };
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { sku: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (category) {
+      query.category = category;
+    }
+
+    if (lowStock) {
+      query.$expr = { $lte: ["$stock", { $ifNull: ["$minStock", 5] }] };
+    }
+
+    const products = await Product.find(query).sort({
+      category: 1,
       name: 1,
     });
 
@@ -48,6 +69,20 @@ export const getPublicProducts = async (req: Request, res: Response) => {
    ➕ CREAR O FUSIONAR (SMART MERGE)
    Si existe SKU o Nombre -> Suma Stock. Si no -> Crea.
 ====================================================== */
+const sanitizeProductNumbers = (payload: any) => {
+  const price = Number(payload.price);
+  const cost = Number(payload.cost ?? 0);
+  const stock = Number(payload.stock ?? 0);
+  const minStock = Number(payload.minStock ?? 5);
+
+  if (!Number.isFinite(price) || price < 0) return { error: "Precio inválido" };
+  if (!Number.isFinite(cost) || cost < 0) return { error: "Costo inválido" };
+  if (!Number.isFinite(stock) || stock < 0) return { error: "Stock inválido" };
+  if (!Number.isFinite(minStock) || minStock < 0) return { error: "Stock mínimo inválido" };
+
+  return { price, cost, stock, minStock };
+};
+
 export const createProduct = async (req: Request, res: Response) => {
   try {
     const tenantId = (req as any).user?.tenantId;
@@ -60,6 +95,11 @@ export const createProduct = async (req: Request, res: Response) => {
 
     if (!name || price === undefined) {
       return res.status(400).json({ message: "Nombre y precio son obligatorios" });
+    }
+
+    const numbers = sanitizeProductNumbers({ price, cost, stock, minStock });
+    if ("error" in numbers) {
+      return res.status(400).json({ message: numbers.error });
     }
 
     // 1. INTENTAR BUSCAR EXISTENTE (Por SKU o Por Nombre)
@@ -80,11 +120,12 @@ export const createProduct = async (req: Request, res: Response) => {
 
     // 🔄 CASO A: EL PRODUCTO YA EXISTE -> ACTUALIZAR Y SUMAR STOCK
     if (product) {
-      product.stock += Number(stock) || 0; // ✨ AQUÍ ESTÁ LA MAGIA: SUMA, NO REEMPLAZA
-      
+      product.stock += numbers.stock; // ✨ AQUÍ ESTÁ LA MAGIA: SUMA, NO REEMPLAZA
+
       // Actualizamos datos si vienen nuevos
-      product.price = price;
-      if (cost !== undefined) product.cost = cost;
+      product.price = numbers.price;
+      product.cost = numbers.cost;
+      product.minStock = numbers.minStock;
       if (sku) product.sku = sku;
       if (category) product.category = category;
       if (description) product.description = description;
@@ -100,10 +141,10 @@ export const createProduct = async (req: Request, res: Response) => {
       name,
       sku: sku || `GEN-${Date.now()}`, // Si no pones SKU, genera uno automático
       category: category || "General",
-      price: Number(price),
-      cost: Number(cost) || 0,
-      stock: Number(stock) || 0,
-      minStock: Number(minStock) || 5,
+      price: numbers.price,
+      cost: numbers.cost,
+      stock: numbers.stock,
+      minStock: numbers.minStock,
       description: description || "",
       imageUrl: imageUrl || "",
       isPublic: Boolean(isPublic),
@@ -146,9 +187,45 @@ export const updateProduct = async (req: Request, res: Response) => {
     const tenantId = (req as any).user?.tenantId;
     const { id } = req.params;
 
+    const allowedFields = [
+      "name",
+      "category",
+      "description",
+      "imageUrl",
+      "isPublic",
+      "sku",
+      "price",
+      "cost",
+      "stock",
+      "minStock",
+    ];
+
+    const updates: any = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    if (updates.price !== undefined && (!Number.isFinite(Number(updates.price)) || Number(updates.price) < 0)) {
+      return res.status(400).json({ message: "Precio inválido" });
+    }
+
+    if (updates.cost !== undefined && (!Number.isFinite(Number(updates.cost)) || Number(updates.cost) < 0)) {
+      return res.status(400).json({ message: "Costo inválido" });
+    }
+
+    if (updates.stock !== undefined && (!Number.isFinite(Number(updates.stock)) || Number(updates.stock) < 0)) {
+      return res.status(400).json({ message: "Stock inválido" });
+    }
+
+    if (updates.minStock !== undefined && (!Number.isFinite(Number(updates.minStock)) || Number(updates.minStock) < 0)) {
+      return res.status(400).json({ message: "Stock mínimo inválido" });
+    }
+
     const updatedProduct = await Product.findOneAndUpdate(
-      { _id: id, tenantId }, 
-      req.body, 
+      { _id: id, tenantId },
+      updates,
       { new: true }
     );
 
@@ -246,5 +323,48 @@ export const bulkAddStock = async (req: Request, res: Response) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error al cargar stock masivo" });
+    }
+};
+
+export const getProductsSummary = async (req: Request, res: Response) => {
+    try {
+        const tenantId = (req as any).user?.tenantId;
+        if (!tenantId) return res.status(401).json({ message: 'No autorizado' });
+
+        const products = await Product.find({ tenantId }).select('stock minStock price cost');
+
+        let totalProducts = products.length;
+        let totalUnits = 0;
+        let lowStockCount = 0;
+        let outOfStockCount = 0;
+        let inventorySaleValue = 0;
+        let inventoryCostValue = 0;
+
+        products.forEach((product: any) => {
+            const stock = Number(product.stock || 0);
+            const minStock = Number(product.minStock ?? 5);
+            const price = Number(product.price || 0);
+            const cost = Number(product.cost || 0);
+
+            totalUnits += stock;
+            inventorySaleValue += stock * price;
+            inventoryCostValue += stock * cost;
+
+            if (stock <= 0) outOfStockCount += 1;
+            if (stock > 0 && stock <= minStock) lowStockCount += 1;
+        });
+
+        return res.json({
+            totalProducts,
+            totalUnits,
+            lowStockCount,
+            outOfStockCount,
+            inventorySaleValue,
+            inventoryCostValue,
+            estimatedGrossMarginValue: inventorySaleValue - inventoryCostValue,
+        });
+    } catch (error) {
+        console.error('getProductsSummary:', error);
+        return res.status(500).json({ message: 'Error obteniendo resumen de inventario' });
     }
 };

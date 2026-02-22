@@ -126,3 +126,23 @@ export const sendAdminNotification = async (message: string) => {
         return false;
     }
 };
+
+// 3. NOTIFICACIÓN AL CLIENTE
+export const sendCustomerNotification = async (phone: string, message: string) => {
+    if (!isReady) {
+        console.warn("⚠️ WhatsApp no está listo para enviar al cliente.");
+        return false;
+    }
+
+    try {
+        const normalized = phone.replace(/[^\d]/g, '');
+        if (!normalized) return false;
+
+        const target = normalized.includes('@c.us') ? normalized : `${normalized}@c.us`;
+        await client.sendMessage(target, message);
+        return true;
+    } catch (error) {
+        console.error('Error enviando notificación al cliente:', error);
+        return false;
+    }
+};
