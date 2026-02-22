@@ -8,6 +8,8 @@ export interface IOrder extends Document {
     deposit: number;
     total: number;
     notes: string;
+    trackingCode: string;
+    customerContact?: string;
     
     // 🆕 DATOS CLAVE
     chatLink?: string; // Link al chat del cliente
@@ -28,6 +30,8 @@ export interface IOrder extends Document {
     finishedAt?: Date;
     adminNotified?: boolean;
     isSaleRegistered: boolean;
+    customerSatisfaction?: number;
+    customerFeedback?: string;
     tenantId: string;
     createdAt: Date;
     updatedAt: Date;
@@ -45,6 +49,8 @@ const OrderSchema: Schema = new Schema({
     deposit: { type: Number, default: 0 },
     total: { type: Number, required: true },
     notes: { type: String, default: "" },
+    trackingCode: { type: String, required: true, unique: true, index: true },
+    customerContact: { type: String, default: "" },
     
     // 🆕 NUEVOS CAMPOS (Asegurados)
     chatLink: { type: String, default: "" },
@@ -67,6 +73,8 @@ const OrderSchema: Schema = new Schema({
     finishedAt: { type: Date },
     adminNotified: { type: Boolean, default: false },
     isSaleRegistered: { type: Boolean, default: false },
+    customerSatisfaction: { type: Number, min: 1, max: 5 },
+    customerFeedback: { type: String, default: "" },
     tenantId: { type: String, required: true }
 }, { timestamps: true });
 

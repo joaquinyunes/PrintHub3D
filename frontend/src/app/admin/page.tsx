@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { 
-  Printer, Package, CheckCircle2, Zap, 
-  TrendingUp, Plus, ArrowRight, 
+  Printer, Package, Zap, 
+  Plus, ArrowRight, 
   DollarSign, Activity, Spool,
-  BarChart3, X, Boxes, Bot,
+  X, Boxes, Bot,
   ListTodo, CheckSquare, Square, Trash2,
   Clock,
   AlertTriangle
 } from "lucide-react";
+import { apiUrl } from "@/lib/api";
 
 // --- COMPONENTE: TARJETA KPI ---
 function StatCard({ title, value, subtext, icon: Icon, color, trend }: any) {
@@ -152,9 +153,9 @@ export default function DashboardPage() {
           const token = currentSession.token;
 
           const [resO, resP, resT] = await Promise.all([
-              fetch('http://localhost:5000/api/orders', { headers: { Authorization: `Bearer ${token}` } }),
-              fetch('http://localhost:5000/api/printers', { headers: { Authorization: `Bearer ${token}` } }),
-              fetch('http://localhost:5000/api/tasks', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ ok: false, json: async () => [] }))
+              fetch(apiUrl("/api/orders"), { headers: { Authorization: `Bearer ${token}` } }),
+              fetch(apiUrl("/api/printers"), { headers: { Authorization: `Bearer ${token}` } }),
+              fetch(apiUrl("/api/tasks"), { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ ok: false, json: async () => [] }))
           ]);
 
           if (resO.ok && resP.ok) {
@@ -210,7 +211,7 @@ export default function DashboardPage() {
   const handleAddTask = async () => {
       if(!newTaskText.trim()) return;
       try {
-          const res = await fetch('http://localhost:5000/api/tasks', {
+          const res = await fetch(apiUrl("/api/tasks"), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
               body: JSON.stringify({ text: newTaskText })
@@ -221,7 +222,7 @@ export default function DashboardPage() {
 
   const toggleTask = async (id: string, currentStatus: boolean) => {
       try {
-          await fetch(`http://localhost:5000/api/tasks/${id}`, {
+          await fetch(apiUrl(`/api/tasks/${id}`), {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
               body: JSON.stringify({ completed: !currentStatus })
@@ -233,7 +234,7 @@ export default function DashboardPage() {
   const deleteTask = async (id: string) => {
       if(!confirm("¿Borrar tarea?")) return;
       try {
-          await fetch(`http://localhost:5000/api/tasks/${id}`, {
+          await fetch(apiUrl(`/api/tasks/${id}`), {
               method: 'DELETE',
               headers: { 'Authorization': `Bearer ${session.token}` }
           });
@@ -264,7 +265,7 @@ export default function DashboardPage() {
   const confirmStockIngress = async () => {
       if(!session) return;
       try {
-          const res = await fetch('http://localhost:5000/api/products/bulk-stock', {
+          const res = await fetch(apiUrl("/api/products/bulk-stock"), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
               body: JSON.stringify({ items: parsedItems })

@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Plus, Trash2, DollarSign, Calendar, Tag } from "lucide-react";
+import { apiUrl } from "@/lib/api";
 
 export default function ExpensesPage() {
     const [expenses, setExpenses] = useState<any[]>([]);
     const [form, setForm] = useState({ description: "", amount: "", category: "Materiales" });
-    const [loading, setLoading] = useState(true);
 
     const categories = ["Materiales", "Mantenimiento", "Servicios", "Alquiler", "Otros"];
 
@@ -15,11 +15,10 @@ export default function ExpensesPage() {
         if (!userStr) return;
         const { token } = JSON.parse(userStr);
 
-        const res = await fetch("http://localhost:5000/api/expenses", {
+        const res = await fetch(apiUrl("/api/expenses"), {
             headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) setExpenses(await res.json());
-        setLoading(false);
     };
 
     useEffect(() => { fetchExpenses(); }, []);
@@ -30,7 +29,7 @@ export default function ExpensesPage() {
         if (!userStr) return;
         const { token } = JSON.parse(userStr);
 
-        await fetch("http://localhost:5000/api/expenses", {
+        await fetch(apiUrl("/api/expenses"), {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify(form)
@@ -45,7 +44,7 @@ export default function ExpensesPage() {
         if (!userStr) return;
         const { token } = JSON.parse(userStr);
 
-        await fetch(`http://localhost:5000/api/expenses/${id}`, {
+        await fetch(apiUrl(`/api/expenses/${id}`), {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` }
         });
