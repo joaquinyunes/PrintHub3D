@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from "recharts";
 import { 
-  DollarSign, TrendingUp, Calendar, Filter, Package, Layers, Loader2, 
-  Download, History, Zap, ArrowUpRight, Archive, Search, ChevronRight, 
+  DollarSign, TrendingUp, Calendar, Layers, Loader2, 
+  Download, Zap, ArrowUpRight, Archive, Search, ChevronRight, 
   Boxes, LayoutGrid, Clock, ShoppingCart, BarChart3, ChevronDown, MousePointer2
 } from "lucide-react";
+import { apiUrl } from "@/lib/api";
 
 /**
  * CONFIGURACIÓN DE COLORES Y CONSTANTES
@@ -113,7 +114,7 @@ export default function AnalyticsPage() {
   /**
    * CARGA DE DATOS DESDE EL BACKEND
    */
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     const stored = localStorage.getItem("user");
     if (!stored) return;
@@ -121,7 +122,7 @@ export default function AnalyticsPage() {
 
     try {
       const query = `?year=${selectedYear}&month=${selectedMonth}`;
-      const res = await fetch(`http://localhost:5000/api/sales/analytics${query}`, {
+      const res = await fetch(apiUrl(`/api/sales/analytics${query}`), {
         headers: { Authorization: `Bearer ${session.token}` }
       });
 
@@ -141,11 +142,11 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedYear, selectedMonth]);
 
   useEffect(() => {
     fetchData();
-  }, [selectedYear, selectedMonth]);
+  }, [fetchData]);
 
   /**
    * LÓGICA DE FILTRADO LOCAL

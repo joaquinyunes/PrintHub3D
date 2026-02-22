@@ -7,8 +7,9 @@ import {
   FileText, Link as LinkIcon, Factory,
   PackageCheck, History, MessageCircle, Globe, Store, User,
   Search, AlertTriangle, Pencil, DollarSign, Calendar,
-  MessageSquare, Flame, ShoppingCart, Tag, Calculator, Wrench, Coins
+  MessageSquare, Flame, ShoppingCart, Calculator, Wrench, Coins
 } from "lucide-react";
+import { apiUrl } from "@/lib/api";
 
 // --- 1. INTERFACES Y TIPOS ---
 interface Product { _id: string; name: string; price: number; stock: number; }
@@ -80,15 +81,15 @@ export default function OrderListPage() {
     const loadData = async () => {
         try {
             const [resO, resP] = await Promise.all([
-                fetch("http://localhost:5000/api/orders", { headers: { Authorization: `Bearer ${currentSession.token}` } }),
-                fetch("http://localhost:5000/api/products", { headers: { Authorization: `Bearer ${currentSession.token}` } })
+                fetch(apiUrl("/api/orders"), { headers: { Authorization: `Bearer ${currentSession.token}` } }),
+                fetch(apiUrl("/api/products"), { headers: { Authorization: `Bearer ${currentSession.token}` } })
             ]);
             if(resO.ok) setOrders(await resO.json());
             if(resP.ok) setProducts(await resP.json());
         } catch (e) { console.error(e); } finally { setLoading(false); }
     };
     loadData();
-  }, []);
+  }, [router]);
 
   // --- LÓGICA DE AGRUPACIÓN (MANTENIDA) ---
   const getGroupedOrders = () => {
@@ -150,7 +151,7 @@ export default function OrderListPage() {
       if(!formData.clientName || cart.length === 0) return;
       const finalDueDate = formData.dueDate ? formData.dueDate : null;
       const payload = { ...formData, dueDate: finalDueDate, deposit: Number(formData.deposit) || 0, items: cart, files, total: cart.reduce((acc, i) => acc + (i.price * i.quantity), 0) };
-      const url = editingOrderId ? `http://localhost:5000/api/orders/${editingOrderId}` : "http://localhost:5000/api/orders";
+      const url = editingOrderId ? apiUrl(`/api/orders/${editingOrderId}`) : apiUrl("/api/orders");
       const method = editingOrderId ? "PUT" : "POST";
       try {
           const res = await fetch(url, { method, headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.token}` }, body: JSON.stringify(payload) });
@@ -166,7 +167,7 @@ export default function OrderListPage() {
   const confirmDelivery = async () => {
       if(!deliverOrder || !session) return;
       try {
-          const res = await fetch(`http://localhost:5000/api/orders/${deliverOrder._id}/register-sale`, {
+          const res = await fetch(apiUrl(`/api/orders/${deliverOrder._id}/register-sale`), {
               method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
               body: JSON.stringify({ finalCost: Number(finalCost) || 0 })
           });
@@ -184,7 +185,7 @@ export default function OrderListPage() {
           if(o) { setDeliverOrder(o); setFinalCost(""); setIsDeliverModalOpen(true); return; }
       }
       setOrders(orders.map(o => o._id === id ? { ...o, status } : o));
-      await fetch(`http://localhost:5000/api/orders/${id}/status`, {
+      await fetch(apiUrl(`/api/orders/${id}/status`), {
           method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.token}` },
           body: JSON.stringify({ status })
       });
@@ -193,7 +194,7 @@ export default function OrderListPage() {
   const markAsPaid = async (order: Order) => {
       if(!confirm("¿Saldar deuda?")) return;
       try {
-          const res = await fetch(`http://localhost:5000/api/orders/${order._id}`, {
+          const res = await fetch(apiUrl(`/api/orders/${order._id}`), {
               method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.token}` },
               body: JSON.stringify({ deposit: order.total }) 
           });

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShoppingCart, Box } from "lucide-react";
+import { apiUrl } from "@/lib/api";
 
 interface Product {
   _id: string;
@@ -37,7 +38,7 @@ export default function HomePage() {
       try {
         const res = await fetch(
         
-          "http://localhost:5000/api/products/public?tenantId=global3d_hq" // ✅ CORRECTO: Coincide con tu product.routes.ts
+          apiUrl("/api/products/public?tenantId=global3d_hq") // ✅ CORRECTO: Coincide con tu product.routes.ts
         );
 
         if (!res.ok) {
