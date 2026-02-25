@@ -2,8 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from './user.model';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+import { appConfig } from '../../config';
 
 // --- REGISTRO PÚBLICO (Solo crea CLIENTES) ---
 export const register = async (req: Request, res: Response) => {
@@ -21,13 +20,13 @@ export const register = async (req: Request, res: Response) => {
             email,
             password: hashedPassword,
             role: 'client', // 👈 FORZAMOS QUE SEA CLIENTE
-            tenantId: 'global3d_hq' // Todos son clientes de TU tienda
+            tenantId: appConfig.defaultTenantId // Todos son clientes de TU tienda
         });
 
         await newUser.save();
 
         // Login automático al registrarse
-        const token = jwt.sign({ id: newUser._id, role: newUser.role }, JWT_SECRET, { expiresIn: '30d' });
+        const token = jwt.sign({ id: newUser._id, role: newUser.role }, appConfig.jwtSecret, { expiresIn: '30d' });
 
         res.status(201).json({ 
             token, 
@@ -62,7 +61,7 @@ export const login = async (req: Request, res: Response) => {
             id: user._id, 
             role: user.role, // Guardamos el rol en el token
             tenantId: user.tenantId 
-        }, JWT_SECRET, { expiresIn: '30d' });
+        }, appConfig.jwtSecret, { expiresIn: '30d' });
 
         res.json({ 
             token, 

@@ -2,12 +2,13 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import User from '../modules/auth/user.model'; // Asegúrate que la ruta al modelo sea correcta
+import { appConfig } from '../config';
 
 dotenv.config();
 
 const createAdmin = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/global3d');
+        await mongoose.connect(appConfig.mongoUri);
         console.log('✅ Conectado a MongoDB');
 
         const adminEmail = 'admin@global3d.com';
@@ -26,7 +27,7 @@ const createAdmin = async () => {
             email: adminEmail,
             password: hashedPassword,
             role: 'admin',      // 👈 IMPORTANTE: Rol admin
-            tenantId: 'global3d_hq'
+            tenantId: appConfig.defaultTenantId
         });
 
         await newAdmin.save();

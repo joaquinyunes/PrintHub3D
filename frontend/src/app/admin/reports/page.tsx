@@ -10,6 +10,7 @@ import {
   DollarSign, TrendingUp, Calendar, Filter, Package, Layers, Loader2, 
   Download, History, ArrowUpRight, Zap
 } from "lucide-react";
+import { apiUrl } from "@/lib/api";
 
 // Colores Gráficos
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -30,7 +31,7 @@ export default function AnalyticsPage() {
 
       try {
         const query = `?year=${selectedYear}&month=${selectedMonth}`;
-        const res = await fetch(`http://localhost:5000/api/sales/analytics${query}`, {
+        const res = await fetch(apiUrl(`/api/sales/analytics${query}`), {
           headers: { Authorization: `Bearer ${session.token}` }
         });
 

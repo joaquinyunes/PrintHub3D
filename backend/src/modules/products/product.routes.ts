@@ -12,15 +12,16 @@ import {
 } from './product.controller';
 
 import { protect } from '../auth/auth.middleware';
+import { withTenant } from '../../middleware/tenant.middleware';
 
 const router = Router();
-router.post('/bulk-stock', protect, bulkAddStock);
-router.get('/summary', protect, getProductsSummary);
-router.get('/', protect, getProducts); // Admin
+router.post('/bulk-stock', protect, withTenant, bulkAddStock);
+router.get('/summary', protect, withTenant, getProductsSummary);
+router.get('/', protect, withTenant, getProducts); // Admin
 router.get('/public', getPublicProducts); // Tienda
-router.post('/', protect, createProduct); // Crear/Fusionar
-router.delete('/:id', protect, deleteProduct);
-router.put('/:id', protect, updateProduct);
-router.post('/:id/sell', protect, quickSell); // 👈 Ruta necesaria para el botón VENDER
+router.post('/', protect, withTenant, createProduct); // Crear/Fusionar
+router.delete('/:id', protect, withTenant, deleteProduct);
+router.put('/:id', protect, withTenant, updateProduct);
+router.post('/:id/sell', protect, withTenant, quickSell); // 👈 Ruta necesaria para el botón VENDER
 
 export default router;

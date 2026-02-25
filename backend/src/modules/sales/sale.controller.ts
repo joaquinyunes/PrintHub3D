@@ -7,12 +7,51 @@ import Product from "../products/product.model";
    ========================================================================== */
 export const getSales = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).user?.tenantId;
-    
-    // Trae absolutamente todas las ventas históricas
-    const sales = await Sale.find({ tenantId }).sort({ createdAt: -1 });
-    
-    return res.json(sales);
+    const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+    if (!tenantId) {
+      return res.status(401).json({ message: 'No autorizado' });
+    }
+
+    const {
+      page = '1',
+      pageSize = '50',
+      sort = '-createdAt',
+      from,
+      to,
+      category,
+    } = req.query as Record<string, string | undefined>;
+
+    const pageNumber = Math.max(parseInt(page || '1', 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(pageSize || '50', 10) || 50, 1), 200);
+    const skip = (pageNumber - 1) * limit;
+
+    const query: any = { tenantId };
+
+    if (from || to) {
+      query.createdAt = {};
+      if (from) query.createdAt.$gte = new Date(from);
+      if (to) query.createdAt.$lte = new Date(to);
+    }
+
+    if (category) {
+      query.category = category;
+    }
+
+    const sortField = sort.startsWith('-') ? sort.substring(1) : sort;
+    const sortDir = sort.startsWith('-') ? -1 : 1;
+    const sortObj: any = { [sortField]: sortDir };
+
+    const [items, total] = await Promise.all([
+      Sale.find(query).sort(sortObj).skip(skip).limit(limit),
+      Sale.countDocuments(query),
+    ]);
+
+    return res.json({
+      items,
+      total,
+      page: pageNumber,
+      pageSize: limit,
+    });
   } catch (error) {
     console.error("Error en getSales:", error);
     return res.status(500).json({ message: "Error al obtener historial de ventas." });
@@ -24,7 +63,7 @@ export const getSales = async (req: Request, res: Response) => {
    ========================================================================== */
 export const registerSale = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).user?.tenantId;
+    const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
     const { productId, quantity = 1 } = req.body;
 
     // 1. Validar Producto
@@ -80,7 +119,7 @@ export const registerSale = async (req: Request, res: Response) => {
    ========================================================================== */
 export const getSalesAnalytics = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).user?.tenantId;
+    const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
     const { year, month } = req.query;
 
     // --- CONFIGURACIÓN DE FECHAS ---

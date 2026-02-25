@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Product from "./product.model";
 import Sale from "../sales/sale.model"; // 👈 IMPORTANTE: Asegúrate de importar el modelo de Ventas
+import { InventoryService } from "./inventory.service";
 /* ======================================================
    🔒 ADMIN – OBTENER PRODUCTOS
 ====================================================== */
@@ -50,7 +51,7 @@ export const getProducts = async (req: Request, res: Response) => {
 ====================================================== */
 export const getPublicProducts = async (req: Request, res: Response) => {
   try {
-    const tenantId = String(req.query.tenantId || "global3d_hq");
+    const tenantId = String(req.query.tenantId || process.env.DEFAULT_TENANT_ID || "global3d_hq");
 
     const products = await Product.find({
       tenantId,
@@ -244,38 +245,26 @@ export const updateProduct = async (req: Request, res: Response) => {
 ====================================================== */
 export const quickSell = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).user?.tenantId;
-        const product = await Product.findOne({ _id: req.params.id, tenantId });
-        
-        if(!product) return res.status(404).json({message: "No encontrado"});
-        
-        if(product.stock > 0) {
-            // 1. Restar Stock
-            product.stock -= 1;
-            await product.save();
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+        if (!tenantId) {
+            return res.status(401).json({ message: "No autorizado" });
+        }
 
-            // 🛡️ CORRECCIÓN MATEMÁTICA: Asegurar números
-            const price = Number(product.price) || 0;
-            const cost = Number(product.cost) || 0;
-            const profit = price - cost;
-
-            // 2. Crear Venta
-            const newSale = new Sale({
-                productId: product._id,
-                productName: product.name,
-                category: product.category,
-                quantity: 1,
-                price: price,
-                cost: cost,
-                profit: profit, // ✅ Ahora es seguro
+        try {
+            const { product, sale } = await InventoryService.quickSell(
                 tenantId,
-                createdAt: new Date()
-            });
-            await newSale.save();
+                req.params.id,
+            );
 
-            res.json({ message: "Venta registrada", product, sale: newSale });
-        } else {
-            return res.status(400).json({ message: "Sin stock" });
+            res.json({ message: "Venta registrada", product, sale });
+        } catch (serviceError: any) {
+            if (serviceError.message === "Producto no encontrado") {
+                return res.status(404).json({ message: serviceError.message });
+            }
+            if (serviceError.message === "Sin stock") {
+                return res.status(400).json({ message: serviceError.message });
+            }
+            throw serviceError;
         }
     } catch (error) {
         console.error(error);
@@ -287,37 +276,13 @@ export const quickSell = async (req: Request, res: Response) => {
 export const bulkAddStock = async (req: Request, res: Response) => {
     try {
         const { items } = req.body; // Recibimos el array [{name: "gorilon rojo", quantity: 3}, ...]
-        const tenantId = (req as any).user?.tenantId;
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
 
-        const results = [];
-
-        for (const item of items) {
-            // Buscamos si ya existe un producto con ese nombre (o similar)
-            // Usamos una expresión regular para buscar sin importar mayúsculas
-            let product = await Product.findOne({ 
-                name: { $regex: new RegExp(`^${item.name}$`, "i") }, 
-                tenantId 
-            });
-
-            if (product) {
-                // Si existe, sumamos al stock
-                product.stock += item.quantity;
-                await product.save();
-                results.push({ name: item.name, status: "Actualizado", newStock: product.stock });
-            } else {
-                // Si no existe, lo creamos como "Filamento"
-                const newProduct = new Product({
-                    name: item.name,
-                    price: 0, // Precio de venta 0 por defecto (es insumo)
-                    cost: 0,  // Costo a definir luego
-                    stock: item.quantity,
-                    category: "Filamento",
-                    tenantId
-                });
-                await newProduct.save();
-                results.push({ name: item.name, status: "Creado", newStock: item.quantity });
-            }
+        if (!tenantId) {
+            return res.status(401).json({ message: "No autorizado" });
         }
+
+        const results = await InventoryService.bulkAddStock(tenantId, items);
 
         res.json({ message: "Stock procesado correctamente", results });
     } catch (error) {

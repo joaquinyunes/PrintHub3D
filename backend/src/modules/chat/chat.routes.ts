@@ -1,47 +1,108 @@
 import { Router } from 'express';
 import Chat from './chat.model';
 import { sendWhatsAppMessage } from '../notifications/whatsapp.service';
+import { protect, adminOnly } from '../auth/auth.middleware';
+import { withTenant } from '../../middleware/tenant.middleware';
 
 const router = Router();
 
-// 1. OBTENER BANDEJA DE ENTRADA (Agrupada por clientes)
-router.get('/', async (req, res) => {
+// 1. OBTENER BANDEJA DE ENTRADA (Agrupada por clientes) con paginación
+router.get('/', protect, withTenant, adminOnly, async (req, res) => {
     try {
-        // Agrupación compleja de MongoDB para obtener el último mensaje de cada uno
-        const chats = await Chat.aggregate([
+        const tenantId = (req as any).tenantId;
+        const {
+            page = '1',
+            pageSize = '50',
+        } = req.query as Record<string, string | undefined>;
+
+        const pageNumber = Math.max(parseInt(page || '1', 10) || 1, 1);
+        const limit = Math.min(Math.max(parseInt(pageSize || '50', 10) || 50, 1), 200);
+        const skip = (pageNumber - 1) * limit;
+
+        const basePipeline: any[] = [
+            { $match: { tenantId } },
             { $sort: { timestamp: -1 } },
-            { $group: {
-                _id: "$from", // Agrupar por el ID del cliente
-                lastMessage: { $first: "$body" },
-                senderName: { $first: "$senderName" },
-                platform: { $first: "$platform" }, // Para saber si es IG, FB o WPP
-                timestamp: { $first: "$timestamp" }
-            }},
+            {
+                $group: {
+                    _id: "$from", // Agrupar por el ID del cliente
+                    lastMessage: { $first: "$body" },
+                    senderName: { $first: "$senderName" },
+                    platform: { $first: "$platform" }, // Para saber si es IG, FB o WPP
+                    timestamp: { $first: "$timestamp" }
+                }
+            },
             { $sort: { timestamp: -1 } } // Los más nuevos arriba
+        ];
+
+        const [items, totalAgg] = await Promise.all([
+            Chat.aggregate([
+                ...basePipeline,
+                { $skip: skip },
+                { $limit: limit },
+            ]),
+            Chat.aggregate([
+                ...basePipeline,
+                { $count: 'total' },
+            ]),
         ]);
-        res.json(chats);
+
+        const total = totalAgg[0]?.total || 0;
+
+        res.json({
+            items,
+            total,
+            page: pageNumber,
+            pageSize: limit,
+        });
     } catch (error) {
         res.status(500).json({ message: 'Error cargando chats' });
     }
 });
 
-// 2. OBTENER CONVERSACIÓN COMPLETA
-router.get('/:id', async (req, res) => {
+// 2. OBTENER CONVERSACIÓN COMPLETA (PAGINADA)
+router.get('/:id', protect, withTenant, adminOnly, async (req, res) => {
     try {
+        const {
+            page = '1',
+            pageSize = '100',
+        } = req.query as Record<string, string | undefined>;
+
+        const pageNumber = Math.max(parseInt(page || '1', 10) || 1, 1);
+        const limit = Math.min(Math.max(parseInt(pageSize || '100', 10) || 100, 1), 500);
+        const skip = (pageNumber - 1) * limit;
+
         // Traer mensajes donde el usuario sea el remitente O el destinatario
-        const messages = await Chat.find({ 
+        const tenantId = (req as any).tenantId;
+
+        const filter = { 
+            tenantId,
             $or: [{ from: req.params.id }, { to: req.params.id }]
-        }).sort({ timestamp: 1 });
-        res.json(messages);
+        };
+
+        const [items, total] = await Promise.all([
+            Chat.find(filter)
+                .sort({ timestamp: 1 })
+                .skip(skip)
+                .limit(limit),
+            Chat.countDocuments(filter),
+        ]);
+
+        res.json({
+            items,
+            total,
+            page: pageNumber,
+            pageSize: limit,
+        });
     } catch (error) {
         res.status(500).json({ message: 'Error cargando mensajes' });
     }
 });
 
 // 3. ENVIAR MENSAJE (TÚ respondes desde la web)
-router.post('/send', async (req, res) => {
+router.post('/send', protect, withTenant, adminOnly, async (req, res) => {
     try {
         const { to, message, platform } = req.body;
+        const tenantId = (req as any).tenantId;
 
         // A. Enviar a la red correspondiente
         if (platform === 'whatsapp') {
@@ -62,7 +123,7 @@ router.post('/send', async (req, res) => {
             platform: platform,
             senderName: 'Yo',
             isMine: true,
-            tenantId: 'global3d_hq'
+            tenantId
         });
 
         res.json(newMsg);

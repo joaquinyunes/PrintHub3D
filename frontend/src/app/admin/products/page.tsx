@@ -7,6 +7,7 @@ import {
   X, AlertTriangle, Barcode, TrendingUp, CheckCircle2,
   Wallet, Zap, History, ChevronRight, Calendar, Boxes, Bot
 } from "lucide-react";
+import { apiUrl } from "@/lib/api";
 
 // --- INTERFACES ---
 interface Product {
@@ -83,8 +84,8 @@ export default function ProductsPage() {
   const loadData = async (token: string) => {
       try {
         const [resP, resS] = await Promise.all([
-            fetch("http://localhost:5000/api/products", { headers: { Authorization: `Bearer ${token}` } }),
-            fetch("http://localhost:5000/api/sales", { headers: { Authorization: `Bearer ${token}` } })
+            fetch(apiUrl("/api/products"), { headers: { Authorization: `Bearer ${token}` } }),
+            fetch(apiUrl("/api/sales"), { headers: { Authorization: `Bearer ${token}` } })
         ]);
         if (resP.ok) setProducts(await resP.json());
         if (resS.ok) setAllSales(await resS.json());
@@ -123,7 +124,7 @@ export default function ProductsPage() {
     e.preventDefault();
     if (!session) return;
     try {
-      const res = await fetch("http://localhost:5000/api/products", {
+      const res = await fetch(apiUrl("/api/products"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
         body: JSON.stringify({ 
@@ -158,7 +159,7 @@ export default function ProductsPage() {
     const newStock = Math.max(0, product.stock + amount);
     setProducts(prev => prev.map(p => p._id === id ? { ...p, stock: newStock } : p));
     try { 
-        await fetch(`http://localhost:5000/api/products/${id}`, { 
+        await fetch(apiUrl(`/api/products/${id}`), { 
             method: "PUT", 
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.token}` }, 
             body: JSON.stringify({ stock: newStock }) 
@@ -169,7 +170,7 @@ export default function ProductsPage() {
   const handleSellOne = async (product: Product) => {
     if (product.stock < 1) { showToast("Sin stock", "error"); return; }
     try {
-      const res = await fetch(`http://localhost:5000/api/products/${product._id}/sell`, {
+      const res = await fetch(apiUrl(`/api/products/${product._id}/sell`), {
         method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.token}` }
       });
       if (res.ok) { showToast(`Vendido: ${product.name}`); loadData(session.token); }
@@ -286,7 +287,7 @@ export default function ProductsPage() {
                                       <td className="px-8 py-6 text-right">
                                           <div className="flex justify-end items-center gap-3">
                                               <button onClick={() => handleSellOne(p)} className="p-3 rounded-xl bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white transition-all active:scale-90 border border-blue-500/20 shadow-lg"><Zap size={18} fill="currentColor"/></button>
-                                              <button onClick={async () => { if(confirm('¿Eliminar?')) { await fetch(`http://localhost:5000/api/products/${p._id}`, { method:'DELETE', headers:{Authorization:`Bearer ${session.token}`}}); loadData(session.token); }}} className="p-3 rounded-xl bg-white/5 text-gray-600 hover:text-red-500 transition-all"><Trash2 size={18}/></button>
+                                              <button onClick={async () => { if(confirm('¿Eliminar?')) { await fetch(apiUrl(`/api/products/${p._id}`), { method:'DELETE', headers:{Authorization:`Bearer ${session.token}`}}); loadData(session.token); }}} className="p-3 rounded-xl bg-white/5 text-gray-600 hover:text-red-500 transition-all"><Trash2 size={18}/></button>
                                           </div>
                                       </td>
                                   </tr>

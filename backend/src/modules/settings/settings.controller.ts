@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import Settings from './settings.model';
+import { appConfig } from '../../config';
 
 export const getSettings = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).user?.tenantId || 'global3d_hq';
+        const tenantId =
+            (req as any).tenantId || (req as any).user?.tenantId || appConfig.defaultTenantId;
         let settings = await Settings.findOne({ tenantId });
 
         if (!settings) {
@@ -18,7 +20,8 @@ export const getSettings = async (req: Request, res: Response) => {
 
 export const updateSettings = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).user?.tenantId || 'global3d_hq';
+        const tenantId =
+            (req as any).tenantId || (req as any).user?.tenantId || appConfig.defaultTenantId;
         const {
             businessName,
             adminPhone,

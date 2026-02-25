@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { appConfig } from '../../config';
 
 // 1. Definimos la Interfaz (Hereda de Document de Mongoose)
 export interface IPrinter extends Document {
@@ -19,7 +20,7 @@ const PrinterSchema: Schema = new Schema({
         default: 'idle' 
     },
     currentOrderId: { type: Schema.Types.ObjectId, ref: 'Order' },
-    tenantId: { type: String, default: 'global3d_hq' }
+    tenantId: { type: String, default: appConfig.defaultTenantId }
 }, { timestamps: true });
 
 // 3. Exportamos el Modelo (Usando la interfaz IPrinter)

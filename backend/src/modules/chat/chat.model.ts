@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { appConfig } from '../../config';
 
 export interface IMessage extends Document {
     from: string;      // El ID del cliente (Número de Teléfono o ID de Instagram/FB)
@@ -23,10 +24,11 @@ const ChatSchema: Schema = new Schema({
     senderName: { type: String, default: 'Usuario' },
     timestamp: { type: Date, default: Date.now },
     isMine: { type: Boolean, default: false },
-    tenantId: { type: String, default: 'global3d_hq' }
+    tenantId: { type: String, default: appConfig.defaultTenantId }
 });
 
 // Índices para que el chat cargue rápido
 ChatSchema.index({ from: 1, to: 1, timestamp: -1 });
+ChatSchema.index({ tenantId: 1, timestamp: -1 });
 
 export default mongoose.model<IMessage>('Chat', ChatSchema);

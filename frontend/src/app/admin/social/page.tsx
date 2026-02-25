@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Search, Send, ShoppingCart, User, MessageCircle, Instagram, Facebook } from 'lucide-react';
+import { apiUrl } from '@/lib/api';
 
 // Tipos de datos
 interface ChatPreview {
@@ -29,7 +30,11 @@ export default function SocialHubPage() {
   // 1. Cargar la lista de contactos
   const fetchChats = async () => {
     try {
-        const res = await fetch('http://localhost:5000/api/chats');
+        const stored = localStorage.getItem("user");
+        const token = stored ? JSON.parse(stored).token : null;
+        const res = await fetch(apiUrl('/api/chats'), {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         const data = await res.json();
         setChats(data);
     } catch (err) { console.error(err); }
@@ -49,12 +54,16 @@ export default function SocialHubPage() {
   // 2. Cargar mensajes cuando seleccionas a alguien
   useEffect(() => {
     if (selectedChat) {
-        fetch(`http://localhost:5000/api/chats/${selectedChat._id}`)
-            .then(res => res.json())
-            .then(data => {
-                setMessages(data);
-                scrollToBottom();
-            });
+        const stored = localStorage.getItem("user");
+        const token = stored ? JSON.parse(stored).token : null;
+        fetch(apiUrl(`/api/chats/${selectedChat._id}`), {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+          .then(res => res.json())
+          .then(data => {
+              setMessages(data);
+              scrollToBottom();
+          });
     }
   }, [selectedChat]);
 
@@ -63,9 +72,14 @@ export default function SocialHubPage() {
     if (!inputText.trim() || !selectedChat) return;
 
     try {
-        const res = await fetch('http://localhost:5000/api/chats/send', {
+        const stored = localStorage.getItem("user");
+        const token = stored ? JSON.parse(stored).token : null;
+        const res = await fetch(apiUrl('/api/chats/send'), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
             body: JSON.stringify({
                 to: selectedChat._id,
                 message: inputText,

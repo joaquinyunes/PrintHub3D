@@ -1,13 +1,14 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import Product from '../modules/products/product.model'; // Ajusta la ruta si es necesario
+import { appConfig } from '../config';
 
 dotenv.config();
 
 const seedProducts = async () => {
     try {
         // 1. Conectar a la Base de Datos
-        await mongoose.connect(process.env.MONGO_URI || '');
+        await mongoose.connect(appConfig.mongoUri);
         console.log('✅ Conectado a MongoDB para sembrar productos');
 
         // 2. Limpiar productos anteriores (Opcional, para no duplicar)
@@ -15,7 +16,7 @@ const seedProducts = async () => {
         console.log('🗑️  Productos anteriores eliminados');
 
         // 3. Definir los productos de prueba
-        // IMPORTANTE: El tenantId debe coincidir con el de tu usuario Admin ('global3d_hq')
+        // IMPORTANTE: El tenantId debe coincidir con el de tu usuario Admin
         const products = [
             {
                 name: "Creality Ender 3 V2",
@@ -26,7 +27,7 @@ const seedProducts = async () => {
                 stock: 15,
                 minStock: 2,
                 isPublic: true,
-                tenantId: "global3d_hq",
+                tenantId: appConfig.defaultTenantId,
                 sku: "PRN-END3-V2",
                 imageUrl: "https://m.media-amazon.com/images/I/61p-WDtLpwL._AC_SL1500_.jpg" 
             },
@@ -39,7 +40,7 @@ const seedProducts = async () => {
                 stock: 100,
                 minStock: 10,
                 isPublic: true,
-                tenantId: "global3d_hq",
+                tenantId: appConfig.defaultTenantId,
                 sku: "FIL-PLA-WHT",
                 imageUrl: "https://m.media-amazon.com/images/I/61Nf9k-O0JL._AC_SL1001_.jpg"
             },
@@ -52,7 +53,7 @@ const seedProducts = async () => {
                 stock: 50,
                 minStock: 5,
                 isPublic: true,
-                tenantId: "global3d_hq",
+                tenantId: appConfig.defaultTenantId,
                 sku: "RES-ELE-GRY",
                 imageUrl: "https://m.media-amazon.com/images/I/71X8gWkO1bL._AC_SL1500_.jpg"
             },
@@ -65,7 +66,7 @@ const seedProducts = async () => {
                 stock: 8,
                 minStock: 1,
                 isPublic: true,
-                tenantId: "global3d_hq",
+                tenantId: appConfig.defaultTenantId,
                 sku: "PRN-ANY-MONO2",
                 imageUrl: "https://m.media-amazon.com/images/I/71S-X-GgXlL._AC_SL1500_.jpg"
             }

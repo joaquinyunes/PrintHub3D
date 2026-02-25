@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { appConfig } from '../config';
 
 dotenv.config();
 
 const fixIndexes = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/global3d');
+        await mongoose.connect(appConfig.mongoUri);
         console.log('✅ Conectado a la Base de Datos');
         
         // Accedemos a la colección de productos directamente

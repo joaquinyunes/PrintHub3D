@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+import { appConfig } from '../../config';
 
 // 1. Verificar que esté logueado (Cualquiera)
 export const protect = (req: Request, res: Response, next: NextFunction) => {
@@ -9,7 +8,7 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
     if (!token) return res.status(401).json({ message: 'No autorizado' });
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        const decoded = jwt.verify(token, appConfig.jwtSecret) as any;
         // @ts-ignore
         req.user = decoded; 
         next();

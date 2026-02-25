@@ -3,6 +3,7 @@ import * as qrcode from 'qrcode-terminal';
 import axios from 'axios';
 import Chat from '../chat/chat.model';
 import Settings from '../settings/settings.model'; // ✅ Importación correcta
+import { appConfig } from '../../config';
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -40,7 +41,7 @@ client.on('message_create', async (msg) => {
             senderName: contact.pushname || contact.name || "Cliente WhatsApp",
             timestamp: new Date(),
             isMine: isMe,
-            tenantId: 'global3d_hq'
+            tenantId: appConfig.defaultTenantId
         });
 
         // B. DETECTOR DE PEDIDOS (Bot)
@@ -66,7 +67,13 @@ client.on('message_create', async (msg) => {
                 });
 
                 if (data.customerName && data.productName && data.price) {
-                    await axios.post('http://localhost:5000/api/orders', {
+                    const baseUrl = appConfig.whatsapp.orderApiBaseUrl;
+                    if (!baseUrl) {
+                        console.warn('ORDER_API_BASE_URL no configurado, se omite creación automática de pedidos desde WhatsApp');
+                        return;
+                    }
+
+                    await axios.post(`${baseUrl}/orders`, {
                         customerName: data.customerName,
                         source: 'whatsapp',
                         items: [{ productName: data.productName, quantity: 1, price: data.price }],
@@ -103,7 +110,7 @@ export const sendAdminNotification = async (message: string) => {
     }
     try {
         // A. BUSCAR EL NÚMERO EN LA BASE DE DATOS
-        const settings = await Settings.findOne({ tenantId: 'global3d_hq' });
+        const settings = await Settings.findOne({ tenantId: appConfig.defaultTenantId });
         
         if (!settings || !settings.adminPhone) {
             console.error("❌ ERROR: No hay número de Admin configurado en Ajustes.");

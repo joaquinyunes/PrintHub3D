@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import User from '../modules/auth/user.model';
+import { appConfig } from '../config';
 
 dotenv.config();
 
 const promoteToAdmin = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI || '');
+        await mongoose.connect(appConfig.mongoUri);
         console.log('✅ Conectado a MongoDB');
 
         const email = 'admin@global3d.com'; // El email que usas para loguearte
@@ -24,7 +25,7 @@ const promoteToAdmin = async () => {
 
         // 3. Forzar actualización
         user.role = 'admin';
-        user.tenantId = 'global3d_hq'; // Aseguramos que tenga el tenant correcto
+        user.tenantId = appConfig.defaultTenantId; // Aseguramos que tenga el tenant correcto
         await user.save();
 
         console.log(`🚀 ¡LISTO! El usuario ${email} ahora es ADMIN confirmado.`);

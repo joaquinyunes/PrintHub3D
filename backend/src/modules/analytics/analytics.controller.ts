@@ -4,10 +4,12 @@ import Product from '../products/product.model';
 import Client from '../clients/client.model';
 import Expense from '../expense/expense.model'; // 👈 IMPORTAR GASTOS
 import Sale from '../sales/sale.model';           // 👈 IMPORTAR VENTAS
+import { appConfig } from '../../config';
 
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
-        const tenantId = 'global3d_hq';
+        const tenantId =
+            (req as any).tenantId || (req as any).user?.tenantId || appConfig.defaultTenantId;
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 

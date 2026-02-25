@@ -8,13 +8,9 @@ import Sale from '../sales/sale.model';
 import Client from '../clients/client.model'; 
 import Printer from '../printers/printer.model';
 import Settings from '../settings/settings.model';
-import { sendAdminNotification, sendCustomerNotification } from '../notifications/whatsapp.service';
-
-const buildTrackingCode = () => {
-    const random = Math.random().toString(36).slice(2, 7).toUpperCase();
-    const stamp = Date.now().toString(36).slice(-4).toUpperCase();
-    return `PH-${stamp}${random}`;
-};
+import { sendAdminNotification, sendCustomerNotification } from '../notifications/notification.service';
+import { OrderService } from './order.service';
+import { appConfig } from '../../config';
 
 const statusSteps = ['pending', 'in_progress', 'completed', 'delivered'];
 
@@ -42,13 +38,55 @@ const buildTrackingUrl = (baseUrl: string, trackingCode: string) => {
 
 
 // ==========================================
-// 1. OBTENER PEDIDOS
+// 1. OBTENER PEDIDOS (PAGINADO + FILTROS)
 // ==========================================
 export const getOrders = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).user?.tenantId;
-        const orders = await Order.find({ tenantId }).sort({ createdAt: -1 });
-        res.json(orders);
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+        if (!tenantId) {
+            return res.status(401).json({ message: 'No autorizado' });
+        }
+
+        const {
+            page = '1',
+            pageSize = '50',
+            sort = '-createdAt',
+            status,
+            from,
+            to,
+        } = req.query as Record<string, string | undefined>;
+
+        const pageNumber = Math.max(parseInt(page || '1', 10) || 1, 1);
+        const limit = Math.min(Math.max(parseInt(pageSize || '50', 10) || 50, 1), 200);
+        const skip = (pageNumber - 1) * limit;
+
+        const query: any = { tenantId };
+
+        if (status) {
+            query.status = status;
+        }
+
+        if (from || to) {
+            query.createdAt = {};
+            if (from) query.createdAt.$gte = new Date(from);
+            if (to) query.createdAt.$lte = new Date(to);
+        }
+
+        const sortField = sort.startsWith('-') ? sort.substring(1) : sort;
+        const sortDir = sort.startsWith('-') ? -1 : 1;
+        const sortObj: any = { [sortField]: sortDir };
+
+        const [items, total] = await Promise.all([
+            Order.find(query).sort(sortObj).skip(skip).limit(limit),
+            Order.countDocuments(query),
+        ]);
+
+        res.json({
+            items,
+            total,
+            page: pageNumber,
+            pageSize: limit,
+        });
     } catch (error) {
         console.error("Error getOrders:", error);
         res.status(500).json({ message: 'Error al obtener pedidos' });
@@ -60,9 +98,11 @@ export const getOrders = async (req: Request, res: Response) => {
 // ==========================================
 export const createOrder = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).user?.tenantId;
-        
-        // 1. Desestructurar datos (INCLUIDO dueDate)
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+        if (!tenantId) {
+            return res.status(401).json({ message: 'No autorizado' });
+        }
+
         const { 
             clientName, origin, paymentMethod, deposit, 
             notes, items, dueDate, files, customerContact 
@@ -70,79 +110,20 @@ export const createOrder = async (req: Request, res: Response) => {
 
         console.log("Recibiendo pedido:", { clientName, dueDate, itemsLength: items?.length });
 
-        // 2. Calcular Totales y Costos
-        let calculatedTotal = 0;
-        let calculatedCost = 0;
-
-        const enrichedItems = await Promise.all(items.map(async (item: any) => {
-            let productCost = 0;
-            if (item.productId && !item.isCustom) {
-                try {
-                    const product = await Product.findOne({ _id: item.productId, tenantId });
-                    if (product) productCost = product.cost ?? 0;
-                } catch (err) { console.error("Error buscando producto:", err); }
-            }
-            
-            const subtotal = Number(item.price) * Number(item.quantity);
-            const subcost = productCost * Number(item.quantity);
-            
-            calculatedTotal += subtotal;
-            calculatedCost += subcost;
-            
-            return item;
-        }));
-
-        const profit = calculatedTotal - calculatedCost;
-
-        // 3. Crear el Objeto Pedido
-        const trackingCode = buildTrackingCode();
-
-        const newOrder = new Order({
-            clientName, 
-            origin: origin || "Local", 
-            paymentMethod: paymentMethod || "Efectivo",
-            deposit: Number(deposit) || 0, 
-            notes, 
-            trackingCode,
-            customerContact: customerContact || "",
-            items: enrichedItems,
-            total: calculatedTotal, 
-            
-            // 👇 AQUÍ SE GUARDA LA FECHA
-            dueDate: dueDate ? new Date(dueDate) : null,
-            files: files || [],
-            
-            // Datos internos
-            profit, 
-            status: 'pending', 
-            tenantId
+        const savedOrder = await OrderService.createOrder({
+            tenantId,
+            clientName,
+            origin,
+            paymentMethod,
+            deposit,
+            notes,
+            items,
+            dueDate,
+            files,
+            customerContact,
         });
 
-        // 4. Guardar
-        const savedOrder = await newOrder.save();
-
-        // 5. Actualizar CRM (Opcional - No bloqueante)
-        try {
-            if(Client) {
-                let client = await Client.findOne({ name: clientName, tenantId });
-                if (client) {
-                    client.totalSpent += calculatedTotal;
-                    client.orderCount += 1;
-                    client.lastOrderDate = new Date();
-                    await client.save();
-                } else {
-                    await Client.create({
-                        name: clientName, source: origin || "Local", totalSpent: calculatedTotal,
-                        orderCount: 1, lastOrderDate: new Date(), tenantId
-                    });
-                }
-            }
-        } catch (crmError) {
-            console.error("CRM Warning: No se pudo actualizar el cliente, pero el pedido se guardó.", crmError);
-        }
-
         res.status(201).json(savedOrder);
-
     } catch (error) {
         console.error("CRITICAL ERROR createOrder:", error);
         res.status(500).json({ message: 'Error interno al crear el pedido. Revisa la consola del servidor.' });
@@ -155,7 +136,7 @@ export const createOrder = async (req: Request, res: Response) => {
 export const updateOrder = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const tenantId = (req as any).user?.tenantId;
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
         const { items } = req.body;
         
         let updateData = { ...req.body };
@@ -186,7 +167,7 @@ export const updateOrder = async (req: Request, res: Response) => {
 // ==========================================
 export const updateOrderStatus = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).user?.tenantId;
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
         const { status, printTimeMinutes, printerId } = req.body;
         if (!status || !Object.keys(statusCopy).includes(String(status))) {
             return res.status(400).json({ message: 'Estado inválido' });
@@ -230,7 +211,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         const order = await Order.findOneAndUpdate({ _id: req.params.id, tenantId }, updateData, { new: true });
 
         if (order?.customerContact && typeof sendCustomerNotification === 'function') {
-            const settings = await Settings.findOne({ tenantId: order.tenantId || 'global3d_hq' });
+            const settings = await Settings.findOne({ tenantId: order.tenantId || appConfig.defaultTenantId });
             const statusText = statusCopy[status] || status;
             const trackingCode = order.trackingCode || 'sin código';
             const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || 'http://localhost:3000/track', trackingCode);
@@ -261,44 +242,31 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 // ==========================================
 export const registerOrderSale = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).user?.tenantId;
+    const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
     const { id } = req.params;
     const { finalCost } = req.body;
 
-    const order = await Order.findOne({ _id: id, tenantId });
-    if (!order) return res.status(404).json({ message: "Pedido no encontrado" });
-    if (order.isSaleRegistered) return res.status(400).json({ message: "Venta ya registrada" });
-
-    let totalCost = 0;
-    if (finalCost !== undefined && finalCost !== null && finalCost !== "") {
-        totalCost = Number(finalCost);
+    if (!tenantId) {
+        return res.status(401).json({ message: "No autorizado" });
     }
 
-    const totalStats = {
-        price: order.total,
-        cost: totalCost,
-        profit: order.total - totalCost 
-    };
+    try {
+        const { sale, order } = await OrderService.registerOrderSale({
+            tenantId,
+            orderId: id,
+            finalCost,
+        });
 
-    const newSale = new Sale({
-      productName: `Pedido: ${order.clientName}`,
-      productId: order._id,
-      quantity: 1, 
-      price: totalStats.price,
-      cost: totalStats.cost,
-      profit: totalStats.profit,
-      category: "Servicio", 
-      tenantId,
-      createdAt: new Date()
-    });
-
-    await newSale.save();
-
-    order.status = 'delivered';
-    order.isSaleRegistered = true;
-    await order.save();
-
-    return res.json({ message: "Venta registrada con costos reales", sale: newSale, order });
+        return res.json({ message: "Venta registrada con costos reales", sale, order });
+    } catch (serviceError: any) {
+        if (serviceError.message === 'Pedido no encontrado') {
+            return res.status(404).json({ message: serviceError.message });
+        }
+        if (serviceError.message === 'Venta ya registrada') {
+            return res.status(400).json({ message: serviceError.message });
+        }
+        throw serviceError;
+    }
 
   } catch (error) {
     console.error(error);
@@ -384,7 +352,7 @@ export const submitOrderFeedback = async (req: Request, res: Response) => {
 // ==========================================
 export const resendTrackingToCustomer = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).user?.tenantId;
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
         const { id } = req.params;
 
         const order = await Order.findOne({ _id: id, tenantId });
@@ -394,7 +362,7 @@ export const resendTrackingToCustomer = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Este pedido no tiene contacto del cliente' });
         }
 
-        const settings = await Settings.findOne({ tenantId: tenantId || 'global3d_hq' });
+        const settings = await Settings.findOne({ tenantId: tenantId || appConfig.defaultTenantId });
         const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || 'http://localhost:3000/track', order.trackingCode);
         const template = settings?.customerMessageTemplates?.resendTracking
             || 'Hola {clientName} 👋 Aquí tienes nuevamente tu código de seguimiento: {trackingCode}. Consulta tu pedido en {trackingUrl}';
@@ -421,7 +389,7 @@ export const resendTrackingToCustomer = async (req: Request, res: Response) => {
 
 export const getOrdersSummary = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).user?.tenantId;
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
         const orders = await Order.find({ tenantId }).select('status total createdAt customerSatisfaction dueDate finishedAt');
 
         const now = new Date();
@@ -469,7 +437,7 @@ export const getOrdersSummary = async (req: Request, res: Response) => {
 
 export const getOrderTimeline = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).user?.tenantId;
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
         const { id } = req.params;
 
         const order = await Order.findOne({ _id: id, tenantId });
@@ -499,7 +467,7 @@ export const getOrderTimeline = async (req: Request, res: Response) => {
 
 export const fixOrdersData = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).user?.tenantId;
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
         await Order.collection.updateMany({ tenantId }, { $rename: { "customerName": "clientName" } });
         res.json({ message: "✅ ¡Base de datos reparada!" });
     } catch (error) {

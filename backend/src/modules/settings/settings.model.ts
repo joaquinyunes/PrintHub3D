@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { appConfig } from '../../config';
 
 export interface ISettings extends Document {
     businessName: string;
@@ -42,7 +43,7 @@ const SettingsSchema: Schema = new Schema({
         cancelled: { type: String, default: defaultTemplates.cancelled },
         resendTracking: { type: String, default: defaultTemplates.resendTracking },
     },
-    tenantId: { type: String, default: 'global3d_hq' }
+    tenantId: { type: String, default: appConfig.defaultTenantId }
 });
 
 export default mongoose.model<ISettings>('Settings', SettingsSchema);

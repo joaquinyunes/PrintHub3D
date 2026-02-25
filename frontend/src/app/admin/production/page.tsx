@@ -7,6 +7,7 @@ import {
   CheckCircle2, Package, Clock, Truck, AlertTriangle, Calendar,
   FileText, Timer, Activity, Flame
 } from "lucide-react";
+import { apiUrl } from "@/lib/api";
 
 // --- COMPONENTE: CRONÓMETRO INTERNO ---
 function CountdownTimer({ start, minutes }: { start: string, minutes: number }) {
@@ -76,8 +77,8 @@ export default function ProductionPage() {
   const fetchData = async (token: string) => {
     try {
       const [resOrders, resPrinters] = await Promise.all([
-        fetch('http://localhost:5000/api/orders', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:5000/api/printers', { headers: { Authorization: `Bearer ${token}` } })
+        fetch(apiUrl('/api/orders'), { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(apiUrl('/api/printers'), { headers: { Authorization: `Bearer ${token}` } })
       ]);
       if (resOrders.ok) {
           const data = await resOrders.json();
@@ -106,7 +107,7 @@ export default function ProductionPage() {
   const confirmStart = async () => {
     if (!selectedOrder || !startConfig.printerId) return alert("Selecciona una impresora");
     try {
-        await fetch(`http://localhost:5000/api/orders/${selectedOrder}/status`, {
+        await fetch(apiUrl(`/api/orders/${selectedOrder}/status`), {
             method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.token}` },
             body: JSON.stringify({ 
                 status: 'in_progress', 
@@ -122,7 +123,7 @@ export default function ProductionPage() {
   const moveOrder = async (orderId: string, nextStatus: string) => {
     if (nextStatus === 'completed' && !confirm("¿Marcar terminado?")) return;
     try {
-        await fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
+        await fetch(apiUrl(`/api/orders/${orderId}/status`), {
             method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.token}` },
             body: JSON.stringify({ status: nextStatus })
         });
@@ -133,7 +134,7 @@ export default function ProductionPage() {
   const addPrinter = async () => {
     if (!newPrinterName) return;
     try {
-        await fetch('http://localhost:5000/api/printers', {
+        await fetch(apiUrl('/api/printers'), {
             method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.token}` },
             body: JSON.stringify({ name: newPrinterName, model: 'Genérica' })
         });
@@ -145,7 +146,7 @@ export default function ProductionPage() {
   const deletePrinter = async (id: string) => {
     if(!confirm("¿Borrar?")) return;
     try {
-        await fetch(`http://localhost:5000/api/printers/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session?.token}` }});
+        await fetch(apiUrl(`/api/printers/${id}`), { method: 'DELETE', headers: { Authorization: `Bearer ${session?.token}` }});
         if (session) fetchData(session.token);
     } catch (error) { console.error(error); }
   };
