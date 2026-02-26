@@ -152,16 +152,29 @@ export default function DashboardPage() {
           setSession(currentSession);
           const token = currentSession.token;
 
-          const [resO, resP, resT] = await Promise.all([
+          const [resOrders, resPrinters, resTasks, resSales] = await Promise.all([
               fetch(apiUrl("/api/orders"), { headers: { Authorization: `Bearer ${token}` } }),
               fetch(apiUrl("/api/printers"), { headers: { Authorization: `Bearer ${token}` } }),
-              fetch(apiUrl("/api/tasks"), { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ ok: false, json: async () => [] }))
+              fetch(apiUrl("/api/tasks"), { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ ok: false, json: async () => [] })),
+              fetch(apiUrl("/api/sales"), { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ ok: false, json: async () => [] }))
           ]);
 
-          if (resO.ok && resP.ok) {
-              const orders = await resO.json();
-              const printersRaw = await resP.json();
-              const tasksData = resT.ok ? await resT.json() : [];
+          if (resOrders.ok && resPrinters.ok) {
+              const rawOrders = await resOrders.json();
+              const orders = Array.isArray(rawOrders)
+                ? rawOrders
+                : Array.isArray((rawOrders as any)?.items)
+                  ? (rawOrders as any).items
+                  : [];
+              const printersRaw = await resPrinters.json();
+              const rawTasks = resTasks.ok ? await resTasks.json() : [];
+              const tasksData = Array.isArray(rawTasks) ? rawTasks : [];
+              const rawSales = resSales.ok ? await resSales.json() : [];
+              const salesItems = Array.isArray(rawSales)
+                ? rawSales
+                : Array.isArray((rawSales as any)?.items)
+                  ? (rawSales as any).items
+                  : [];
 
               const activeOrders = orders.filter((o:any) => o.status === 'in_progress');
 
@@ -180,13 +193,23 @@ export default function DashboardPage() {
               const currentMonth = now.getMonth(); 
               const currentYear = now.getFullYear();
 
-              const monthlyRevenue = orders
+              const monthlyRevenueFromOrders = orders
                 .filter((o:any) => {
                     if (!o.createdAt) return false;
                     const d = new Date(o.createdAt);
                     return d.getMonth() === currentMonth && d.getFullYear() === currentYear && o.status !== 'cancelled';
                 })
                 .reduce((acc: number, o:any) => acc + (Number(o.total) || 0), 0);
+
+              const monthlyRevenueFromSales = salesItems
+                .filter((s:any) => {
+                    if (!s.createdAt) return false;
+                    const d = new Date(s.createdAt);
+                    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                })
+                .reduce((acc:number, s:any) => acc + (Number(s.price) || 0), 0);
+
+              const monthlyRevenue = monthlyRevenueFromOrders + monthlyRevenueFromSales;
 
               setStats({ 
                   pending: orders.filter((o:any) => o.status === 'pending').length, 

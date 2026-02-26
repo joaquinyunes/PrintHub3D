@@ -18,7 +18,15 @@ export default function ExpensesPage() {
         const res = await fetch(apiUrl("/api/expenses"), {
             headers: { Authorization: `Bearer ${token}` }
         });
-        if (res.ok) setExpenses(await res.json());
+        if (res.ok) {
+            const data = await res.json();
+            const list = Array.isArray(data)
+                ? data
+                : Array.isArray((data as any)?.items)
+                    ? (data as any).items
+                    : [];
+            setExpenses(list);
+        }
     };
 
     useEffect(() => { fetchExpenses(); }, []);

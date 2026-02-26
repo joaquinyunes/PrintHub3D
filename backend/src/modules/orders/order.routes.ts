@@ -10,7 +10,8 @@ import {
     submitOrderFeedback,
     resendTrackingToCustomer,
     getOrdersSummary,
-    getOrderTimeline
+    getOrderTimeline,
+    markOrderItemPrinted
 } from './order.controller'; 
 import { protect, adminOnly } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
@@ -27,6 +28,7 @@ router.post('/', protect, withTenant, adminOnly, createOrder);
 // Rutas de edición y estado
 router.put('/:id', protect, withTenant, adminOnly, updateOrder); // Editar info general (lápiz)
 router.put('/:id/status', protect, withTenant, adminOnly, updateOrderStatus); // Solo estado (impresoras)
+router.post('/:id/print-item', protect, withTenant, adminOnly, markOrderItemPrinted); // Marcar un ítem como impreso
 router.get('/:id/timeline', protect, withTenant, adminOnly, getOrderTimeline);
 
 // Ruta "Vendido" (Cohete)

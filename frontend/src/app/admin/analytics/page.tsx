@@ -45,6 +45,15 @@ interface AnalyticsData {
     totals: { sales: number; profit: number };
 }
 
+interface DashboardStats {
+    income: number;
+    profit: number;
+    expenses: number;
+    ordersPending: number;
+    stockWarning: number;
+    clients: number;
+}
+
 /**
  * COMPONENTE: TARJETA DE ESTADÍSTICA (KPI)
  * Rectángulos con iluminación lateral y fondo oscuro profundo
@@ -98,6 +107,7 @@ function StatCard({ title, value, icon: Icon, color, sub, trend }: any) {
 export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<AnalyticsData | null>(null);
+  const [dashboard, setDashboard] = useState<DashboardStats | null>(null);
   
   // FILTROS DE CABECERA
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -122,20 +132,42 @@ export default function AnalyticsPage() {
 
     try {
       const query = `?year=${selectedYear}&month=${selectedMonth}`;
-      const res = await fetch(apiUrl(`/api/sales/analytics${query}`), {
-        headers: { Authorization: `Bearer ${session.token}` }
-      });
+      const [salesRes, dashboardRes] = await Promise.all([
+        fetch(apiUrl(`/api/sales/analytics${query}`), {
+          headers: { Authorization: `Bearer ${session.token}` }
+        }),
+        fetch(apiUrl("/api/analytics/dashboard"), {
+          headers: { Authorization: `Bearer ${session.token}` }
+        }).catch(() => null)
+      ]);
 
-      if (res.ok) {
-        const result = await res.json();
+      if (salesRes.ok) {
+        const result = await salesRes.json();
         
-        // Procesar datos para el gráfico
-        const formattedChart = result.chartData.map((item: any) => ({
-          ...item,
-          name: new Date(item._id).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })
-        }));
+        // Procesar datos para el gráfico de tiempo
+        const formattedChart = Array.isArray(result.chartData)
+          ? result.chartData.map((item: any) => ({
+              ...item,
+              name: new Date(item._id).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })
+            }))
+          : [];
+
+        // Normalizar categorías para evitar bugs en el pie chart
+        const rawCategories = Array.isArray(result.categoryData) ? result.categoryData : [];
+        const formattedCategories = rawCategories
+          .map((cat: any) => ({
+            ...cat,
+            _id: cat._id || 'Sin categoría',
+            total: Number(cat.total) || 0,
+          }))
+          .filter((cat: any) => cat.total > 0);
         
-        setData({ ...result, chartData: formattedChart });
+        setData({ ...result, chartData: formattedChart, categoryData: formattedCategories });
+      }
+
+      if (dashboardRes && dashboardRes.ok) {
+        const dashboardData = await dashboardRes.json();
+        setDashboard(dashboardData);
       }
     } catch (error) {
       console.error("Error en analíticas:", error);
@@ -285,8 +317,17 @@ export default function AnalyticsPage() {
                 value={data?.salesHistory?.length || 0} 
                 icon={ShoppingCart} 
                 color={{text:'text-purple-400', bg:'bg-purple-600'}} 
-                sub="Transacciones cerradas" 
+                sub={data?.salesHistory?.length ? `Ticket promedio ${formatMoney((data.totals.sales || 0) / data.salesHistory.length)}` : "Transacciones cerradas"} 
             />
+            {dashboard && (
+              <StatCard 
+                title="Gastos del Mes" 
+                value={formatMoney(dashboard.expenses || 0)} 
+                icon={Layers} 
+                color={{text:'text-red-400', bg:'bg-red-600'}} 
+                sub={`Beneficio neto: ${formatMoney(dashboard.profit || 0)}`} 
+              />
+            )}
         </div>
 
         {/* --- FILTRO DE CALENDARIO DINÁMICO --- */}

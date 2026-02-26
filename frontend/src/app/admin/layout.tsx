@@ -112,10 +112,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavItem href="/admin/orders" icon={<ShoppingCart size={20} />} label="Pedidos" active={pathname.includes("/orders")} />
           <NavItem href="/admin/production" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/production")} />
           
-          {/* 👇 AQUÍ AGREGAMOS GASTOS 👇 */}
+          {/* 👇 GASTOS 👇 */}
           <NavItem href="/admin/expenses" icon={<DollarSign size={20} />} label="Gastos" active={pathname.includes("/expenses")} />
-          
-          <NavItem href="/admin/clients" icon={<Users size={20} />} label="Clientes" active={pathname.includes("/clients")} />
           <NavItem href="/admin/analytics" icon={<BarChart3 size={20} />} label="Reportes" active={pathname.includes("/analytics")} />
           
           <div className="my-4 h-px bg-white/5 mx-2" />

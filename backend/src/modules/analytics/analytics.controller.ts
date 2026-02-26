@@ -13,16 +13,16 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        // 1. Ingresos por Pedidos (Custom Prints)
+        // 1. Ingresos por Pedidos (trabajos personalizados)
         const orderStats = await Order.aggregate([
             { $match: { tenantId, createdAt: { $gte: startOfMonth }, status: { $ne: 'cancelled' } } },
-            { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+            { $group: { _id: null, total: { $sum: "$total" } } }
         ]);
 
-        // 2. Ingresos por Ventas (Filamentos/Insumos)
+        // 2. Ingresos por Ventas Rápidas / Stock (Filamentos, insumos)
         const saleStats = await Sale.aggregate([
             { $match: { tenantId, createdAt: { $gte: startOfMonth } } },
-            { $group: { _id: null, total: { $sum: "$total" } } }
+            { $group: { _id: null, total: { $sum: "$price" } } }
         ]);
 
         // 3. Gastos Totales

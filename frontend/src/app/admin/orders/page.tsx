@@ -18,7 +18,7 @@ interface OrderFile { name: string; url: string; }
 interface Order { 
     _id: string; clientName: string; origin?: string; paymentMethod?: string; 
     deposit?: number; notes?: string; total: number; 
-    status: string; createdAt: string; items: OrderItem[]; isSaleRegistered?: boolean;
+    status: string; createdAt: string; items: (OrderItem & { printedQuantity?: number })[]; isSaleRegistered?: boolean;
     dueDate?: string; files?: OrderFile[]; chatLink?: string;
 }
 interface StoredUser { token: string; }
@@ -72,6 +72,8 @@ export default function OrderListPage() {
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [itemTab, setItemTab] = useState<"product" | "custom">("product"); 
   const [itemInput, setItemInput] = useState({ id: "", qty: 1, customName: "", customPrice: "" });
+  const [printOrder, setPrintOrder] = useState<Order | null>(null);
+  const [printIndex, setPrintIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -84,7 +86,15 @@ export default function OrderListPage() {
                 fetch(apiUrl("/api/orders"), { headers: { Authorization: `Bearer ${currentSession.token}` } }),
                 fetch(apiUrl("/api/products"), { headers: { Authorization: `Bearer ${currentSession.token}` } })
             ]);
-            if(resO.ok) setOrders(await resO.json());
+            if(resO.ok) {
+              const rawOrders = await resO.json();
+              const ordersData = Array.isArray(rawOrders)
+                ? rawOrders
+                : Array.isArray((rawOrders as any)?.items)
+                  ? (rawOrders as any).items
+                  : [];
+              setOrders(ordersData);
+            }
             if(resP.ok) setProducts(await resP.json());
         } catch (e) { console.error(e); } finally { setLoading(false); }
     };
@@ -205,6 +215,30 @@ export default function OrderListPage() {
       } catch(e) { console.error(e); }
   };
 
+  const openPrintModal = (order: Order) => {
+      setPrintOrder(order);
+      setPrintIndex(0);
+  };
+
+  const handlePrintItem = async () => {
+      if (!printOrder || printIndex === null || !session) return;
+      try {
+          const res = await fetch(apiUrl(`/api/orders/${printOrder._id}/print-item`), {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
+              body: JSON.stringify({ itemIndex: printIndex })
+          });
+          if (res.ok) {
+              const updated = await res.json();
+              setOrders(orders.map(o => o._id === updated._id ? updated : o));
+              setPrintOrder(null);
+              setPrintIndex(null);
+          }
+      } catch (e) {
+          console.error(e);
+      }
+  };
+
   // --- FORM HELPERS ---
   const openNew = () => { setEditingOrderId(null); setFormData({clientName:"", origin:"Local", paymentMethod:"Efectivo", deposit:"", notes:"", dueDate:"", chatLink: ""}); setFiles([]); setCart([]); setTempFile({name:"", url:""}); setIsModalOpen(true); };
   const openEdit = (o: Order) => { setEditingOrderId(o._id); setFormData({clientName:o.clientName, origin:o.origin||"Local", paymentMethod:o.paymentMethod||"Efectivo", deposit:String(o.deposit||0), notes:o.notes||"", dueDate: o.dueDate ? o.dueDate.split('T')[0] : "", chatLink: o.chatLink || "" }); setCart(o.items); setFiles(o.files||[]); setTempFile({name:"", url:""}); setIsModalOpen(true); };
@@ -275,7 +309,18 @@ export default function OrderListPage() {
                             <div className={`h-px flex-1 ${dateLabel.includes("VENCIDOS") ? "bg-red-500/50" : "bg-white/10"}`}></div>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {groupedOrders[dateLabel].map(order => <OrderCard key={order._id} order={order} activeTab={activeTab} onEdit={() => openEdit(order)} onDeliver={() => { setDeliverOrder(order); setFinalCost(""); setIsDeliverModalOpen(true); }} onStatusChange={changeStatus} onPay={() => markAsPaid(order)}/>)}
+                            {groupedOrders[dateLabel].map(order => (
+                                <OrderCard 
+                                  key={order._id} 
+                                  order={order} 
+                                  activeTab={activeTab} 
+                                  onEdit={() => openEdit(order)} 
+                                  onDeliver={() => { setDeliverOrder(order); setFinalCost(""); setIsDeliverModalOpen(true); }} 
+                                  onStatusChange={changeStatus} 
+                                  onPay={() => markAsPaid(order)}
+                                  onPrint={() => openPrintModal(order)}
+                                />
+                            ))}
                         </div>
                     </div>
                 ))
@@ -327,7 +372,7 @@ export default function OrderListPage() {
                             {/* Selector Tipo Item */}
                             <div className="flex bg-[#141414] p-1.5 rounded-2xl mb-6 border border-white/5 w-fit">
                                 <button onClick={()=>setItemTab("product")} className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${itemTab==="product"?"bg-blue-600 text-white shadow-lg":"text-gray-500 hover:text-white hover:bg-white/5"}`}><Package size={14}/> PRODUCTO</button>
-                                <button onClick={()=>setItemTab("custom")} className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${itemTab==="custom"?"bg-purple-600 text-white shadow-lg":"text-gray-500 hover:text-white hover:bg-white/5"}`}><Wrench size={14}/> SERVICIO</button>
+                                <button onClick={()=>setItemTab("custom")} className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${itemTab==="custom"?"bg-purple-600 text-white shadow-lg":"text-gray-500 hover:text-white hover:bg-white/5"}`}><Wrench size={14}/> PERSONALIZADO</button>
                             </div>
 
                             {/* Inputs Agregar Item */}
@@ -376,8 +421,24 @@ export default function OrderListPage() {
                                 <div className="flex justify-between items-center"><span className="text-gray-400 text-xs font-bold uppercase tracking-widest">Total Estimado</span><span className="text-4xl font-black text-white tracking-tighter">${calculateTotal().toLocaleString()}</span></div>
                                 <div className="h-px bg-white/10 w-full"></div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-yellow-500 text-xs font-bold uppercase tracking-widest flex items-center gap-2"><Coins size={14}/> Seña / Anticipo</span>
-                                    <div className="flex items-center gap-1 bg-yellow-500/10 px-3 rounded-lg border border-yellow-500/20"><span className="text-yellow-500 font-bold">$</span><input type="number" className="bg-transparent text-right w-24 text-lg text-yellow-500 font-bold outline-none py-2" value={formData.deposit} onChange={e=>setFormData({...formData, deposit: e.target.value})} placeholder="0"/></div>
+                                    <span className="text-yellow-500 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                        <Coins size={14}/> Seña / Anticipo
+                                    </span>
+                                    <div className="flex items-center gap-2 bg-yellow-500/10 px-3 rounded-xl border border-yellow-500/20 overflow-hidden">
+                                        <span className="text-yellow-500 font-bold">$</span>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
+                                            className="bg-black/20 rounded-lg text-right w-28 text-xl text-yellow-400 font-black outline-none py-2 px-2 placeholder:text-yellow-700"
+                                            value={formData.deposit}
+                                            onChange={e=>{
+                                                const raw = e.target.value.replace(/[^0-9]/g, "");
+                                                setFormData({...formData, deposit: raw});
+                                            }}
+                                            placeholder="0"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -389,13 +450,72 @@ export default function OrderListPage() {
                 </div>
             </div>
         )}
+        {/* MODAL SELECCIONAR ÍTEM A IMPRIMIR */}
+        {printOrder && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                <div className="w-full max-w-md bg-[#0f0f0f] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-4">
+                    <h2 className="text-lg font-black text-white uppercase tracking-tight mb-2">
+                        Elegir ítem a imprimir
+                    </h2>
+                    <p className="text-[11px] text-gray-500 uppercase tracking-widest mb-4">
+                        Pedido: <span className="text-white">{printOrder.clientName}</span>
+                    </p>
+                    <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                        {printOrder.items.map((item, idx) => {
+                            const printed = Number(item.printedQuantity || 0) >= Number(item.quantity || 0);
+                            return (
+                                <button
+                                  key={idx}
+                                  disabled={printed}
+                                  onClick={() => setPrintIndex(idx)}
+                                  className={`w-full flex justify-between items-center px-4 py-3 rounded-xl border text-left transition-all ${
+                                      printed
+                                        ? 'border-emerald-500/30 bg-emerald-500/10 cursor-default opacity-60'
+                                        : printIndex === idx
+                                          ? 'border-blue-500 bg-blue-500/10'
+                                          : 'border-white/10 bg-black/40 hover:border-white/30'
+                                  }`}
+                                >
+                                  <div>
+                                      <div className="text-sm font-bold text-white">{item.productName}</div>
+                                      <div className="text-[11px] text-gray-500 font-mono">
+                                          x{item.quantity} {printed && '· IMPRESO'}
+                                      </div>
+                                  </div>
+                                  {!printed && (
+                                      <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">
+                                          Seleccionar
+                                      </span>
+                                  )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button
+                          onClick={() => { setPrintOrder(null); setPrintIndex(null); }}
+                          className="px-5 py-2 rounded-xl text-[11px] font-bold text-gray-500 hover:text-white uppercase tracking-widest"
+                        >
+                          Cerrar
+                        </button>
+                        <button
+                          onClick={handlePrintItem}
+                          disabled={printIndex === null}
+                          className="px-6 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-white text-black disabled:bg-white/20 disabled:text-gray-500"
+                        >
+                          Imprimir seleccionado
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
       </div>
     </div>
   );
 }
 
 // --- SUBCOMPONENTE DE TARJETA ---
-function OrderCard({ order, activeTab, onEdit, onDeliver, onStatusChange, onPay }: any) {
+function OrderCard({ order, activeTab, onEdit, onDeliver, onStatusChange, onPay, onPrint }: any) {
     const originConf = ORIGIN_CONFIG[order.origin || "Local"] || ORIGIN_CONFIG["Local"];
     const OriginIcon = originConf.icon;
     const balance = (order.total??0) - (order.deposit??0);
@@ -478,13 +598,14 @@ function OrderCard({ order, activeTab, onEdit, onDeliver, onStatusChange, onPay 
                 </button>
                 
                 {activeTab === 'production' && (
-                    <button onClick={() => onStatusChange(order._id, order.status === 'in_progress' ? 'completed' : 'in_progress')} 
+                    <button 
+                        onClick={onPrint}
                         className={`flex-[2] py-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 uppercase tracking-wider
-                        ${order.status === 'in_progress' 
-                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20' 
+                        ${order.items?.some((i:any) => (i.printedQuantity || 0) > 0) 
+                            ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-600/40' 
                             : 'bg-orange-600/20 hover:bg-orange-600/40 text-orange-400 border-orange-500/30'
                         }`}>
-                        {order.status === 'in_progress' ? <><CheckCircle2 size={14}/> Terminar</> : <><Factory size={14}/> Imprimir</>}
+                        <Factory size={14}/> Imprimir
                     </button>
                 )}
 

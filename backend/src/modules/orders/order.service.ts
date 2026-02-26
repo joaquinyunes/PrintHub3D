@@ -83,7 +83,10 @@ export const OrderService = {
         calculatedTotal += subtotal;
         calculatedCost += subcost;
 
-        return item;
+        return {
+          ...item,
+          printedQuantity: 0,
+        };
       }),
     );
 

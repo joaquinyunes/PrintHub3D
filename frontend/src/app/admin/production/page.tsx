@@ -56,12 +56,45 @@ function CountdownTimer({ start, minutes }: { start: string, minutes: number }) 
 
 // --- INTERFACES ---
 interface Order {
-  _id: string; clientName: string; items: any[]; status: string;
-  printTimeMinutes?: number; startedAt?: string; dueDate?: string;
+  _id: string;
+  clientName: string;
+  items: any[];
+  status: string;
+  printTimeMinutes?: number;
+  startedAt?: string;
+  dueDate?: string;
   files?: { name: string; url: string }[];
+  deposit?: number;
+  createdAt?: string;
 }
 
 interface Printer { _id: string; name: string; model: string; status: 'idle' | 'printing' | 'maintenance'; }
+
+const sortForProduction = (list: Order[]) => {
+  return [...list].sort((a, b) => {
+    const aDeposit = Number(a.deposit || 0);
+    const bDeposit = Number(b.deposit || 0);
+    const aHasDeposit = aDeposit > 0;
+    const bHasDeposit = bDeposit > 0;
+
+    if (aHasDeposit !== bHasDeposit) {
+      return aHasDeposit ? -1 : 1;
+    }
+
+    const aDate = a.dueDate
+      ? new Date(a.dueDate).getTime()
+      : a.createdAt
+        ? new Date(a.createdAt).getTime()
+        : 0;
+    const bDate = b.dueDate
+      ? new Date(b.dueDate).getTime()
+      : b.createdAt
+        ? new Date(b.createdAt).getTime()
+        : 0;
+
+    return aDate - bDate;
+  });
+};
 
 export default function ProductionPage() {
   const router = useRouter();
@@ -82,7 +115,12 @@ export default function ProductionPage() {
       ]);
       if (resOrders.ok) {
           const data = await resOrders.json();
-          setOrders(Array.isArray(data) ? data : []);
+          const ordersData = Array.isArray(data)
+            ? data
+            : Array.isArray((data as any)?.items)
+              ? (data as any).items
+              : [];
+          setOrders(ordersData);
       }
       if (resPrinters.ok) setPrinters(await resPrinters.json());
     } catch (error) { console.error(error); }
@@ -151,8 +189,12 @@ export default function ProductionPage() {
     } catch (error) { console.error(error); }
   };
 
-  const pending = orders.filter(o => ['pending', 'pendiente'].includes(o.status));
-  const printing = orders.filter(o => ['in_progress', 'imprimiendo'].includes(o.status));
+  const pending = sortForProduction(
+    orders.filter(o => ['pending', 'pendiente'].includes(o.status))
+  );
+  const printing = sortForProduction(
+    orders.filter(o => ['in_progress', 'imprimiendo'].includes(o.status))
+  );
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#050505] text-white font-sans selection:bg-cyan-500/30">

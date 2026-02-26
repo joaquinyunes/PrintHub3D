@@ -238,7 +238,73 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 };
 
 // ==========================================
-// 5. REGISTRAR VENTA (ENTREGAR - NOMBRE CORREGIDO)
+// 5. MARCAR ÍTEM COMO IMPRESO (PARCIAL)
+// ==========================================
+export const markOrderItemPrinted = async (req: Request, res: Response) => {
+    try {
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+        const { id } = req.params;
+        const { itemIndex } = req.body as { itemIndex: number };
+
+        if (!tenantId) {
+            return res.status(401).json({ message: 'No autorizado' });
+        }
+        if (itemIndex === undefined || itemIndex === null || Number.isNaN(Number(itemIndex))) {
+            return res.status(400).json({ message: 'itemIndex requerido' });
+        }
+
+        const order = await Order.findOne({ _id: id, tenantId });
+        if (!order) {
+            return res.status(404).json({ message: 'Pedido no encontrado' });
+        }
+
+        const index = Number(itemIndex);
+        if (!order.items[index]) {
+            return res.status(400).json({ message: 'Ítem inválido' });
+        }
+
+        const item: any = order.items[index];
+        const qty = Number(item.quantity || 0);
+        const alreadyPrinted = Number(item.printedQuantity || 0);
+
+        if (qty <= 0) {
+            return res.status(400).json({ message: 'Cantidad inválida en el ítem' });
+        }
+
+        // Marcamos este ítem como completamente impreso
+        item.printedQuantity = Math.max(alreadyPrinted, qty);
+
+        // Recalcular estado global del pedido según items impresos
+        const totalItems = order.items.length;
+        let printedItems = 0;
+        let anyPrinted = false;
+
+        order.items.forEach((it: any) => {
+            const q = Number(it.quantity || 0);
+            const printed = Number(it.printedQuantity || 0);
+            if (printed > 0) anyPrinted = true;
+            if (q > 0 && printed >= q) printedItems += 1;
+        });
+
+        if (printedItems === totalItems && totalItems > 0) {
+            order.status = 'completed';
+        } else if (anyPrinted) {
+            order.status = 'in_progress';
+        } else {
+            order.status = 'pending';
+        }
+
+        await order.save();
+
+        return res.json(order);
+    } catch (error) {
+        console.error('Error markOrderItemPrinted:', error);
+        return res.status(500).json({ message: 'Error marcando ítem impreso' });
+    }
+};
+
+// ==========================================
+// 6. REGISTRAR VENTA (ENTREGAR - NOMBRE CORREGIDO)
 // ==========================================
 export const registerOrderSale = async (req: Request, res: Response) => {
   try {

@@ -87,8 +87,19 @@ export default function ProductsPage() {
             fetch(apiUrl("/api/products"), { headers: { Authorization: `Bearer ${token}` } }),
             fetch(apiUrl("/api/sales"), { headers: { Authorization: `Bearer ${token}` } })
         ]);
-        if (resP.ok) setProducts(await resP.json());
-        if (resS.ok) setAllSales(await resS.json());
+        if (resP.ok) {
+          const productsData = await resP.json();
+          setProducts(Array.isArray(productsData) ? productsData : []);
+        }
+        if (resS.ok) {
+          const salesData = await resS.json();
+          const normalizedSales = Array.isArray(salesData)
+            ? salesData
+            : Array.isArray((salesData as any)?.items)
+              ? (salesData as any).items
+              : [];
+          setAllSales(normalizedSales);
+        }
       } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
