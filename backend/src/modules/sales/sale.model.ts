@@ -26,4 +26,7 @@ const SaleSchema: Schema = new Schema(
   { timestamps: true }
 );
 
+// Índice compuesto para listados por tenant y fecha
+SaleSchema.index({ tenantId: 1, createdAt: -1 });
+
 export default mongoose.model<ISale>("Sale", SaleSchema);

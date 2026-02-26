@@ -78,4 +78,8 @@ const OrderSchema: Schema = new Schema({
     tenantId: { type: String, required: true }
 }, { timestamps: true });
 
+// Índices para consultas por tenant, fecha y estado
+OrderSchema.index({ tenantId: 1, createdAt: -1 });
+OrderSchema.index({ tenantId: 1, status: 1, createdAt: -1 });
+
 export default mongoose.model<IOrder>('Order', OrderSchema);

@@ -31,5 +31,6 @@ const ClientSchema: Schema = new Schema({
 
 // Índice para buscar rápido por nombre o red social
 ClientSchema.index({ name: 'text', socialHandle: 'text' });
+ClientSchema.index({ tenantId: 1, totalSpent: -1 });
 
 export default mongoose.model<IClient>('Client', ClientSchema);

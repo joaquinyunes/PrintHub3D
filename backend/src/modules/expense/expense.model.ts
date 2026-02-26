@@ -16,4 +16,7 @@ const ExpenseSchema: Schema = new Schema({
     tenantId: { type: String, required: true }
 }, { timestamps: true });
 
+// Índice para listados por tenant y fecha
+ExpenseSchema.index({ tenantId: 1, date: -1 });
+
 export default mongoose.model<IExpense>('Expense', ExpenseSchema);
