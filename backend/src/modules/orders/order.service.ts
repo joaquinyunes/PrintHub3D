@@ -9,6 +9,7 @@ interface OrderItemInput {
   quantity: number;
   price: number;
   isCustom?: boolean;
+  printTimeMinutes?: number;
 }
 
 export interface CreateOrderInput {
@@ -77,8 +78,8 @@ export const OrderService = {
           }
         }
 
-        const subtotal = Number(item.price) * Number(item.quantity);
-        const subcost = productCost * Number(item.quantity);
+        const subtotal = Number(item.price || 0) * Number(item.quantity || 0);
+        const subcost = Number(productCost || 0) * Number(item.quantity || 0);
 
         calculatedTotal += subtotal;
         calculatedCost += subcost;
@@ -86,6 +87,7 @@ export const OrderService = {
         return {
           ...item,
           printedQuantity: 0,
+          printTimeMinutes: item.printTimeMinutes || 30,
         };
       }),
     );

@@ -6,7 +6,7 @@ import {
   PieChart, Pie, Cell
 } from "recharts";
 import { 
-  DollarSign, TrendingUp, Calendar, Layers, Loader2, 
+  DollarSign, TrendingUp, TrendingDown, Calendar, Layers, Loader2, 
   Download, Zap, ArrowUpRight, Archive, Search, ChevronRight, 
   Boxes, LayoutGrid, Clock, ShoppingCart, BarChart3, ChevronDown, MousePointer2
 } from "lucide-react";
@@ -14,7 +14,6 @@ import { apiUrl } from "@/lib/api";
 
 /**
  * CONFIGURACIÓN DE COLORES Y CONSTANTES
- * Mantiene la línea visual del Dashboard
  */
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 const MONTHS = [
@@ -23,53 +22,42 @@ const MONTHS = [
 ];
 
 /**
- * INTERFACES DE DATOS
+ * INTERFACES DE DATOS (Actualizadas para soportar Gastos)
  */
 interface SaleRecord {
     _id: string;
-    productName: string;
+    productName?: string;
+    description?: string; // Para gastos
     category: string;
-    quantity: number;
-    price: number;
-    cost: number;
-    profit: number;
+    quantity?: number;
+    price?: number;
+    amount?: number; // Para gastos
+    cost?: number;
+    profit?: number;
+    type?: 'sale' | 'order' | 'expense';
     createdAt: string;
-    tenantId: string;
+    tenantId?: string;
 }
 
 interface AnalyticsData {
-    chartData: { _id: string; ventas: number; ganancia: number; name?: string }[];
+    chartData: { _id: string; ventas: number; gastos: number; name?: string }[];
     categoryData: { _id: string; total: number; count: number }[];
-    topProducts: { _id: string; sales: number; quantity: number; category: string }[];
     salesHistory: SaleRecord[];
-    totals: { sales: number; profit: number };
-}
-
-interface DashboardStats {
-    income: number;
-    profit: number;
-    expenses: number;
-    ordersPending: number;
-    stockWarning: number;
-    clients: number;
+    totals: { sales: number; profit: number; expenses: number };
 }
 
 /**
  * COMPONENTE: TARJETA DE ESTADÍSTICA (KPI)
- * Rectángulos con iluminación lateral y fondo oscuro profundo
  */
 function StatCard({ title, value, icon: Icon, color, sub, trend }: any) {
     return (
         <div className="bg-[#0f0f0f] border border-white/5 p-6 rounded-[32px] relative overflow-hidden group hover:border-white/10 transition-all duration-500 shadow-2xl flex-1 min-w-[280px]">
-            {/* Iluminación de fondo al hacer hover */}
             <div className={`absolute -right-4 -top-4 w-24 h-24 blur-[60px] opacity-0 group-hover:opacity-20 transition-opacity duration-700 ${color.bg}`}/>
             
-            {/* Icono de fondo decorativo */}
             <div className={`absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-10 group-hover:scale-110 transition-all duration-700 ${color.text}`}>
                 <Icon size={80} />
             </div>
 
-            {/* Barra lateral de estado */}
             <div className={`absolute left-0 top-0 bottom-0 w-1 ${color.bg} shadow-[0_0_15px_currentColor]`}/>
             
             <div className="relative z-10">
@@ -107,14 +95,13 @@ function StatCard({ title, value, icon: Icon, color, sub, trend }: any) {
 export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<AnalyticsData | null>(null);
-  const [dashboard, setDashboard] = useState<DashboardStats | null>(null);
   
   // FILTROS DE CABECERA
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth()));
   
-  // FILTROS DE HISTORIAL (PEDIDO VS STOCK)
-  const [originFilter, setOriginFilter] = useState<'all' | 'stock' | 'custom'>('all');
+  // FILTROS DE HISTORIAL
+  const [originFilter, setOriginFilter] = useState<'all' | 'stock' | 'custom' | 'expense'>('all');
   const [historySearch, setHistorySearch] = useState("");
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(true);
 
@@ -132,19 +119,15 @@ export default function AnalyticsPage() {
 
     try {
       const query = `?year=${selectedYear}&month=${selectedMonth}`;
-      const [salesRes, dashboardRes] = await Promise.all([
-        fetch(apiUrl(`/api/sales/analytics${query}`), {
-          headers: { Authorization: `Bearer ${session.token}` }
-        }),
-        fetch(apiUrl("/api/analytics/dashboard"), {
-          headers: { Authorization: `Bearer ${session.token}` }
-        }).catch(() => null)
-      ]);
+      
+      // Acá llamamos a tu nueva ruta de reportes que armamos en el backend
+      const res = await fetch(apiUrl(`/api/analytics/reports${query}`), {
+        headers: { Authorization: `Bearer ${session.token}` }
+      });
 
-      if (salesRes.ok) {
-        const result = await salesRes.json();
+      if (res.ok) {
+        const result = await res.json();
         
-        // Procesar datos para el gráfico de tiempo
         const formattedChart = Array.isArray(result.chartData)
           ? result.chartData.map((item: any) => ({
               ...item,
@@ -152,7 +135,6 @@ export default function AnalyticsPage() {
             }))
           : [];
 
-        // Normalizar categorías para evitar bugs en el pie chart
         const rawCategories = Array.isArray(result.categoryData) ? result.categoryData : [];
         const formattedCategories = rawCategories
           .map((cat: any) => ({
@@ -163,11 +145,6 @@ export default function AnalyticsPage() {
           .filter((cat: any) => cat.total > 0);
         
         setData({ ...result, chartData: formattedChart, categoryData: formattedCategories });
-      }
-
-      if (dashboardRes && dashboardRes.ok) {
-        const dashboardData = await dashboardRes.json();
-        setDashboard(dashboardData);
       }
     } catch (error) {
       console.error("Error en analíticas:", error);
@@ -182,33 +159,39 @@ export default function AnalyticsPage() {
 
   /**
    * LÓGICA DE FILTRADO LOCAL
-   * Cruza búsqueda de texto + filtro de origen (filamento/stock vs pedido)
    */
   const filteredHistory = useMemo(() => {
     if (!data?.salesHistory) return [];
     
-    return data.salesHistory.filter(sale => {
-      const matchesSearch = sale.productName.toLowerCase().includes(historySearch.toLowerCase());
+    return data.salesHistory.filter(record => {
+      const nameToSearch = record.productName || record.description || '';
+      const matchesSearch = nameToSearch.toLowerCase().includes(historySearch.toLowerCase());
       
-      const isCustom = (sale.category === 'Servicio' || sale.category === 'Impresión');
+      const isExpense = record.type === 'expense' || record.amount !== undefined;
+      const isCustom = (record.category === 'Servicio' || record.category === 'Impresión' || record.type === 'order');
+      
       const matchesOrigin = 
         originFilter === 'all' || 
         (originFilter === 'custom' && isCustom) || 
-        (originFilter === 'stock' && !isCustom);
+        (originFilter === 'stock' && !isCustom && !isExpense) ||
+        (originFilter === 'expense' && isExpense);
 
       return matchesSearch && matchesOrigin;
     });
   }, [data, historySearch, originFilter]);
 
   /**
-   * CÁLCULO DE VENTAS SEGÚN EL "CALENDARIO" (SEMANA/MES/AÑO)
+   * CÁLCULO DE VENTAS SEGÚN EL "CALENDARIO" LOCAL
    */
   const periodTotal = useMemo(() => {
     if (!data?.salesHistory) return 0;
     const now = new Date();
     
-    const filtered = data.salesHistory.filter(sale => {
-        const saleDate = new Date(sale.createdAt);
+    const filtered = data.salesHistory.filter(record => {
+        // Solo sumamos ingresos en este KPI
+        if (record.type === 'expense' || record.amount !== undefined) return false;
+        
+        const saleDate = new Date(record.createdAt);
         if (timePeriod === 'year') return saleDate.getFullYear() === now.getFullYear();
         if (timePeriod === 'month') return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear();
         if (timePeriod === 'week') {
@@ -219,18 +202,21 @@ export default function AnalyticsPage() {
         return true;
     });
     
-    return filtered.reduce((acc, s) => acc + s.price, 0);
+    return filtered.reduce((acc, s) => acc + (s.price || 0), 0);
   }, [data, timePeriod]);
 
   /**
-   * EXPORTACIÓN DE DATOS A EXCEL (CSV)
+   * EXPORTACIÓN
    */
   const handleExport = () => {
       if(!data?.salesHistory?.length) return;
-      const headers = "Fecha,Hora,Producto,Categoria,Cantidad,Monto,Ganancia\n";
+      const headers = "Fecha,Hora,Concepto,Categoria,Tipo,Cantidad,Monto,Ganancia\n";
       const rows = data.salesHistory.map((s) => {
           const d = new Date(s.createdAt);
-          return `${d.toLocaleDateString()},${d.toLocaleTimeString()},"${s.productName}",${s.category},${s.quantity},${s.price},${s.profit}`;
+          const concept = s.productName || s.description || 'Sin concepto';
+          const type = s.type === 'expense' ? 'Gasto' : 'Ingreso';
+          const amount = s.price || s.amount || 0;
+          return `${d.toLocaleDateString()},${d.toLocaleTimeString()},"${concept}",${s.category},${type},${s.quantity || 1},${amount},${s.profit || 0}`;
       }).join("\n");
       
       const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
@@ -302,37 +288,33 @@ export default function AnalyticsPage() {
                 value={formatMoney(data?.totals?.sales || 0)} 
                 icon={DollarSign} 
                 color={{text:'text-blue-400', bg:'bg-blue-600'}} 
-                sub="Ingresos por Ventas"
-                trend="+12.5%" 
+                sub="Ingresos Totales"
+            />
+            <StatCard 
+                title="Gastos del Período" 
+                value={formatMoney(data?.totals?.expenses || 0)} 
+                icon={TrendingDown} 
+                color={{text:'text-red-400', bg:'bg-red-600'}} 
+                sub="Insumos, Envios y Otros" 
             />
             <StatCard 
                 title="Ganancia Neta" 
                 value={formatMoney(data?.totals?.profit || 0)} 
                 icon={TrendingUp} 
                 color={{text:'text-emerald-400', bg:'bg-emerald-600'}} 
-                sub={`${data?.totals?.sales ? Math.round((data.totals.profit / data.totals.sales) * 100) : 0}% de Rentabilidad`} 
+                sub={`${data?.totals?.sales ? Math.round(((data?.totals?.profit || 0) / data.totals.sales) * 100) : 0}% de Rentabilidad`} 
             />
             <StatCard 
                 title="Movimientos" 
                 value={data?.salesHistory?.length || 0} 
                 icon={ShoppingCart} 
                 color={{text:'text-purple-400', bg:'bg-purple-600'}} 
-                sub={data?.salesHistory?.length ? `Ticket promedio ${formatMoney((data.totals.sales || 0) / data.salesHistory.length)}` : "Transacciones cerradas"} 
+                sub="Transacciones registradas" 
             />
-            {dashboard && (
-              <StatCard 
-                title="Gastos del Mes" 
-                value={formatMoney(dashboard.expenses || 0)} 
-                icon={Layers} 
-                color={{text:'text-red-400', bg:'bg-red-600'}} 
-                sub={`Beneficio neto: ${formatMoney(dashboard.profit || 0)}`} 
-              />
-            )}
         </div>
 
         {/* --- FILTRO DE CALENDARIO DINÁMICO --- */}
         <div className="bg-[#0a0a0a] border border-white/5 rounded-[32px] p-8 shadow-2xl relative overflow-hidden group">
-            {/* Efecto de fondo sutil */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-transparent pointer-events-none"/>
             
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
@@ -363,7 +345,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="bg-white/5 px-8 py-4 rounded-2xl border border-white/5 flex flex-col items-center md:items-end">
-                    <span className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mb-1">Ventas en este tramo</span>
+                    <span className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mb-1">Ingresos en este tramo</span>
                     <span className="text-2xl font-black text-emerald-400 tracking-tighter">{formatMoney(periodTotal)}</span>
                 </div>
             </div>
@@ -397,7 +379,8 @@ export default function AnalyticsPage() {
                             />
                             <Area 
                                 type="monotone" 
-                                dataKey="ventas" 
+                                dataKey="ventas"
+                                name="Ingresos"
                                 stroke="#3b82f6" 
                                 strokeWidth={4} 
                                 fill="url(#glowVentas)" 
@@ -412,7 +395,7 @@ export default function AnalyticsPage() {
             {/* GRÁFICO DISTRIBUCIÓN (1/3) */}
             <div className="bg-[#0a0a0a] border border-white/5 rounded-[40px] p-10 shadow-2xl relative">
                 <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] mb-10 flex items-center gap-3">
-                    <Layers size={16} className="text-purple-500"/> Categorías
+                    <Layers size={16} className="text-purple-500"/> Categorías de Ingreso
                 </h3>
                 <div className="h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -476,24 +459,25 @@ export default function AnalyticsPage() {
                         <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600 group-focus-within:text-blue-500 transition-colors"/>
                         <input 
                             type="text" 
-                            placeholder="Buscar producto o categoría..." 
+                            placeholder="Buscar concepto..." 
                             value={historySearch}
                             onChange={(e) => setHistorySearch(e.target.value)}
                             className="w-full bg-black border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-[11px] text-white outline-none focus:border-blue-500 transition-all font-bold placeholder:text-gray-700"
                         />
                     </div>
 
-                    {/* Filtro de Origen */}
-                    <div className="flex bg-black p-1 rounded-2xl border border-white/5">
+                    {/* Filtro de Origen Aumentado */}
+                    <div className="flex bg-black p-1 rounded-2xl border border-white/5 overflow-x-auto custom-scrollbar">
                         {[
                             { id: 'all', label: 'Todos', icon: LayoutGrid },
-                            { id: 'stock', label: 'Filamentos/Stock', icon: Boxes },
-                            { id: 'custom', label: 'Pedidos', icon: Archive }
+                            { id: 'stock', label: 'Stock', icon: Boxes },
+                            { id: 'custom', label: 'Pedidos', icon: Archive },
+                            { id: 'expense', label: 'Gastos', icon: TrendingDown }
                         ].map((btn) => (
                             <button 
                                 key={btn.id}
                                 onClick={() => setOriginFilter(btn.id as any)}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${originFilter === btn.id ? 'bg-white text-black shadow-xl' : 'text-gray-600 hover:text-gray-400'}`}
+                                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${originFilter === btn.id ? 'bg-white text-black shadow-xl' : 'text-gray-600 hover:text-gray-400'}`}
                             >
                                 <btn.icon size={12}/> {btn.label}
                             </button>
@@ -505,56 +489,67 @@ export default function AnalyticsPage() {
             {/* Tabla Expandible */}
             {isHistoryExpanded && (
                 <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
                         <thead className="sticky top-0 bg-[#0a0a0a] z-10">
                             <tr className="text-[10px] uppercase text-gray-600 font-black tracking-[0.2em] border-b border-white/5">
                                 <th className="px-10 py-6">Fecha y Hora</th>
-                                <th className="px-10 py-6">Producto Seleccionado</th>
+                                <th className="px-10 py-6">Concepto Registrado</th>
                                 <th className="px-10 py-6">Origen / Cat</th>
                                 <th className="px-10 py-6 text-center">Unidades</th>
-                                <th className="px-10 py-6 text-right">Inversión</th>
-                                <th className="px-10 py-6 text-right text-white">Ingreso Bruto</th>
+                                <th className="px-10 py-6 text-right">Costo Interno</th>
+                                <th className="px-10 py-6 text-right text-white">Monto Operación</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {filteredHistory.map((sale, i) => {
-                                const isCustom = (sale.category === 'Servicio' || sale.category === 'Impresión');
+                            {filteredHistory.map((record, i) => {
+                                const isExpense = record.type === 'expense' || record.amount !== undefined;
+                                const isCustom = (record.category === 'Servicio' || record.category === 'Impresión' || record.type === 'order');
+                                
                                 return (
-                                    <tr key={sale._id || i} className="group hover:bg-white/[0.02] transition-colors">
+                                    <tr key={record._id || i} className="group hover:bg-white/[0.02] transition-colors">
                                         <td className="px-10 py-6">
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-xs font-black text-white/90">{new Date(sale.createdAt).toLocaleDateString('es-AR', {day:'2-digit', month:'short', year:'numeric'})}</span>
+                                                <span className="text-xs font-black text-white/90">{new Date(record.createdAt).toLocaleDateString('es-AR', {day:'2-digit', month:'short', year:'numeric'})}</span>
                                                 <div className="flex items-center gap-1.5 text-gray-600">
                                                     <Clock size={10}/>
-                                                    <span className="text-[10px] font-mono">{new Date(sale.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                                                    <span className="text-[10px] font-mono">{new Date(record.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-10 py-6">
                                             <div className="font-black text-white text-sm tracking-tight group-hover:text-blue-400 transition-colors uppercase">
-                                                {sale.productName}
+                                                {record.productName || record.description || 'Sin concepto'}
                                             </div>
                                         </td>
                                         <td className="px-10 py-6">
-                                            <div className="flex flex-col gap-1.5">
-                                                <span className={`w-fit text-[9px] font-black px-2 py-0.5 rounded border ${isCustom ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'} uppercase tracking-widest`}>
-                                                    {isCustom ? 'Pedido Web' : 'Inventario Stock'}
+                                            <div className="flex flex-col gap-1.5 items-start">
+                                                <span className={`w-fit text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-widest ${
+                                                    isExpense ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
+                                                    isCustom ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 
+                                                    'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                }`}>
+                                                    {isExpense ? 'Egreso / Compra' : isCustom ? 'Pedido Web' : 'Inventario Stock'}
                                                 </span>
-                                                <span className="text-[10px] text-gray-600 font-bold uppercase">{sale.category}</span>
+                                                <span className="text-[10px] text-gray-600 font-bold uppercase">{record.category}</span>
                                             </div>
                                         </td>
                                         <td className="px-10 py-6 text-center">
-                                            <span className="font-mono text-xs font-black bg-white/5 px-3 py-1 rounded-lg">x{sale.quantity}</span>
+                                            {!isExpense && <span className="font-mono text-xs font-black bg-white/5 px-3 py-1 rounded-lg">x{record.quantity || 1}</span>}
+                                            {isExpense && <span className="font-mono text-xs text-gray-600">-</span>}
                                         </td>
                                         <td className="px-10 py-6 text-right">
-                                            <div className="text-xs font-bold text-gray-500">{formatMoney(sale.cost)}</div>
+                                            {!isExpense && <div className="text-xs font-bold text-gray-500">{formatMoney(record.cost || 0)}</div>}
                                         </td>
                                         <td className="px-10 py-6 text-right">
                                             <div className="flex flex-col items-end">
-                                                <div className="font-black text-white text-base tracking-tighter">{formatMoney(sale.price)}</div>
-                                                <div className="text-[10px] text-emerald-500 font-black uppercase mt-1 flex items-center gap-1">
-                                                    <Zap size={10} fill="currentColor"/> +{formatMoney(sale.profit)} Net
+                                                <div className={`font-black text-base tracking-tighter ${isExpense ? 'text-red-400' : 'text-white'}`}>
+                                                    {isExpense ? '-' : ''}{formatMoney(record.price || record.amount || 0)}
                                                 </div>
+                                                {!isExpense && record.profit !== undefined && (
+                                                    <div className="text-[10px] text-emerald-500 font-black uppercase mt-1 flex items-center gap-1">
+                                                        <Zap size={10} fill="currentColor"/> +{formatMoney(record.profit)} Net
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

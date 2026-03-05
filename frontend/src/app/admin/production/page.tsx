@@ -65,6 +65,7 @@ interface Order {
   dueDate?: string;
   files?: { name: string; url: string }[];
   deposit?: number;
+  total?: number;
   createdAt?: string;
 }
 
@@ -72,11 +73,19 @@ interface Printer { _id: string; name: string; model: string; status: 'idle' | '
 
 const sortForProduction = (list: Order[]) => {
   return [...list].sort((a, b) => {
+    const aTotal = Number(a.total || 0);
+    const bTotal = Number(b.total || 0);
     const aDeposit = Number(a.deposit || 0);
     const bDeposit = Number(b.deposit || 0);
+    
+    const aFullyPaid = aDeposit >= aTotal && aTotal > 0;
+    const bFullyPaid = bDeposit >= bTotal && bTotal > 0;
     const aHasDeposit = aDeposit > 0;
     const bHasDeposit = bDeposit > 0;
 
+    if (aFullyPaid && !bFullyPaid) return -1;
+    if (!aFullyPaid && bFullyPaid) return 1;
+    
     if (aHasDeposit !== bHasDeposit) {
       return aHasDeposit ? -1 : 1;
     }
@@ -85,12 +94,12 @@ const sortForProduction = (list: Order[]) => {
       ? new Date(a.dueDate).getTime()
       : a.createdAt
         ? new Date(a.createdAt).getTime()
-        : 0;
+        : 9999999999999;
     const bDate = b.dueDate
       ? new Date(b.dueDate).getTime()
       : b.createdAt
         ? new Date(b.createdAt).getTime()
-        : 0;
+        : 9999999999999;
 
     return aDate - bDate;
   });
@@ -104,6 +113,8 @@ export default function ProductionPage() {
   const [isPrinterModalOpen, setIsPrinterModalOpen] = useState(false);
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
+  const [selectedOrderForFinish, setSelectedOrderForFinish] = useState<Order | null>(null);
+  const [finishItemIndex, setFinishItemIndex] = useState<number | null>(null);
   const [newPrinterName, setNewPrinterName] = useState("");
   const [startConfig, setStartConfig] = useState({ printerId: "", minutes: "60" });
 
@@ -169,6 +180,30 @@ export default function ProductionPage() {
     } catch (error) { console.error(error); }
   };
 
+  const openFinishModal = (order: Order) => {
+    setSelectedOrderForFinish(order);
+    setFinishItemIndex(null);
+  };
+
+  // 🔥 ACÁ ESTÁ EL CAMBIO PRINCIPAL PARA QUE SE ACTUALICE AL INSTANTE 🔥
+  const handleFinishItem = async () => {
+    if (!selectedOrderForFinish || finishItemIndex === null || !session) return;
+    try {
+        const res = await fetch(apiUrl(`/api/orders/${selectedOrderForFinish._id}/print-item`), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` },
+            body: JSON.stringify({ itemIndex: finishItemIndex })
+        });
+        if (res.ok) {
+            // Cerramos el modal rapidísimo para mejorar la sensación del usuario
+            setSelectedOrderForFinish(null);
+            setFinishItemIndex(null);
+            // Volvemos a pedir TODO (órdenes e impresoras) para que cambien las tarjetas de lugar y colores
+            fetchData(session.token);
+        }
+    } catch (error) { console.error(error); }
+  };
+
   const addPrinter = async () => {
     if (!newPrinterName) return;
     try {
@@ -179,6 +214,24 @@ export default function ProductionPage() {
         setNewPrinterName(""); setIsPrinterModalOpen(false);
         if (session) fetchData(session.token);
     } catch (error) { console.error(error); }
+  };
+
+  const updatePrinterStatus = async (id: string, status: string) => {
+    try {
+      await fetch(apiUrl(`/api/printers/${id}/status`), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.token}`
+        },
+        body: JSON.stringify({ status })
+      });
+  
+      if (session) fetchData(session.token);
+  
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const deletePrinter = async (id: string) => {
@@ -212,21 +265,57 @@ export default function ProductionPage() {
          <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
             {printers.map(p => {
                 const isBusy = p.status === 'printing';
+                const isMaintenance = p.status === 'maintenance';
+
                 return (
-                    <div key={p._id} className={`p-5 rounded-2xl border transition-all duration-300 ${isBusy ? 'bg-cyan-500/5 border-cyan-500/20' : 'bg-[#0f0f0f] border-white/5 hover:border-white/10'}`}>
+                    <div key={p._id} className={`p-5 rounded-2xl border transition-all duration-300 ${isBusy ? 'bg-cyan-500/5 border-cyan-500/20' : isMaintenance ? 'bg-red-500/5 border-red-500/20' : 'bg-[#0f0f0f] border-white/5 hover:border-white/10'}`}>
                         <div className="flex justify-between items-start mb-3">
                             <div>
-                                <span className={`font-bold text-base ${isBusy ? 'text-cyan-200/80' : 'text-gray-300'}`}>{p.name}</span>
+                                <span className={`font-bold text-base ${isBusy ? 'text-cyan-200/80' : isMaintenance ? 'text-red-300/80' : 'text-gray-300'}`}>{p.name}</span>
                                 <p className="text-[10px] text-gray-600 font-mono uppercase tracking-wider">{p.model}</p>
                             </div>
-                            <div className={`w-2.5 h-2.5 rounded-full ${isBusy ? 'bg-cyan-500 animate-pulse shadow-[0_0_8px_#22d3ee]' : 'bg-emerald-500/40'}`}></div>
+                            <div className={`w-2.5 h-2.5 rounded-full ${
+                                isBusy
+                                    ? 'bg-cyan-500 animate-pulse shadow-[0_0_8px_#22d3ee]'
+                                    : isMaintenance
+                                    ? 'bg-red-500 shadow-[0_0_8px_#ef4444]'
+                                    : 'bg-emerald-500/40'
+                            }`}></div>
                         </div>
                         <div className="flex justify-between items-center mt-4">
-                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${isBusy ? 'bg-cyan-500/10 text-cyan-400' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                                {isBusy ? 'OCUPADA' : 'LIBRE'}
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${
+                                isBusy 
+                                    ? 'bg-cyan-500/10 text-cyan-400' 
+                                    : isMaintenance
+                                    ? 'bg-red-500/10 text-red-500'
+                                    : 'bg-emerald-500/10 text-emerald-500'
+                            }`}>
+                                {isBusy
+                                  ? 'OCUPADA'
+                                  : isMaintenance
+                                    ? 'MANTENIMIENTO'
+                                    : 'LIBRE'
+                                }
                             </span>
-                            {p.status === 'idle' && (
-                                <button onClick={() => deletePrinter(p._id)} className="text-gray-600 hover:text-red-500 transition-colors"><Trash2 size={14}/></button>
+                            
+                            {p.status !== 'printing' && (
+                                <div className="flex gap-2 items-center">
+                                    <button
+                                        onClick={() => updatePrinterStatus(p._id, isMaintenance ? 'idle' : 'maintenance')}
+                                        className={`${isMaintenance ? 'text-emerald-500 hover:text-emerald-400' : 'text-yellow-500 hover:text-yellow-400'} transition-colors`}
+                                        title={isMaintenance ? "Marcar como libre" : "Poner en mantenimiento"}
+                                    >
+                                        {isMaintenance ? <CheckCircle2 size={14}/> : <AlertTriangle size={14}/>}
+                                    </button>
+                                    
+                                    <button
+                                        onClick={() => deletePrinter(p._id)}
+                                        className="text-gray-600 hover:text-red-500 transition-colors"
+                                        title="Eliminar impresora"
+                                    >
+                                        <Trash2 size={14}/>
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -257,7 +346,7 @@ export default function ProductionPage() {
             <KanbanColumn title="En proceso de impresion" count={printing.length} color="text-cyan-400 border-cyan-500/10 bg-cyan-500/5">
                 {printing.map(o => (
                     <ProductionCard key={o._id} order={o} isActive 
-                        action={() => moveOrder(o._id, 'completed')} label="FINALIZAR" 
+                        action={() => openFinishModal(o)} label="FINALIZAR" 
                         btnStyle="bg-cyan-600 text-white hover:bg-cyan-500 shadow-lg shadow-cyan-900/20" icon={<CheckCircle2 size={14}/>} />
                 ))}
             </KanbanColumn>
@@ -303,6 +392,65 @@ export default function ProductionPage() {
                 <div className="flex justify-end gap-3 mt-10">
                     <button onClick={() => setIsStartModalOpen(false)} className="text-[10px] font-black px-5 py-3 text-gray-500 hover:text-white uppercase tracking-widest">Abortar</button>
                     <button onClick={confirmStart} className="bg-cyan-600 text-white text-[10px] font-black px-10 py-3 rounded-xl hover:bg-cyan-500 shadow-lg shadow-cyan-900/20 uppercase tracking-widest transition-all">Comenzar</button>
+                </div>
+            </div>
+         </div>
+      )}
+
+      {selectedOrderForFinish && (
+         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in">
+            <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl">
+                <h2 className="text-lg font-black text-white uppercase tracking-tight mb-2">
+                    Finalizar ítem
+                </h2>
+                <p className="text-[11px] text-gray-500 uppercase tracking-widest mb-4">
+                    Pedido: <span className="text-white">{selectedOrderForFinish.clientName}</span>
+                </p>
+                <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                    {selectedOrderForFinish.items.map((item: any, idx: number) => {
+                        const printed = Number(item.printedQuantity || 0) >= Number(item.quantity || 0);
+                        return (
+                            <button
+                              key={idx}
+                              disabled={printed}
+                              onClick={() => setFinishItemIndex(idx)}
+                              className={`w-full flex justify-between items-center px-4 py-3 rounded-xl border text-left transition-all ${
+                                  printed
+                                    ? 'border-emerald-500/30 bg-emerald-500/10 cursor-default opacity-60'
+                                    : finishItemIndex === idx
+                                      ? 'border-blue-500 bg-blue-500/10'
+                                      : 'border-white/10 bg-black/40 hover:border-white/30'
+                              }`}
+                            >
+                              <div>
+                                  <div className="text-sm font-bold text-white">{item.productName}</div>
+                                  <div className="text-[11px] text-gray-500 font-mono">
+                                      x{item.quantity} {printed && '· IMPRESO'}
+                                  </div>
+                              </div>
+                              {!printed && (
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">
+                                      Seleccionar
+                                  </span>
+                              )}
+                            </button>
+                        );
+                    })}
+                </div>
+                <div className="flex justify-end gap-3 pt-4">
+                    <button
+                      onClick={() => { setSelectedOrderForFinish(null); setFinishItemIndex(null); }}
+                      className="px-5 py-2 rounded-xl text-[11px] font-bold text-gray-500 hover:text-white uppercase tracking-widest"
+                    >
+                      Cerrar
+                    </button>
+                    <button
+                      onClick={handleFinishItem}
+                      disabled={finishItemIndex === null}
+                      className="px-6 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-cyan-600 text-white disabled:bg-white/20 disabled:text-gray-500 hover:bg-cyan-500"
+                    >
+                      Finalizar seleccionado
+                    </button>
                 </div>
             </div>
          </div>

@@ -43,3 +43,27 @@ export const deletePrinter = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Error eliminando impresora' });
     }
 };
+
+// Actualizar estado de la impresora
+export const updatePrinterStatus = async (req: Request, res: Response) => {
+    try {
+        const tenantId =
+            (req as any).tenantId || (req as any).user?.tenantId || appConfig.defaultTenantId;
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const updatedPrinter = await Printer.findOneAndUpdate(
+            { _id: id, tenantId },
+            { status },
+            { new: true } // Esto hace que te devuelva el documento ya actualizado
+        );
+
+        if (!updatedPrinter) {
+            return res.status(404).json({ message: 'Impresora no encontrada' });
+        }
+
+        res.json(updatedPrinter);
+    } catch (error) {
+        res.status(500).json({ message: 'Error actualizando el estado de la impresora' });
+    }
+};

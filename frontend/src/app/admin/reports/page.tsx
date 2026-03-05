@@ -4,18 +4,19 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell
+  PieChart, Pie, Cell, Legend
 } from "recharts";
 import { 
-  DollarSign, TrendingUp, Calendar, Filter, Package, Layers, Loader2, 
+  DollarSign, TrendingUp, TrendingDown, Calendar, Filter, Package, Layers, Loader2, 
   Download, History, ArrowUpRight, Zap
 } from "lucide-react";
 import { apiUrl } from "@/lib/api";
 
 // Colores Gráficos
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
 
 export default function AnalyticsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth()));
@@ -26,7 +27,7 @@ export default function AnalyticsPage() {
     const fetchData = async () => {
       setLoading(true);
       const stored = localStorage.getItem("user");
-      if (!stored) return;
+      if (!stored) { router.replace("/admin/login"); return; }
       const session = JSON.parse(stored);
 
       try {
@@ -37,31 +38,35 @@ export default function AnalyticsPage() {
 
         if (res.ok) {
           const result = await res.json();
-          // Formatear fechas gráfico
-          const formattedChart = result.chartData.map((item: any) => ({
+          // Formatear fechas para el gráfico para que no se buguee el eje X
+          const formattedChart = result.chartData?.map((item: any) => ({
             ...item,
-            name: new Date(item._id).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })
-          }));
+            name: new Date(item._id).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })
+          })) || [];
+          
           setData({ ...result, chartData: formattedChart });
         }
-      } catch (error) { console.error(error); } 
-      finally { setLoading(false); }
+      } catch (error) { 
+          console.error(error); 
+      } finally { 
+          setLoading(false); 
+      }
     };
     fetchData();
-  }, [selectedYear, selectedMonth]);
+  }, [selectedYear, selectedMonth, router]);
 
   // EXPORTAR A CSV
   const handleExport = () => {
       if(!data || !data.salesHistory) return;
       const csvContent = "data:text/csv;charset=utf-8," 
-          + "Fecha,Producto,Categoria,Cantidad,Precio Total,Ganancia\n"
+          + "Fecha,Concepto,Categoria,Tipo,Monto\n"
           + data.salesHistory.map((s:any) => 
-              `${new Date(s.createdAt).toLocaleDateString()},${s.productName},${s.category},${s.quantity},${s.price},${s.profit||0}`
+              `${new Date(s.createdAt).toLocaleDateString()},${s.productName || s.description},${s.category},${s.type || 'Venta'},${s.price || s.amount}`
           ).join("\n");
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `reporte_ventas_${selectedMonth}_${selectedYear}.csv`);
+      link.setAttribute("download", `reporte_general_${selectedMonth}_${selectedYear}.csv`);
       document.body.appendChild(link);
       link.click();
   };
@@ -70,6 +75,12 @@ export default function AnalyticsPage() {
   const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
   if (loading) return (<div className="flex min-h-screen items-center justify-center bg-[#050505] text-white"><Loader2 className="h-10 w-10 animate-spin text-blue-500" /></div>);
+
+  // Cálculos Reales
+  const ingresosTotales = Number(data?.totals?.sales || 0);
+  const gastosTotales = Number(data?.totals?.expenses || 0); // El backend DEBE mandar esto
+  const gananciaNeta = ingresosTotales - gastosTotales; // Calculamos la ganancia real acá
+  const margen = ingresosTotales > 0 ? Math.round((gananciaNeta / ingresosTotales) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-[#050505] p-8 text-white font-sans selection:bg-blue-500/30">
@@ -84,11 +95,11 @@ export default function AnalyticsPage() {
             </p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <div className="relative">
               <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}
                 className="appearance-none bg-[#111] border border-white/10 rounded-xl px-5 py-3 pr-10 text-xs font-bold uppercase outline-none focus:border-blue-500 cursor-pointer hover:bg-[#161616] transition-colors">
-                <option value={2024}>2024</option><option value={2025}>2025</option><option value={2026}>2026</option>
+                <option value={2024}>2024</option><option value={2025}>2025</option><option value={2026}>2026</option><option value={2027}>2027</option>
               </select>
               <Calendar className="absolute right-3 top-3 h-4 w-4 text-gray-500 pointer-events-none"/>
             </div>
@@ -106,28 +117,37 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* KPI CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* KPI CARDS (Ahora son 4 para incluir Gastos) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-[#0f0f0f] border border-white/5 p-6 rounded-2xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-6 opacity-10 text-white group-hover:scale-110 transition-transform"><DollarSign size={40}/></div>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2">Ingresos Totales</p>
-                <div className="text-3xl font-black text-white">{formatMoney(data?.totals?.sales)}</div>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2">Facturación Bruta</p>
+                <div className="text-3xl font-black text-white">{formatMoney(ingresosTotales)}</div>
             </div>
+
+            <div className="bg-[#0f0f0f] border border-red-500/20 p-6 rounded-2xl relative overflow-hidden group">
+                <div className="absolute left-0 top-0 w-1 h-full bg-red-500"></div>
+                <div className="absolute top-0 right-0 p-6 opacity-10 text-red-500 group-hover:scale-110 transition-transform"><TrendingDown size={40}/></div>
+                <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest mb-2">Gastos Totales</p>
+                <div className="text-3xl font-black text-white">{formatMoney(gastosTotales)}</div>
+            </div>
+
             <div className="bg-[#0f0f0f] border border-green-500/20 p-6 rounded-2xl relative overflow-hidden group">
                 <div className="absolute left-0 top-0 w-1 h-full bg-green-500"></div>
                 <div className="absolute top-0 right-0 p-6 opacity-10 text-green-500 group-hover:scale-110 transition-transform"><TrendingUp size={40}/></div>
                 <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest mb-2">Ganancia Neta</p>
-                <div className="text-3xl font-black text-white">{formatMoney(data?.totals?.profit)}</div>
+                <div className="text-3xl font-black text-white">{formatMoney(gananciaNeta)}</div>
                 <div className="text-xs text-green-400 mt-1 font-bold">
-                    {data?.totals?.sales ? Math.round((data.totals.profit / data.totals.sales) * 100) : 0}% Margen
+                    {margen}% Margen de ganancia
                 </div>
             </div>
+
             <div className="bg-[#0f0f0f] border border-blue-500/20 p-6 rounded-2xl relative overflow-hidden group">
                 <div className="absolute left-0 top-0 w-1 h-full bg-blue-500"></div>
                 <div className="absolute top-0 right-0 p-6 opacity-10 text-blue-500 group-hover:scale-110 transition-transform"><Package size={40}/></div>
-                <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest mb-2">Volumen Ventas</p>
+                <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest mb-2">Movimientos</p>
                 <div className="text-3xl font-black text-white">{data?.salesHistory?.length || 0}</div>
-                <p className="text-xs text-blue-400 mt-1 font-bold">Transacciones</p>
+                <p className="text-xs text-blue-400 mt-1 font-bold">Registros en el periodo</p>
             </div>
         </div>
 
@@ -137,7 +157,7 @@ export default function AnalyticsPage() {
                 <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6 flex items-center gap-2"><ArrowUpRight size={16} className="text-blue-500"/> Flujo de Caja</h3>
                 <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={data?.chartData}>
+                        <AreaChart data={data?.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
@@ -145,10 +165,14 @@ export default function AnalyticsPage() {
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                            <XAxis dataKey="name" stroke="#444" tick={{fill: '#666', fontSize: 10}} tickLine={false} axisLine={false} />
-                            <YAxis stroke="#444" tick={{fill: '#666', fontSize: 10}} tickFormatter={(val) => `$${val}`} tickLine={false} axisLine={false} />
-                            <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #222', borderRadius: '8px' }} formatter={(val: any) => formatMoney(val)} />
-                            <Area type="monotone" dataKey="ventas" stroke="#3b82f6" strokeWidth={3} fill="url(#colorVentas)" />
+                            <XAxis dataKey="name" stroke="#444" tick={{fill: '#666', fontSize: 11}} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#444" tick={{fill: '#666', fontSize: 11}} tickFormatter={(val) => `$${val}`} tickLine={false} axisLine={false} width={60} />
+                            <Tooltip 
+                                contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px', color: '#fff' }} 
+                                itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                formatter={(val: any) => formatMoney(val)} 
+                            />
+                            <Area type="monotone" dataKey="ventas" name="Ingresos" stroke="#3b82f6" strokeWidth={3} fill="url(#colorVentas)" activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff' }} />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
@@ -159,26 +183,34 @@ export default function AnalyticsPage() {
                 <div className="flex-1 min-h-[250px] relative">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                            <Pie data={data?.categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="total">
+                            <Pie data={data?.categoryData} cx="50%" cy="50%" innerRadius={70} outerRadius={90} paddingAngle={5} dataKey="total">
                                 {data?.categoryData?.map((entry: any, index: number) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="none" />
                                 ))}
                             </Pie>
-                            <Tooltip contentStyle={{backgroundColor: '#000', borderColor: '#222', borderRadius: '8px'}} formatter={(val: any) => formatMoney(val)} />
+                            <Tooltip 
+                                contentStyle={{backgroundColor: '#111', borderColor: '#333', borderRadius: '8px'}} 
+                                itemStyle={{color: '#fff'}}
+                                formatter={(val: any) => formatMoney(val)} 
+                            />
                         </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="text-center">
                             <span className="text-[10px] text-gray-500 font-bold uppercase block">Total</span>
-                            <span className="text-lg font-bold text-white">{formatMoney(data?.totals?.sales)}</span>
+                            <span className="text-lg font-bold text-white">{formatMoney(ingresosTotales)}</span>
                         </div>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 mt-2">
+                {/* Leyenda personalizada para la torta */}
+                <div className="grid grid-cols-2 gap-3 mt-4">
                     {data?.categoryData?.map((cat: any, i: number) => (
-                        <div key={i} className="flex items-center gap-2 text-[10px]">
-                            <div className="w-2 h-2 rounded-full" style={{backgroundColor: COLORS[i % COLORS.length]}}/>
-                            <span className="text-gray-400 truncate">{cat._id}</span>
+                        <div key={i} className="flex flex-col gap-1 text-[10px]">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full" style={{backgroundColor: COLORS[i % COLORS.length]}}/>
+                                <span className="text-gray-400 font-bold truncate">{cat._id}</span>
+                            </div>
+                            <span className="text-white pl-4">{formatMoney(cat.total)}</span>
                         </div>
                     ))}
                 </div>
@@ -188,8 +220,7 @@ export default function AnalyticsPage() {
         {/* --- HISTORIAL DE TRANSACCIONES COMPLETO --- */}
         <div className="bg-[#0f0f0f] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#111]">
-                <h3 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-2"><History size={18} className="text-orange-500"/> Historial de Transacciones</h3>
-                <span className="text-xs bg-white/5 text-gray-400 px-3 py-1 rounded-full border border-white/5 font-mono">{data?.salesHistory?.length || 0} Movimientos</span>
+                <h3 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-2"><History size={18} className="text-orange-500"/> Registro Detallado</h3>
             </div>
             
             <div className="overflow-x-auto max-h-[500px] overflow-y-auto custom-scrollbar">
@@ -204,32 +235,44 @@ export default function AnalyticsPage() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {data?.salesHistory?.map((sale: any, i: number) => (
+                        {data?.salesHistory?.map((item: any, i: number) => {
+                            // Determinamos visualmente qué tipo de registro es
+                            const isExpense = item.type === 'expense' || item.amount < 0;
+                            const isOrder = item.type === 'order' || item.category === 'Impresión' || item.category === 'Servicio';
+                            
+                            return (
                             <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
                                 <td className="px-6 py-4">
-                                    <div className="text-xs font-mono text-gray-400">{new Date(sale.createdAt).toLocaleDateString()}</div>
-                                    <div className="text-[10px] text-gray-600">{new Date(sale.createdAt).toLocaleTimeString()}</div>
+                                    <div className="text-xs font-mono text-gray-400">{new Date(item.createdAt).toLocaleDateString()}</div>
+                                    <div className="text-[10px] text-gray-600">{new Date(item.createdAt).toLocaleTimeString()}</div>
                                 </td>
-                                <td className="px-6 py-4 font-bold text-white text-sm">{sale.productName}</td>
+                                <td className="px-6 py-4 font-bold text-white text-sm">
+                                    {item.productName || item.clientName || item.description || 'Sin concepto'}
+                                </td>
                                 <td className="px-6 py-4 text-xs text-gray-400">
-                                    <span className="bg-white/5 px-2 py-1 rounded border border-white/5">{sale.category}</span>
+                                    <span className="bg-white/5 px-2 py-1 rounded border border-white/5">{item.category || 'General'}</span>
                                 </td>
                                 <td className="px-6 py-4 text-center">
-                                    {/* Detectamos Origen basado en Categoría o Nombre */}
-                                    {sale.category === 'Servicio' || sale.category === 'Impresión' ? (
+                                    {isExpense ? (
+                                        <span className="text-[10px] text-red-400 bg-red-500/10 px-2 py-1 rounded font-bold uppercase tracking-wider flex justify-center items-center gap-1"><TrendingDown size={10}/> Gasto</span>
+                                    ) : isOrder ? (
                                         <span className="text-[10px] text-purple-400 bg-purple-500/10 px-2 py-1 rounded font-bold uppercase tracking-wider flex justify-center items-center gap-1"><Package size={10}/> Pedido</span>
                                     ) : (
-                                        <span className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-1 rounded font-bold uppercase tracking-wider flex justify-center items-center gap-1"><Zap size={10}/> Stock</span>
+                                        <span className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-1 rounded font-bold uppercase tracking-wider flex justify-center items-center gap-1"><Zap size={10}/> Venta Directa</span>
                                     )}
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <div className="font-bold text-white">{formatMoney(sale.price)}</div>
-                                    <div className="text-[10px] text-emerald-500 font-bold">+{formatMoney(sale.profit)} Net</div>
+                                    <div className={`font-bold ${isExpense ? 'text-red-400' : 'text-white'}`}>
+                                        {isExpense ? '-' : ''}{formatMoney(item.price || item.amount || item.total)}
+                                    </div>
+                                    {!isExpense && item.profit && (
+                                        <div className="text-[10px] text-emerald-500 font-bold">+{formatMoney(item.profit)} Net</div>
+                                    )}
                                 </td>
                             </tr>
-                        ))}
+                        )})}
                         {(!data?.salesHistory || data.salesHistory.length === 0) && (
-                            <tr><td colSpan={5} className="py-12 text-center text-gray-600 text-sm uppercase tracking-widest">Sin transacciones</td></tr>
+                            <tr><td colSpan={5} className="py-12 text-center text-gray-600 text-sm uppercase tracking-widest">Sin transacciones registradas</td></tr>
                         )}
                     </tbody>
                 </table>

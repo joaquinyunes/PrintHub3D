@@ -7,13 +7,13 @@ import {
   FileText, Link as LinkIcon, Factory,
   PackageCheck, History, MessageCircle, Globe, Store, User,
   Search, AlertTriangle, Pencil, DollarSign, Calendar,
-  MessageSquare, Flame, ShoppingCart, Calculator, Wrench, Coins
+  MessageSquare, Flame, ShoppingCart, Calculator, Wrench, Coins, Timer
 } from "lucide-react";
 import { apiUrl } from "@/lib/api";
 
 // --- 1. INTERFACES Y TIPOS ---
 interface Product { _id: string; name: string; price: number; stock: number; }
-interface OrderItem { productId?: string; productName: string; quantity: number; price: number; isCustom?: boolean; }
+interface OrderItem { productId?: string; productName: string; quantity: number; price: number; isCustom?: boolean; printTimeMinutes?: number; }
 interface OrderFile { name: string; url: string; }
 interface Order { 
     _id: string; clientName: string; origin?: string; paymentMethod?: string; 
@@ -71,7 +71,7 @@ export default function OrderListPage() {
   const [tempFile, setTempFile] = useState({ name: "", url: "" });
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [itemTab, setItemTab] = useState<"product" | "custom">("product"); 
-  const [itemInput, setItemInput] = useState({ id: "", qty: 1, customName: "", customPrice: "" });
+  const [itemInput, setItemInput] = useState({ id: "", qty: 1, customName: "", customPrice: "", printTimeMinutes: 30 });
   const [printOrder, setPrintOrder] = useState<Order | null>(null);
   const [printIndex, setPrintIndex] = useState<number | null>(null);
 
@@ -160,7 +160,7 @@ export default function OrderListPage() {
   const handleSaveOrder = async () => {
       if(!formData.clientName || cart.length === 0) return;
       const finalDueDate = formData.dueDate ? formData.dueDate : null;
-      const payload = { ...formData, dueDate: finalDueDate, deposit: Number(formData.deposit) || 0, items: cart, files, total: cart.reduce((acc, i) => acc + (i.price * i.quantity), 0) };
+      const payload = { ...formData, dueDate: finalDueDate, deposit: Number(formData.deposit) || 0, items: cart, files, total: cart.reduce((acc, i) => acc + (Number(i.price) * Number(i.quantity)), 0) };
       const url = editingOrderId ? apiUrl(`/api/orders/${editingOrderId}`) : apiUrl("/api/orders");
       const method = editingOrderId ? "PUT" : "POST";
       try {
@@ -247,12 +247,12 @@ export default function OrderListPage() {
   const handleAddItem = () => {
       if(itemTab === "product"){
           const p = products.find(x => x._id === itemInput.id);
-          if(p && itemInput.qty > 0) { setCart([...cart, { productId: p._id, productName: p.name, price: p.price, quantity: itemInput.qty, isCustom: false }]); setItemInput({ ...itemInput, qty: 1 }); }
+          if(p && itemInput.qty > 0) { setCart([...cart, { productId: p._id, productName: p.name, price: Number(p.price), quantity: Number(itemInput.qty), isCustom: false, printTimeMinutes: Number(itemInput.printTimeMinutes) || 30 }]); setItemInput({ ...itemInput, qty: 1, printTimeMinutes: 30 }); }
       } else {
-          if(itemInput.customName && itemInput.customPrice) { setCart([...cart, { productName: itemInput.customName, price: Number(itemInput.customPrice), quantity: 1, isCustom: true }]); setItemInput({ ...itemInput, customName: "", customPrice: "" }); }
+          if(itemInput.customName && itemInput.customPrice) { setCart([...cart, { productName: itemInput.customName, price: Number(itemInput.customPrice), quantity: Number(itemInput.qty) || 1, isCustom: true, printTimeMinutes: Number(itemInput.printTimeMinutes) || 30 }]); setItemInput({ ...itemInput, customName: "", customPrice: "", printTimeMinutes: 30 }); }
       }
   };
-  const calculateTotal = () => cart.reduce((acc, i) => acc + (i.price * i.quantity), 0);
+  const calculateTotal = () => cart.reduce((acc, i) => acc + (Number(i.price) * Number(i.quantity)), 0);
 
   if(loading) return <div className="flex h-screen items-center justify-center bg-[#050505] text-white"><Loader2 className="animate-spin text-blue-500 h-10 w-10"/></div>;
 
@@ -392,6 +392,11 @@ export default function OrderListPage() {
                                 {itemTab==="custom" && <div className="relative w-32 border-l border-white/10"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span><input type="number" className="w-full bg-transparent border-none pl-6 py-3 text-white outline-none" placeholder="Precio" value={itemInput.customPrice} onChange={e=>setItemInput({...itemInput, customPrice: e.target.value})}/></div>}
                                 
                                 <div className="w-20 border-l border-white/10"><input type="number" className="w-full bg-transparent border-none py-3 text-center text-white outline-none" value={itemInput.qty} onChange={e=>setItemInput({...itemInput, qty: Number(e.target.value)})}/></div>
+                                
+                                <div className="w-20 border-l border-white/10 flex items-center justify-center gap-1" title="Tiempo de impresión (minutos)">
+                                    <Timer size={12} className="text-gray-500"/>
+                                    <input type="number" className="w-12 bg-transparent border-none py-3 text-center text-white outline-none text-xs" value={itemInput.printTimeMinutes} onChange={e=>setItemInput({...itemInput, printTimeMinutes: Number(e.target.value)})} />
+                                </div>
                                 
                                 <button onClick={handleAddItem} className="bg-white text-black px-4 rounded-xl hover:bg-gray-200 transition-colors font-bold"><Plus size={18}/></button>
                             </div>
@@ -597,18 +602,6 @@ function OrderCard({ order, activeTab, onEdit, onDeliver, onStatusChange, onPay,
                     Editar
                 </button>
                 
-                {activeTab === 'production' && (
-                    <button 
-                        onClick={onPrint}
-                        className={`flex-[2] py-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-2 uppercase tracking-wider
-                        ${order.items?.some((i:any) => (i.printedQuantity || 0) > 0) 
-                            ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-600/40' 
-                            : 'bg-orange-600/20 hover:bg-orange-600/40 text-orange-400 border-orange-500/30'
-                        }`}>
-                        <Factory size={14}/> Imprimir
-                    </button>
-                )}
-
                 {activeTab === 'ready' && !order.isSaleRegistered && (
                     <button onClick={onDeliver} className="flex-[2] py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold transition-all shadow-lg shadow-green-900/20 flex items-center justify-center gap-2 uppercase tracking-wider">
                         <PackageCheck size={16}/> ENTREGAR

@@ -22,7 +22,6 @@ const statusCopy: Record<string, string> = {
     cancelled: 'Cancelado'
 };
 
-
 const fillTemplate = (template: string, vars: Record<string, string>) => {
     let output = template;
     Object.entries(vars).forEach(([key, value]) => {
@@ -35,7 +34,6 @@ const buildTrackingUrl = (baseUrl: string, trackingCode: string) => {
     const cleaned = (baseUrl || 'http://localhost:3000/track').replace(/\/$/, '');
     return `${cleaned}?code=${trackingCode}`;
 };
-
 
 // ==========================================
 // 1. OBTENER PEDIDOS (PAGINADO + FILTROS)
@@ -144,7 +142,7 @@ export const updateOrder = async (req: Request, res: Response) => {
         // Recalcular total si cambian los items
         if (items && Array.isArray(items)) {
             let newTotal = 0;
-            items.forEach((i: any) => newTotal += (i.price * i.quantity));
+            items.forEach((i: any) => newTotal += Number(i.price || 0) * Number(i.quantity || 0));
             updateData.total = newTotal;
         }
 
@@ -195,10 +193,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                     const currentOrder = await Order.findOne({ _id: req.params.id, tenantId });
                     if (currentOrder && !currentOrder.adminNotified) {
                         const itemNames = currentOrder.items.map(i => i.productName).join(', ');
-                        const msg = `✅ *IMPRESIÓN FINALIZADA*
-👤 ${currentOrder.clientName}
-📦 ${itemNames}
-🚀 Máquina liberada.`;
+                        const msg = `✅ *IMPRESIÓN FINALIZADA*\n👤 ${currentOrder.clientName}\n📦 ${itemNames}\n🚀 Máquina liberada.`;
                         if(typeof sendAdminNotification === 'function') await sendAdminNotification(msg);
                         updateData.adminNotified = true;
                     }
@@ -271,27 +266,40 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Cantidad inválida en el ítem' });
         }
 
-        // Marcamos este ítem como completamente impreso
+        // 1️⃣ Marcamos este ítem como completamente impreso
         item.printedQuantity = Math.max(alreadyPrinted, qty);
 
-        // Recalcular estado global del pedido según items impresos
+        // 2️⃣ ¡CLAVE! Liberamos la impresora SIEMPRE que se termina una pieza
+        try {
+            if (Printer) {
+                await Printer.updateMany(
+                    { currentOrderId: id }, 
+                    { status: 'idle', $unset: { currentOrderId: 1 } }
+                );
+            }
+        } catch (printerError) {
+            console.error("Printer Warning:", printerError);
+        }
+
+        // 3️⃣ Recalcular estado global del pedido según items impresos
         const totalItems = order.items.length;
         let printedItems = 0;
-        let anyPrinted = false;
 
         order.items.forEach((it: any) => {
             const q = Number(it.quantity || 0);
             const printed = Number(it.printedQuantity || 0);
-            if (printed > 0) anyPrinted = true;
             if (q > 0 && printed >= q) printedItems += 1;
         });
 
         if (printedItems === totalItems && totalItems > 0) {
+            // Si ya no falta nada, el pedido se completa
             order.status = 'completed';
-        } else if (anyPrinted) {
-            order.status = 'in_progress';
+            order.finishedAt = new Date();
         } else {
+            // Si faltan piezas, VUELVE A LA COLA y reseteamos el tiempo
             order.status = 'pending';
+            order.startedAt = undefined;
+            order.printTimeMinutes = undefined;
         }
 
         await order.save();
@@ -304,46 +312,44 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
 };
 
 // ==========================================
-// 6. REGISTRAR VENTA (ENTREGAR - NOMBRE CORREGIDO)
+// 6. REGISTRAR VENTA (ENTREGAR)
 // ==========================================
 export const registerOrderSale = async (req: Request, res: Response) => {
-  try {
-    const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
-    const { id } = req.params;
-    const { finalCost } = req.body;
-
-    if (!tenantId) {
-        return res.status(401).json({ message: "No autorizado" });
-    }
-
     try {
-        const { sale, order } = await OrderService.registerOrderSale({
-            tenantId,
-            orderId: id,
-            finalCost,
-        });
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+        const { id } = req.params;
+        const { finalCost } = req.body;
 
-        return res.json({ message: "Venta registrada con costos reales", sale, order });
-    } catch (serviceError: any) {
-        if (serviceError.message === 'Pedido no encontrado') {
-            return res.status(404).json({ message: serviceError.message });
+        if (!tenantId) {
+            return res.status(401).json({ message: "No autorizado" });
         }
-        if (serviceError.message === 'Venta ya registrada') {
-            return res.status(400).json({ message: serviceError.message });
+
+        try {
+            const { sale, order } = await OrderService.registerOrderSale({
+                tenantId,
+                orderId: id,
+                finalCost,
+            });
+
+            return res.json({ message: "Venta registrada con costos reales", sale, order });
+        } catch (serviceError: any) {
+            if (serviceError.message === 'Pedido no encontrado') {
+                return res.status(404).json({ message: serviceError.message });
+            }
+            if (serviceError.message === 'Venta ya registrada') {
+                return res.status(400).json({ message: serviceError.message });
+            }
+            throw serviceError;
         }
-        throw serviceError;
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Error al registrar venta del pedido" });
     }
-
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Error al registrar venta del pedido" });
-  }
 };
 
-
-
 // ==========================================
-// 6. TRACKING PÚBLICO POR CÓDIGO
+// 7. TRACKING PÚBLICO POR CÓDIGO
 // ==========================================
 export const getOrderByTrackingCode = async (req: Request, res: Response) => {
     try {
@@ -379,7 +385,7 @@ export const getOrderByTrackingCode = async (req: Request, res: Response) => {
 };
 
 // ==========================================
-// 7. FEEDBACK DEL CLIENTE
+// 8. FEEDBACK DEL CLIENTE
 // ==========================================
 export const submitOrderFeedback = async (req: Request, res: Response) => {
     try {
@@ -411,10 +417,8 @@ export const submitOrderFeedback = async (req: Request, res: Response) => {
     }
 };
 
-
-
 // ==========================================
-// 8. REENVIAR TRACKING AL CLIENTE
+// 9. REENVIAR TRACKING AL CLIENTE
 // ==========================================
 export const resendTrackingToCustomer = async (req: Request, res: Response) => {
     try {
@@ -453,6 +457,9 @@ export const resendTrackingToCustomer = async (req: Request, res: Response) => {
     }
 };
 
+// ==========================================
+// 10. RESUMEN DE PEDIDOS
+// ==========================================
 export const getOrdersSummary = async (req: Request, res: Response) => {
     try {
         const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
@@ -501,6 +508,9 @@ export const getOrdersSummary = async (req: Request, res: Response) => {
     }
 };
 
+// ==========================================
+// 11. TIMELINE DE PEDIDOS
+// ==========================================
 export const getOrderTimeline = async (req: Request, res: Response) => {
     try {
         const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
@@ -531,6 +541,9 @@ export const getOrderTimeline = async (req: Request, res: Response) => {
     }
 };
 
+// ==========================================
+// 12. UTILIDAD: FIX DATA
+// ==========================================
 export const fixOrdersData = async (req: Request, res: Response) => {
     try {
         const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
