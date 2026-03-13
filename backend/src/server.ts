@@ -15,12 +15,24 @@ import chatRoutes from './modules/chat/chat.routes';
 import printerRoutes from './modules/printers/printer.routes';
 import settingsRoutes from './modules/settings/settings.routes';
 import saleRoutes from './modules/sales/sale.routes';
-import expenseRoutes from './modules/expense/expense.routes'; // ✅ Ruta corregida a 'expenses'
+import expenseRoutes from './modules/expense/expense.routes';
 
 const app = express();
 const httpServer = createServer(app);
 
-app.use(cors());
+// 👇 AQUÍ ESTÁ EL CAMBIO CLAVE PARA EL CORS 👇
+const corsOptions = {
+  origin: [
+    'https://print-hub3-d-git-main-joaquinyunes-projects.vercel.app', // Tu dominio de Vercel
+    'http://localhost:3000' // Para cuando pruebas en tu PC
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true, // Fundamental para que pase el login y los tokens
+};
+
+app.use(cors(corsOptions));
+// 👆 -------------------------------------- 👆
+
 app.use(express.json());
 
 mongoose
@@ -39,7 +51,7 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/printers', printerRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/sales', saleRoutes);
-app.use('/api/expenses', expenseRoutes); // ✅ Ahora debería reconocer el nombre
+app.use('/api/expenses', expenseRoutes); 
 
 const PORT = appConfig.port;
 httpServer.listen(PORT, () => {
