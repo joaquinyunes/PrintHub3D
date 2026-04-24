@@ -8,8 +8,7 @@ import {
   BarChart3, 
   LogOut, 
   Settings,
-  Store,
-  Image
+  Store
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -69,17 +68,6 @@ export default function Sidebar() {
              <BarChart3 className="h-4 w-4" />
           </div>
           <span className="font-medium">Reportes</span>
-        </Link>
-
-        {/* 4. IMÁGENES DE PRODUCTOS */}
-        <Link 
-          href="/admin/media" 
-          className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all ${isActive('/admin/media') ? 'bg-green-600/10 text-green-400 font-bold' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
-        >
-          <div className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${isActive('/admin/media') ? 'bg-green-500 text-white' : 'bg-white/5 group-hover:bg-white/10'}`}>
-             <Image className="h-4 w-4" />
-          </div>
-          <span className="font-medium">Imágenes</span>
         </Link>
         
         {/* SEPARADOR */}

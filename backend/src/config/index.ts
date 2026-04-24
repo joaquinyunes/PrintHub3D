@@ -57,8 +57,11 @@ const getRedisUrl = (): string | undefined => {
     return fromEnv;
   }
 
-  // En producción y desarrollo, no conectamos Redis por defecto para evitar errores
-  // Configurar REDIS_URL si se necesita la cola de WhatsApp
+  if (!isProduction) {
+    return 'redis://localhost:6379';
+  }
+
+  // En producción lo dejamos undefined para que los workers fallen rápido si la cola es obligatoria
   return undefined;
 };
 

@@ -39,21 +39,7 @@ export const getProducts = async (req: Request, res: Response) => {
       name: 1,
     });
 
-    // Agrupar por categoría para el frontend
-    const categories: Record<string, typeof products> = {};
-    products.forEach((p: any) => {
-      const cat = p.category || 'General';
-      if (!categories[cat]) categories[cat] = [];
-      categories[cat].push(p);
-    });
-
-    return res.json({ 
-      products,
-      categories: Object.keys(categories).map(name => ({
-        name,
-        products: categories[name]
-      }))
-    });
+    return res.json(products);
   } catch (error) {
     console.error("getProducts:", error);
     return res.status(500).json({ message: "Error interno" });

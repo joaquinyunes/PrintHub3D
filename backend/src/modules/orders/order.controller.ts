@@ -22,31 +22,6 @@ const statusCopy: Record<string, string> = {
     cancelled: 'Cancelado'
 };
 
-// Imágenes/videos predeterminados por estado
-const statusMedia: Record<string, { image?: string; video?: string; message: string }> = {
-    pending: {
-        message: 'Tu pedido está siendo revisado por nuestro equipo. Próimamente iniciaremos la impresión 3D.',
-        image: '/images/status/pending.jpg'
-    },
-    in_progress: {
-        message: 'Tu pedido está en producción. Estamos imprimiendo tus piezas en 3D.',
-        image: '/images/status/printing.jpg',
-        video: '/videos/printing.mp4'
-    },
-    completed: {
-        message: 'Tu pedido está listo! Puedes venir a retirarlo o contactanos para delivery.',
-        image: '/images/status/completed.jpg'
-    },
-    delivered: {
-        message: 'Pedido entregado. Gracias por confiar en nosotros!',
-        image: '/images/status/delivered.jpg'
-    },
-    cancelled: {
-        message: 'Pedido cancelado. Contactanos para más información.',
-        image: '/images/status/cancelled.jpg'
-    }
-};
-
 const fillTemplate = (template: string, vars: Record<string, string>) => {
     let output = template;
     Object.entries(vars).forEach(([key, value]) => {
@@ -388,43 +363,20 @@ export const getOrderByTrackingCode = async (req: Request, res: Response) => {
         const currentStep = Math.max(statusSteps.indexOf(order.status), 0);
         const progress = Math.round((currentStep / (statusSteps.length - 1)) * 100);
 
-        const statusInfo = statusMedia[order.status] || statusMedia.pending;
-
-        // Buscar imágenes de productos
-        const { getMediaByProductName } = await import('../products/product-media.controller');
-        
-        const itemsWithMedia = await Promise.all(order.items.map(async (item: any) => {
-            const media = await getMediaByProductName(item.productName, order.tenantId);
-            return {
-                ...item,
-                productImage: media?.imageUrl || null,
-                productVideo: media?.videoUrl || null
-            };
-        }));
-
         return res.json({
             trackingCode: order.trackingCode,
             clientName: order.clientName,
             status: order.status,
-            statusLabel: statusCopy[order.status] || order.status,
             progress,
             dueDate: order.dueDate,
             createdAt: order.createdAt,
             notes: order.notes,
-            items: itemsWithMedia,
+            items: order.items,
             total: order.total,
             paymentMethod: order.paymentMethod,
             deposit: order.deposit,
             customerSatisfaction: order.customerSatisfaction,
             customerFeedback: order.customerFeedback,
-            media: statusInfo,
-            statusSteps: statusSteps.map((step, idx) => ({
-                key: step,
-                label: statusCopy[step],
-                isComplete: idx <= currentStep,
-                isCurrent: idx === currentStep,
-                media: statusMedia[step]
-            })),
         });
     } catch (error) {
         console.error('Error getOrderByTrackingCode:', error);

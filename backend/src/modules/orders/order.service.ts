@@ -31,16 +31,10 @@ export interface RegisterOrderSaleInput {
   finalCost?: number | string | null;
 }
 
-const buildTrackingCode = (clientName?: string) => {
+const buildTrackingCode = () => {
   const random = Math.random().toString(36).slice(2, 7).toUpperCase();
   const stamp = Date.now().toString(36).slice(-4).toUpperCase();
-  
-  // Incluir las primeras 3 letras del nombre del cliente en mayúsculas
-  const namePart = clientName 
-    ? clientName.replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() 
-    : 'PH';
-  
-  return `${namePart}-${stamp}${random}`;
+  return `PH-${stamp}${random}`;
 };
 
 export const OrderService = {
@@ -99,7 +93,7 @@ export const OrderService = {
     );
 
     const profit = calculatedTotal - calculatedCost;
-    const trackingCode = buildTrackingCode(clientName);
+    const trackingCode = buildTrackingCode();
 
     const newOrder = new Order({
       clientName,

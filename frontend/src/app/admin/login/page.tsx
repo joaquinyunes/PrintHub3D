@@ -60,8 +60,12 @@ export default function LoginPage() {
         })
       );
 
-      // Redirección según rol - siempre al home, el adminLink está en el header
-      router.push("/");
+      // 🚀 Redirección según rol
+      if (data.user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

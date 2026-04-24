@@ -7,9 +7,7 @@ import { appConfig } from './config';
 // Importación de Rutas
 import taskRoutes from './modules/task/task.routes';
 import authRoutes from './modules/auth/auth.routes';
-import magicAuthRoutes from './modules/auth/magic-auth.routes';
 import productRoutes from './modules/products/product.routes';
-import productMediaRoutes from './modules/products/product-media.routes';
 import orderRoutes from './modules/orders/order.routes';
 import analyticsRoutes from './modules/analytics/analytics.routes';
 import clientRoutes from './modules/clients/client.routes';
@@ -45,9 +43,7 @@ mongoose
 // Conexión de Rutas a la API
 app.use('/api/tasks', taskRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/auth', magicAuthRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/products', productMediaRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/clients', clientRoutes);

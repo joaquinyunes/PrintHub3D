@@ -15,9 +15,7 @@ import {
   X,
   Printer,
   BarChart3,
-  DollarSign,
-  Image as ImageIcon,
-  ArrowLeft
+  DollarSign
 } from "lucide-react";
 
 interface StoredUser {
@@ -129,12 +127,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
           <NavItem href="/admin" icon={<LayoutDashboard size={20} />} label="Dashboard" active={pathname === "/admin"} />
           <NavItem href="/admin/products" icon={<Package size={20} />} label="Inventario" active={pathname.includes("/products")} />
-          <NavItem href="/admin/catalog" icon={<Package size={20} />} label="Catálogo" active={pathname.includes("/catalog")} />
           <NavItem href="/admin/orders" icon={<ShoppingCart size={20} />} label="Pedidos" active={pathname.includes("/orders")} />
           <NavItem href="/admin/production" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/production")} />
           <NavItem href="/admin/expenses" icon={<DollarSign size={20} />} label="Gastos" active={pathname.includes("/expenses")} />
           <NavItem href="/admin/analytics" icon={<BarChart3 size={20} />} label="Reportes" active={pathname.includes("/analytics")} />
-          <NavItem href="/admin/media" icon={<ImageIcon size={20} />} label="Imágenes" active={pathname.includes("/media")} />
           
           <div className="my-4 h-px bg-white/5 mx-2" />
           
@@ -163,16 +159,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         <main className="flex-1 overflow-auto bg-[#0a0a0a]">
-          {/* BOTÓN VOLVER AL SITIO */}
-          <div className="max-w-7xl mx-auto px-4 py-2">
-            <a 
-              href="/" 
-              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              ← Volver al sitio
-            </a>
-          </div>
           {children}
         </main>
       </div>

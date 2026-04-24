@@ -20,7 +20,6 @@ interface Order {
     deposit?: number; notes?: string; total: number; 
     status: string; createdAt: string; items: (OrderItem & { printedQuantity?: number })[]; isSaleRegistered?: boolean;
     dueDate?: string; files?: OrderFile[]; chatLink?: string;
-    trackingCode?: string;
 }
 interface StoredUser { token: string; }
 
@@ -75,8 +74,6 @@ export default function OrderListPage() {
   const [itemInput, setItemInput] = useState({ id: "", qty: 1, customName: "", customPrice: "", printTimeMinutes: 30 });
   const [printOrder, setPrintOrder] = useState<Order | null>(null);
   const [printIndex, setPrintIndex] = useState<number | null>(null);
-  const [productCategories, setProductCategories] = useState<{name: string; products: any[]}[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -98,24 +95,7 @@ export default function OrderListPage() {
                   : [];
               setOrders(ordersData);
             }
-            if(resP.ok) {
-              const productData = await resP.json();
-              // Soportar tanto array plano como objeto con categorías
-              if (Array.isArray(productData)) {
-                setProducts(productData);
-                // Agrupar por categoría
-                const cats: Record<string, any[]> = {};
-                productData.forEach((p: any) => {
-                  const cat = p.category || 'General';
-                  if (!cats[cat]) cats[cat] = [];
-                  cats[cat].push(p);
-                });
-                setProductCategories(Object.keys(cats).map(name => ({ name, products: cats[name] })));
-              } else if (productData.products) {
-                setProducts(productData.products);
-                setProductCategories(productData.categories || []);
-              }
-            }
+            if(resP.ok) setProducts(await resP.json());
         } catch (e) { console.error(e); } finally { setLoading(false); }
     };
     loadData();
@@ -398,28 +378,11 @@ export default function OrderListPage() {
                             {/* Inputs Agregar Item */}
                             <div className="flex gap-2 mb-4 bg-white/5 p-2 rounded-2xl border border-white/5">
                                 {itemTab==="product" ? (
-                                    <div className="flex-1 space-y-2">
-                                        {/* Selector de categoría */}
-                                        <select 
-                                            className="w-full bg-black/50 border border-white/10 rounded-xl p-2 text-xs text-white outline-none"
-                                            value={selectedCategory}
-                                            onChange={e => setSelectedCategory(e.target.value)}
-                                        >
-                                            <option value="" className="bg-black">Todas las categorías</option>
-                                            {productCategories.map(c => <option key={c.name} value={c.name} className="bg-black">{c.name} ({c.products.length})</option>)}
-                                        </select>
-                                        
-                                        {/* Selector de producto */}
-                                        <select 
-                                            className="w-full bg-transparent border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none"
-                                            value={itemInput.id} 
-                                            onChange={e => setItemInput({...itemInput, id: e.target.value})}
-                                        >
+                                    <div className="relative flex-1">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4"/>
+                                        <select className="w-full bg-transparent border-none pl-9 py-3 text-sm text-white outline-none appearance-none" value={itemInput.id} onChange={e=>setItemInput({...itemInput, id: e.target.value})}>
                                             <option value="" className="bg-black">Seleccionar producto...</option>
-                                            {(selectedCategory 
-                                                ? productCategories.find(c => c.name === selectedCategory)?.products || []
-                                                : products
-                                            ).map(p => <option key={p._id} value={p._id} className="bg-black">{p.name} - ${p.price}</option>)}
+                                            {products.map(p=><option key={p._id} value={p._id} className="bg-black">{p.name} (${p.price})</option>)}
                                         </select>
                                     </div>
                                 ):(
@@ -582,16 +545,6 @@ function OrderCard({ order, activeTab, onEdit, onDeliver, onStatusChange, onPay,
                         <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{order.origin}</span>
                     </div>
                     <h4 className="font-bold text-white text-lg line-clamp-1">{order.clientName}</h4>
-                    {/* CÓDIGO DE SEGUIMIENTO */}
-                    {order.trackingCode && (
-                        <button 
-                            onClick={() => navigator.clipboard.writeText(order.trackingCode)}
-                            className="flex items-center gap-1.5 mt-1 text-[10px] text-blue-400 font-bold uppercase tracking-wider bg-blue-500/10 px-2 py-0.5 rounded hover:bg-blue-500/20 transition-colors w-fit"
-                            title="Click para copiar"
-                        >
-                            {order.trackingCode}
-                        </button>
-                    )}
                     {/* FECHA */}
                     {order.dueDate && (
                         <div className="flex items-center gap-1.5 mt-2 text-[10px] text-gray-500 font-bold uppercase tracking-wide">
