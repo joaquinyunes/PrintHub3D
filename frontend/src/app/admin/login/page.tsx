@@ -60,12 +60,8 @@ export default function LoginPage() {
         })
       );
 
-      // 🚀 Redirección según rol
-      if (data.user.role === "admin") {
-        router.push("/admin");
-      } else {
-        router.push("/");
-      }
+      // Siempre ir al home, el boton Admin aparece en el header
+      router.push("/");
     } catch (err: any) {
       setError(err.message);
     } finally {

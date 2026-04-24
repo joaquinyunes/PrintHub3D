@@ -26,8 +26,15 @@ interface Printer {
 }
 
 interface User {
-  name: string;
-  role: "admin" | "user";
+  token?: string;
+  user?: {
+    id?: string;
+    name?: string;
+    role: string;
+    email?: string;
+  };
+  name?: string;
+  role?: string;
   email?: string;
 }
 
@@ -149,16 +156,14 @@ export default function HomePage() {
             <Link href="/#impresoras" className="text-gray-300 hover:text-white text-sm font-medium transition hover:text-blue-400">Impresoras</Link>
             <Link href="/#contacto" className="text-gray-300 hover:text-white text-sm font-medium transition hover:text-blue-400">Contacto</Link>
             
-            {user ? (
+            {user && user.user?.role === "admin" ? (
               <div className="flex items-center gap-3 pl-4 border-l border-gray-700">
-                {user.role === "admin" && (
-                  <Link
-                    href="/admin"
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-bold hover:from-blue-700 hover:to-purple-700 transition shadow-lg shadow-blue-600/20"
-                  >
-                    Admin
-                  </Link>
-                )}
+                <Link
+                  href="/admin"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-bold hover:from-blue-700 hover:to-purple-700 transition shadow-lg shadow-blue-600/20"
+                >
+                  Admin
+                </Link>
 
                 <button
                   onClick={handleLogout}
