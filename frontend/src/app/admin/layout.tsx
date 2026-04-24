@@ -15,7 +15,8 @@ import {
   X,
   Printer,
   BarChart3,
-  DollarSign
+  DollarSign,
+  Home
 } from "lucide-react";
 
 interface StoredUser {
@@ -126,6 +127,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Links de Navegación */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
           <NavItem href="/admin" icon={<LayoutDashboard size={20} />} label="Dashboard" active={pathname === "/admin"} />
+          <NavItem href="/admin/home" icon={<Home size={20} />} label="Inicio Web" active={pathname === "/admin/home"} />
           <NavItem href="/admin/products" icon={<Package size={20} />} label="Inventario" active={pathname.includes("/products")} />
           <NavItem href="/admin/orders" icon={<ShoppingCart size={20} />} label="Pedidos" active={pathname.includes("/orders")} />
           <NavItem href="/admin/production" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/production")} />

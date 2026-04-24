@@ -12,15 +12,16 @@ interface Product {
   category: string;
 }
 
-interface User {
+interface UserData {
   name: string;
   role: string;
   email?: string;
+  token?: string;
 }
 
 export default function PaymentButtons({ product }: { product: Product }) {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

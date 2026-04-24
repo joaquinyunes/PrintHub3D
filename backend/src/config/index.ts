@@ -57,11 +57,7 @@ const getRedisUrl = (): string | undefined => {
     return fromEnv;
   }
 
-  if (!isProduction) {
-    return 'redis://localhost:6379';
-  }
-
-  // En producción lo dejamos undefined para que los workers fallen rápido si la cola es obligatoria
+  // No usar Redis en desarrollo local - evitar errores
   return undefined;
 };
 

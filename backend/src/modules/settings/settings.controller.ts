@@ -30,6 +30,7 @@ export const updateSettings = async (req: Request, res: Response) => {
             filamentCostAverage,
             trackingBaseUrl,
             customerMessageTemplates,
+            homepageSections,
         } = req.body;
 
         const settings = await Settings.findOneAndUpdate(
@@ -42,6 +43,7 @@ export const updateSettings = async (req: Request, res: Response) => {
                 filamentCostAverage,
                 trackingBaseUrl,
                 customerMessageTemplates,
+                homepageSections,
             },
             { new: true, upsert: true }
         );

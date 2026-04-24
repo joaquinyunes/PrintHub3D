@@ -16,6 +16,12 @@ export interface ISettings extends Document {
         cancelled: string;
         resendTracking: string;
     };
+    homepageSections: {
+        ideas: { name: string; icon: string; category: string; downloads: string; link: string }[];
+        printers: { name: string; description: string; imageUrl: string; price: number; link: string }[];
+        printersTitle: string;
+        printersSubtitle: string;
+    };
     tenantId: string;
 }
 
@@ -42,6 +48,19 @@ const SettingsSchema: Schema = new Schema({
         delivered: { type: String, default: defaultTemplates.delivered },
         cancelled: { type: String, default: defaultTemplates.cancelled },
         resendTracking: { type: String, default: defaultTemplates.resendTracking },
+    },
+    homepageSections: {
+        ideas: { type: Schema.Types.Mixed, default: [
+            { name: 'iPhone Stand', icon: '📱', category: 'Organizers', downloads: '15k+', link: '' },
+            { name: 'Under Desk Drawer', icon: '🗄️', category: 'Storage', downloads: '12k+', link: '' },
+            { name: 'OTF Fidget', icon: '🎯', category: 'Toys', downloads: '10k+', link: '' },
+            { name: 'Cable Wrapper', icon: '🔌', category: 'Organizers', downloads: '8k+', link: '' },
+            { name: 'Filament Clip', icon: '🎞️', category: 'Accessories', downloads: '7k+', link: '' },
+            { name: 'Capybara', icon: '🦫', category: 'Toys', downloads: '5k+', link: '' },
+        ]},
+        printers: { type: Schema.Types.Mixed, default: [] },
+        printersTitle: { type: String, default: 'Impresoras 3D' },
+        printersSubtitle: { type: String, default: 'Vendemos impresoras Bambu Lab y accesorios' },
     },
     tenantId: { type: String, default: appConfig.defaultTenantId }
 });
