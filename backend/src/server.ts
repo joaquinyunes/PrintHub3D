@@ -16,6 +16,8 @@ import printerRoutes from './modules/printers/printer.routes';
 import settingsRoutes from './modules/settings/settings.routes';
 import saleRoutes from './modules/sales/sale.routes';
 import expenseRoutes from './modules/expense/expense.routes';
+import paymentRoutes from './modules/payments/payment.routes';
+import trendsRoutes from './modules/trends/trends.routes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -52,6 +54,8 @@ app.use('/api/printers', printerRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/sales', saleRoutes);
 app.use('/api/expenses', expenseRoutes); 
+app.use('/api/payments', paymentRoutes);
+app.use('/api/trends', trendsRoutes); 
 
 const PORT = appConfig.port;
 httpServer.listen(PORT, () => {
