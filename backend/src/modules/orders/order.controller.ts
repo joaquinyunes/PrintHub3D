@@ -129,6 +129,59 @@ export const createOrder = async (req: Request, res: Response) => {
 };
 
 // ==========================================
+// 2B. CREAR PEDIDO PÚBLICO (Desde storefront)
+// ==========================================
+export const createPublicOrder = async (req: Request, res: Response) => {
+    try {
+        const defaultTenantId = 'global3d_hq';
+        
+        const { 
+            clientName, 
+            customerContact,
+            items, 
+            notes 
+        } = req.body;
+
+        if (!clientName || !items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ message: 'Datos inválidos' });
+        }
+
+        // Calculate total
+        let total = 0;
+        items.forEach((i: any) => {
+            total += Number(i.price || 0) * Number(i.quantity || 1);
+        });
+
+        const savedOrder = await OrderService.createOrder({
+            tenantId: defaultTenantId,
+            clientName,
+            origin: 'Web',
+            paymentMethod: 'WhatsApp',
+            deposit: 0,
+            notes: notes || '',
+            items,
+            dueDate: null,
+            files: [],
+            customerContact: customerContact || '',
+        });
+
+        // Return order with WhatsApp link
+        const order = savedOrder as any;
+        const phone = '5493794000000';
+        const waText = encodeURIComponent(`Hola! Acabo de hacer un pedido desde la web.\n\nCódigo: ${order.trackingCode}\nTotal: $${total}\n\nProductos:\n${items.map((i: any) => `- ${i.productName} x${i.quantity}`).join('\n')}`);
+        
+        res.status(201).json({
+            ...order,
+            whatsappUrl: `https://wa.me/${phone}?text=${waText}`,
+            total
+        });
+    } catch (error) {
+        console.error("CRITICAL ERROR createPublicOrder:", error);
+        res.status(500).json({ message: 'Error al crear pedido' });
+    }
+};
+
+// ==========================================
 // 3. EDITAR PEDIDO
 // ==========================================
 export const updateOrder = async (req: Request, res: Response) => {
@@ -363,10 +416,20 @@ export const getOrderByTrackingCode = async (req: Request, res: Response) => {
         const currentStep = Math.max(statusSteps.indexOf(order.status), 0);
         const progress = Math.round((currentStep / (statusSteps.length - 1)) * 100);
 
+        const statusLabel = statusCopy[order.status] || order.status;
+        const steps = statusSteps.map((s, i) => ({
+            key: s,
+            label: statusCopy[s] || s,
+            isComplete: i < currentStep,
+            isCurrent: i === currentStep,
+            media: null
+        }));
+
         return res.json({
             trackingCode: order.trackingCode,
             clientName: order.clientName,
             status: order.status,
+            statusLabel,
             progress,
             dueDate: order.dueDate,
             createdAt: order.createdAt,
@@ -377,6 +440,8 @@ export const getOrderByTrackingCode = async (req: Request, res: Response) => {
             deposit: order.deposit,
             customerSatisfaction: order.customerSatisfaction,
             customerFeedback: order.customerFeedback,
+            media: { message: 'Tu pedido está en producción' },
+            statusSteps: steps,
         });
     } catch (error) {
         console.error('Error getOrderByTrackingCode:', error);

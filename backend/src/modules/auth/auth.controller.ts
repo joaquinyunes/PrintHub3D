@@ -59,7 +59,7 @@ export const login = async (req: Request, res: Response) => {
 
         const token = jwt.sign({ 
             id: user._id, 
-            role: user.role, // Guardamos el rol en el token
+            role: user.role,
             tenantId: user.tenantId 
         }, appConfig.jwtSecret, { expiresIn: '30d' });
 
@@ -69,12 +69,35 @@ export const login = async (req: Request, res: Response) => {
                 id: user._id, 
                 name: user.name, 
                 email: user.email, 
-                role: user.role // Devolvemos el rol al frontend para saber a dónde redirigir
+                role: user.role,
+                tenantId: user.tenantId
             } 
         });
 
     } catch (error) {
         console.error("Error en login:", error);
         res.status(500).json({ message: 'Error en login' });
+    }
+};
+
+// --- GET ME (Obtener usuario actual desde token) ---
+export const getMe = async (req: Request, res: Response) => {
+    try {
+        const user = (req as any).user;
+        if (!user) {
+            return res.status(401).json({ message: 'No autorizado' });
+        }
+
+        res.json({ 
+            user: { 
+                id: user.id, 
+                name: user.name || 'Usuario', 
+                email: user.email || '', 
+                role: user.role,
+                tenantId: user.tenantId
+            } 
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error obtieniendo usuario' });
     }
 };

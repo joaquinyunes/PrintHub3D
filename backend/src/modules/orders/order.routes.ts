@@ -2,9 +2,10 @@ import { Router } from 'express';
 import { 
     getOrders, 
     createOrder, 
+    createPublicOrder,
     updateOrderStatus, 
     updateOrder,        
-    registerOrderSale, // 👈 CORREGIDO (Antes decía registerOrderAsSale)
+    registerOrderSale,
     fixOrdersData,
     getOrderByTrackingCode,
     submitOrderFeedback,
@@ -18,9 +19,12 @@ import { withTenant } from '../../middleware/tenant.middleware';
 
 const router = Router();
 
+// Public routes (no auth)
+router.post('/public', createPublicOrder);
 router.get('/track/:trackingCode', getOrderByTrackingCode);
 router.post('/track/:trackingCode/feedback', submitOrderFeedback);
 
+// Admin routes (auth required)
 router.get('/summary', protect, withTenant, adminOnly, getOrdersSummary);
 router.get('/', protect, withTenant, adminOnly, getOrders);
 router.post('/', protect, withTenant, adminOnly, createOrder);
