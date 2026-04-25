@@ -9,8 +9,8 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
 
     try {
         const decoded = jwt.verify(token, appConfig.jwtSecret) as any;
-        // @ts-ignore
-        req.user = decoded; 
+        // Augment Express Request with user for TypeScript safety
+        (req as any).user = decoded; 
         next();
     } catch (error) {
         res.status(401).json({ message: 'Token inválido' });

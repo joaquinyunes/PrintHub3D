@@ -18,6 +18,7 @@ import saleRoutes from './modules/sales/sale.routes';
 import expenseRoutes from './modules/expense/expense.routes';
 import paymentRoutes from './modules/payments/payment.routes';
 import trendsRoutes from './modules/trends/trends.routes';
+import homeRoutes from './modules/home/home.routes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -56,6 +57,8 @@ app.use('/api/sales', saleRoutes);
 app.use('/api/expenses', expenseRoutes); 
 app.use('/api/payments', paymentRoutes);
 app.use('/api/trends', trendsRoutes); 
+// Home content API
+app.use('/api/home', homeRoutes);
 
 const PORT = appConfig.port;
 httpServer.listen(PORT, () => {

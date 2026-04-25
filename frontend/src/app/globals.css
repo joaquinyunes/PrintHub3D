@@ -62,3 +62,11 @@ body {
   background: var(--bg-main);
   color: var(--text-main);
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  transition: all 0.25s ease;
+}
