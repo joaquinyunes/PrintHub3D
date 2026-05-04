@@ -12,7 +12,7 @@ import { apiUrl } from "@/lib/api";
 // --- INTERFACES ---
 interface Product {
   _id: string; name: string; price: number; cost: number;
-  stock: number; category: string; sku?: string; minStock?: number;
+  stock: number; category: string; sku?: string; minStock?: number; imageUrl?: string;
 }
 
 interface Sale {
@@ -60,7 +60,7 @@ export default function ProductsPage() {
 
   const [newSectionName, setNewSectionName] = useState("");
   const [newProduct, setNewProduct] = useState({
-    name: "", price: "", cost: "", stock: "", category: "", sku: "", minStock: "5"
+    name: "", price: "", cost: "", stock: "", category: "", sku: "", minStock: "5", imageUrl: ""
   });
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -148,7 +148,7 @@ export default function ProductsPage() {
       if (res.ok) {
         showToast("📦 Producto guardado");
         setIsProductModalOpen(false);
-        setNewProduct({ name: "", price: "", cost: "", stock: "", category: "", sku: "", minStock: "5" });
+        setNewProduct({ name: "", price: "", cost: "", stock: "", category: "", sku: "", minStock: "5", imageUrl: "" });
         await loadData(session.token); // RECARGA PARA GUARDADO INMEDIATO
       }
     } catch { showToast("Error", "error"); }
@@ -371,6 +371,10 @@ export default function ProductsPage() {
                       <div className="col-span-2">
                           <label className="text-[10px] text-gray-500 font-black uppercase mb-2 block tracking-widest">Nombre del Producto</label>
                           <input required className="w-full bg-[#050505] border border-white/10 rounded-2xl p-5 text-white outline-none focus:border-blue-500 transition-all font-bold" value={newProduct.name} onChange={e=>setNewProduct({...newProduct, name:e.target.value})} placeholder="Ej: Filamento PLA Rojo"/>
+                      </div>
+                      <div className="col-span-2">
+                          <label className="text-[10px] text-purple-500 font-black uppercase mb-2 block tracking-widest">URL de Imagen</label>
+                          <input className="w-full bg-[#050505] border border-white/10 rounded-2xl p-5 text-white outline-none focus:border-purple-500 transition-all font-mono text-sm" value={newProduct.imageUrl} onChange={e=>setNewProduct({...newProduct, imageUrl:e.target.value})} placeholder="https://ejemplo.com/imagen.jpg"/>
                       </div>
                       <div className="col-span-1">
                           <label className="text-[10px] text-emerald-500 font-black uppercase mb-2 block tracking-widest">Precio Venta ($)</label>

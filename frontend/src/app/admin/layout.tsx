@@ -16,7 +16,8 @@ import {
   Printer,
   BarChart3,
   DollarSign,
-  Home
+  Home,
+  Store
 } from "lucide-react";
 
 interface StoredUser {
@@ -140,7 +141,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* Footer Sidebar */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 space-y-2">
+          <button 
+            onClick={() => window.open('/', '_blank')}
+            className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-green-400 hover:bg-green-500/10 hover:text-green-300 rounded-xl transition-colors"
+          >
+            <Store size={18} />
+            <span>Ver Tienda</span>
+          </button>
           <button 
             onClick={handleLogout}
             className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-xl transition-colors"
