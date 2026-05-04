@@ -96,9 +96,7 @@ export default function SettingsPage() {
 
   const connectWhatsApp = () => {
     setConnecting(true);
-    eventSource.current = new EventSource(apiUrl('/api/whatsapp/qr'), {
-      headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem("user") || "{}").token}` }
-    });
+    eventSource.current = new EventSource(apiUrl('/api/whatsapp/qr'));
 
     eventSource.current.onmessage = (event) => {
       const data = JSON.parse(event.data);

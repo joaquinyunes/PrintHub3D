@@ -33,4 +33,4 @@ export const uploadProductImage = [upload.single('image'), async (req: Request, 
   } catch (err) {
     res.status(500).json({ message: 'Error subiendo imagen' });
   }
-] as any;
+}];
