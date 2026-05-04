@@ -98,13 +98,17 @@ export default function SettingsPage() {
     setConnecting(true);
     eventSource.current = new EventSource(apiUrl('/api/whatsapp/qr'));
 
-    eventSource.current.onmessage = (event) => {
+    eventSource.current.addEventListener('qr', (event) => {
       const data = JSON.parse(event.data);
       if (data.qr) {
         setQrImage(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(data.qr)}`);
         setConnecting(false);
       }
-    };
+    });
+
+    eventSource.current.addEventListener('waiting', () => {
+      // Esperando QR...
+    });
 
     eventSource.current.addEventListener('connected', () => {
       setWaStatus({ isReady: true, hasQr: false });
