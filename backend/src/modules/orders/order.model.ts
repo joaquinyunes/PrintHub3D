@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import mongooseDelete from 'mongoose-delete';
 
 export interface IOrder extends Document {
     clientName: string;
@@ -51,7 +52,7 @@ const OrderSchema: Schema = new Schema({
     deposit: { type: Number, default: 0 },
     total: { type: Number, required: true },
     notes: { type: String, default: "" },
-    trackingCode: { type: String, required: true, unique: true, index: true },
+    trackingCode: { type: String, required: true, index: true },
     customerContact: { type: String, default: "" },
     
     // 🆕 NUEVOS CAMPOS (Asegurados)
@@ -80,10 +81,22 @@ const OrderSchema: Schema = new Schema({
     customerSatisfaction: { type: Number, min: 1, max: 5 },
     customerFeedback: { type: String, default: "" },
     tenantId: { type: String, required: true }
-}, { timestamps: true });
+}, { 
+    timestamps: true,
+    // Soft delete configurado aquí
+    deletedAt: true,
+    deletedBy: false
+});
 
 // Índices para consultas por tenant, fecha y estado
 OrderSchema.index({ tenantId: 1, createdAt: -1 });
 OrderSchema.index({ tenantId: 1, status: 1, createdAt: -1 });
+OrderSchema.index({ trackingCode: 1, deleted: 1 });
+
+// Aplicar plugin de soft delete
+OrderSchema.plugin(mongooseDelete, { 
+    deletedAt: true,
+    overrideMethods: true 
+});
 
 export default mongoose.model<IOrder>('Order', OrderSchema);

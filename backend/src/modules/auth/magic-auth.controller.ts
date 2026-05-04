@@ -3,25 +3,12 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User, { IUser } from './user.model';
 import { appConfig } from '../../config';
-
-const magicCodes = new Map<string, { code: string; expiresAt: Date; userId: string }>();
-
-const generateMagicCode = () => Math.floor(100000 + Math.random() * 900000).toString();
-
-setInterval(() => {
-  const now = new Date();
-  for (const [key, value] of magicCodes.entries()) {
-    if (value.expiresAt < now) magicCodes.delete(key);
-  }
-}, 5 * 60 * 1000);
+import logger from '../../config/logger';
 
 export const requestMagicCode = async (req: Request, res: Response) => {
   try {
     const { identifier } = req.body;
-    
-    if (!identifier) {
-      return res.status(400).json({ message: 'Email o teléfono requerido' });
-    }
+    if (!identifier) return res.status(400).json({ message: 'Email o teléfono requerido' });
 
     let user = await User.findOne({ 
       $or: [{ email: identifier }, { phone: identifier }] 
@@ -40,32 +27,35 @@ export const requestMagicCode = async (req: Request, res: Response) => {
         role: 'client',
         tenantId: appConfig.defaultTenantId,
       }) as IUser & { phone?: string; email?: string };
-      await user.save();
     }
 
     if ((user as any).role === 'admin') {
       return res.status(400).json({ message: 'Los administradores deben usar contraseña' });
     }
 
-    const userPhone = (user as any).phone as string | undefined;
-    
-    const code = generateMagicCode();
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
     
-    magicCodes.set(identifier, { code, expiresAt, userId: user._id.toString() });
+    (user as any).magicCode = code;
+    (user as any).magicCodeExpires = expiresAt;
+    await user.save();
 
+    const userPhone = (user as any).phone as string | undefined;
+    
     if (userPhone) {
       try {
         const { sendCustomerNotification } = await import('../notifications/notification.service');
         await sendCustomerNotification(
           userPhone,
-          `🔐 Tu código de accesso es: *${code}*. Expira en 15 minutos.`
+          `🔐 Tu código de acceso es: *${code}*. Expira en 15 minutos.`
         );
       } catch (err) {
-        console.error('Error enviando código:', err);
+        logger.error('Error enviando código:', err);
       }
     }
 
+    logger.info(`Magic code generado para ${identifier}: ${code}`);
+    
     res.json({ 
       message: 'Código enviado',
       sentTo: userPhone ? 'whatsapp' : 'email',
@@ -73,7 +63,7 @@ export const requestMagicCode = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    console.error('Error requestMagicCode:', error);
+    logger.error('Error requestMagicCode:', error);
     res.status(500).json({ message: 'Error solicitando código' });
   }
 };
@@ -86,26 +76,20 @@ export const verifyMagicCode = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Identificador y código requeridos' });
     }
 
-    const stored = magicCodes.get(identifier);
-    if (!stored) {
-      return res.status(400).json({ message: 'Código no solicitado o expirado' });
-    }
+    const user = await User.findOne({ 
+      $or: [{ email: identifier }, { phone: identifier }],
+      magicCode: code,
+      magicCodeExpires: { $gt: new Date() }
+    }) as (IUser & { phone?: string; email?: string }) | null;
 
-    if (stored.expiresAt < new Date()) {
-      magicCodes.delete(identifier);
-      return res.status(400).json({ message: 'Código expirado' });
-    }
-
-    if (stored.code !== code) {
-      return res.status(400).json({ message: 'Código incorrecto' });
-    }
-
-    const user = await User.findById(stored.userId) as (IUser & { phone?: string; email?: string }) | null;
     if (!user) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
+      return res.status(400).json({ message: 'Código inválido o expirado' });
     }
 
-    magicCodes.delete(identifier);
+    // Limpiar código
+    (user as any).magicCode = undefined;
+    (user as any).magicCodeExpires = undefined;
+    await user.save();
 
     const token = jwt.sign({ 
       id: user._id, 
@@ -124,7 +108,7 @@ export const verifyMagicCode = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    console.error('Error verifyMagicCode:', error);
+    logger.error('Error verifyMagicCode:', error);
     res.status(500).json({ message: 'Error verificando código' });
   }
 };

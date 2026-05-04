@@ -1,11 +1,9 @@
 import { Router } from 'express';
-import { getProductMedia, createProductMedia, deleteProductMedia } from './product-media.controller';
+import { uploadProductImage } from './product-media.controller';
 import { protect } from '../auth/auth.middleware';
-import { withTenant } from '../../middleware/tenant.middleware';
 
 const router = Router();
-router.get('/media', protect, withTenant, getProductMedia);
-router.post('/media', protect, withTenant, createProductMedia);
-router.delete('/media/:id', protect, withTenant, deleteProductMedia);
+// Teóricamente protegido; ajuste según tus roles (admin/client)
+router.post('/image', protect, uploadProductImage);
 
 export default router;

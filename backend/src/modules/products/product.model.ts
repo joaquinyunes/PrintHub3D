@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
+import mongooseDelete from "mongoose-delete";
 
-// 1. 👇 Agrega 'sku' a la Interfaz (TypeScript)
 export interface IProduct extends Document {
   name: string;
   category: string;
@@ -12,7 +12,7 @@ export interface IProduct extends Document {
   minStock: number;
   isPublic: boolean;
   tenantId: string;
-  sku?: string; // 👈 ESTO ES LO QUE TE FALTA AQUI
+  sku?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,18 +29,25 @@ const ProductSchema: Schema = new Schema(
     minStock: { type: Number, default: 5 },
     isPublic: { type: Boolean, default: false },
     tenantId: { type: String, required: true, index: true },
-    
-    // 2. 👇 Agrega 'sku' al Schema (Base de Datos)
-    sku: { type: String, required: false, default: "" }, 
+    sku: { type: String, default: "" }, 
   },
   {
     timestamps: true,
+    deletedAt: true,
+    deletedBy: false
   }
 );
 
-
-
-// 🔍 Búsqueda por texto
+// 🔍 Búsqueda por texto y índices compuestos
 ProductSchema.index({ name: "text" });
+ProductSchema.index({ tenantId: 1, category: 1, createdAt: -1 });
+ProductSchema.index({ tenantId: 1, isPublic: 1, stock: 1 });
+ProductSchema.index({ tenantId: 1, sku: 1 }, { unique: false });
+
+// Aplicar plugin de soft delete
+ProductSchema.plugin(mongooseDelete, { 
+  deletedAt: true,
+  overrideMethods: true 
+});
 
 export default mongoose.model<IProduct>("Product", ProductSchema);

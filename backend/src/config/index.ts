@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import logger from './logger';
 
 dotenv.config();
 
@@ -9,70 +10,37 @@ const NODE_ENV: NodeEnv =
 
 const isProduction = NODE_ENV === 'production';
 
+// Validación estricta de variables críticas
+const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET'];
+requiredEnvVars.forEach((varName) => {
+  if (!process.env[varName]) {
+    logger.fatal(`Falta la variable de entorno crítica: ${varName}`);
+    if (isProduction) process.exit(1);
+  }
+});
+
 const getMongoUri = (): string => {
-  const fromEnv = process.env.MONGO_URI?.trim();
-  if (fromEnv) {
-    return fromEnv;
-  }
-
-  if (!isProduction) {
-    // Solo permitimos default en desarrollo/test
-    return 'mongodb://localhost:27017/global3d';
-  }
-
-  throw new Error('MONGO_URI is required in production');
+  return process.env.MONGO_URI?.trim() || 'mongodb://localhost:27017/global3d';
 };
 
 const getJwtSecret = (): string => {
   const fromEnv = process.env.JWT_SECRET?.trim();
-  if (fromEnv) {
-    return fromEnv;
-  }
-
+  if (fromEnv) return fromEnv;
+  
   if (!isProduction) {
-    // Default inseguro solo para desarrollo
-    return 'dev-change-me-jwt-secret';
+    logger.warn('JWT_SECRET no configurado. Usando fallback inseguro para desarrollo.');
+    return 'dev-fallback-jwt-secret';
   }
-
   throw new Error('JWT_SECRET is required in production');
 };
 
+const getCorsOrigins = (): string[] => {
+  const origins = process.env.CLIENT_URL || 'http://localhost:3000';
+  return origins.split(',').map(o => o.trim());
+};
+
 const getDefaultTenantId = (): string => {
-  const fromEnv = process.env.DEFAULT_TENANT_ID?.trim();
-  if (fromEnv) {
-    return fromEnv;
-  }
-
-  if (!isProduction) {
-    // Mantiene compatibilidad, pero ya no está hardcodeado en todo el código
-    return 'global3d_hq';
-  }
-
-  throw new Error('DEFAULT_TENANT_ID is required in production');
-};
-
-const getRedisUrl = (): string | undefined => {
-  const fromEnv = process.env.REDIS_URL?.trim();
-  if (fromEnv) {
-    return fromEnv;
-  }
-
-  // No usar Redis en desarrollo local - evitar errores
-  return undefined;
-};
-
-const getOrderApiBaseUrl = (): string | undefined => {
-  const fromEnv = process.env.ORDER_API_BASE_URL?.trim();
-  if (fromEnv) {
-    return fromEnv.replace(/\/$/, '');
-  }
-
-  if (!isProduction) {
-    return 'http://localhost:5000/api';
-  }
-
-  // En producción, si el bot depende de esto, se debe configurar explícitamente
-  return undefined;
+  return process.env.DEFAULT_TENANT_ID?.trim() || 'global3d_hq';
 };
 
 export const appConfig = {
@@ -82,11 +50,20 @@ export const appConfig = {
   mongoUri: getMongoUri(),
   jwtSecret: getJwtSecret(),
   defaultTenantId: getDefaultTenantId(),
-  redisUrl: getRedisUrl(),
+  corsOrigins: getCorsOrigins(),
+  logLevel: process.env.LOG_LEVEL || 'info',
+  redisUrl: process.env.REDIS_URL?.trim(),
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID?.trim() || '',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET?.trim() || '',
+  },
+  mercadoPago: {
+    accessToken: process.env.MP_ACCESS_TOKEN?.trim() || '',
+    webhookSecret: process.env.MP_WEBHOOK_SECRET?.trim() || '',
+  },
   whatsapp: {
-    orderApiBaseUrl: getOrderApiBaseUrl(),
+    orderApiBaseUrl: process.env.ORDER_API_BASE_URL?.trim() || 'http://localhost:5000/api',
   },
 };
 
 export type AppConfig = typeof appConfig;
-

@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  mongodb:
+    image: mongo:6
+    container_name: printhub-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: global3d
+
+  backend:
+    build: ./backend
+    container_name: printhub-backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/global3d
+      - JWT_SECRET=super_secret_jwt_key_for_prod
+      - NODE_ENV=production
+      - CLIENT_URL=http://localhost:3000
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  frontend:
+    build: ./frontend
+    container_name: printhub-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+
+volumes:
+  mongo-data:

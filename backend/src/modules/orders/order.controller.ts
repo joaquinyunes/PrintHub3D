@@ -1,16 +1,13 @@
 import { Request, Response } from 'express';
-import Order from './order.model';
-import Product from '../products/product.model';
+import OrderRepository from '../../repositories/order.repository';
+import ProductRepository from '../../repositories/product.repository';
 import Sale from '../sales/sale.model';
-
-// Intentamos importar estos módulos opcionales. Si fallan, no rompemos el servidor.
-// Asegúrate de que las rutas sean correctas según tu estructura de carpetas.
-import Client from '../clients/client.model'; 
-import Printer from '../printers/printer.model';
-import Settings from '../settings/settings.model';
 import { sendAdminNotification, sendCustomerNotification } from '../notifications/notification.service';
 import { OrderService } from './order.service';
 import { appConfig } from '../../config';
+
+const orderRepository = new OrderRepository();
+const productRepository = new ProductRepository();
 
 const statusSteps = ['pending', 'in_progress', 'completed', 'delivered'];
 
@@ -54,36 +51,20 @@ export const getOrders = async (req: Request, res: Response) => {
             to,
         } = req.query as Record<string, string | undefined>;
 
-        const pageNumber = Math.max(parseInt(page || '1', 10) || 1, 1);
-        const limit = Math.min(Math.max(parseInt(pageSize || '50', 10) || 50, 1), 200);
-        const skip = (pageNumber - 1) * limit;
-
-        const query: any = { tenantId };
-
-        if (status) {
-            query.status = status;
-        }
-
-        if (from || to) {
-            query.createdAt = {};
-            if (from) query.createdAt.$gte = new Date(from);
-            if (to) query.createdAt.$lte = new Date(to);
-        }
-
-        const sortField = sort.startsWith('-') ? sort.substring(1) : sort;
-        const sortDir = sort.startsWith('-') ? -1 : 1;
-        const sortObj: any = { [sortField]: sortDir };
-
-        const [items, total] = await Promise.all([
-            Order.find(query).sort(sortObj).skip(skip).limit(limit),
-            Order.countDocuments(query),
-        ]);
+        const result = await orderRepository.findWithPaginationByTenant(tenantId, {
+            page: parseInt(page || '1', 10),
+            pageSize: parseInt(pageSize || '50', 10),
+            sort,
+            status,
+            from,
+            to
+        });
 
         res.json({
-            items,
-            total,
-            page: pageNumber,
-            pageSize: limit,
+            items: result.items,
+            total: result.total,
+            page: parseInt(page || '1', 10),
+            pageSize: parseInt(pageSize || '50', 10),
         });
     } catch (error) {
         console.error("Error getOrders:", error);
@@ -199,11 +180,7 @@ export const updateOrder = async (req: Request, res: Response) => {
             updateData.total = newTotal;
         }
 
-        const updatedOrder = await Order.findOneAndUpdate(
-            { _id: id, tenantId }, 
-            updateData, 
-            { new: true }
-        );
+        const updatedOrder = await orderRepository.update(id, updateData as any, tenantId);
 
         if (!updatedOrder) return res.status(404).json({ message: "Pedido no encontrado" });
         res.json(updatedOrder);
@@ -224,7 +201,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Estado inválido' });
         }
 
-        const existingOrder = await Order.findOne({ _id: req.params.id, tenantId });
+        const existingOrder = await orderRepository.findById(req.params.id, tenantId);
         if (!existingOrder) {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
@@ -232,6 +209,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         const updateData: any = { status };
 
         try {
+            const Printer = require('../printers/printer.model').default;
             if (Printer) {
                 if (status === 'in_progress' && printerId) {
                     updateData.startedAt = new Date();
@@ -243,9 +221,9 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                     updateData.finishedAt = new Date();
                     await Printer.updateMany({ currentOrderId: req.params.id }, { status: 'idle', $unset: { currentOrderId: "" } });
 
-                    const currentOrder = await Order.findOne({ _id: req.params.id, tenantId });
-                    if (currentOrder && !currentOrder.adminNotified) {
-                        const itemNames = currentOrder.items.map(i => i.productName).join(', ');
+                    const currentOrder = await orderRepository.findById(req.params.id, tenantId);
+                    if (currentOrder && !(currentOrder as any).adminNotified) {
+                        const itemNames = (currentOrder as any).items.map((i: any) => i.productName).join(', ');
                         const msg = `✅ *IMPRESIÓN FINALIZADA*\n👤 ${currentOrder.clientName}\n📦 ${itemNames}\n🚀 Máquina liberada.`;
                         if(typeof sendAdminNotification === 'function') await sendAdminNotification(msg);
                         updateData.adminNotified = true;
@@ -256,12 +234,13 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             console.error("Printer/Notification Warning:", printerError);
         }
 
-        const order = await Order.findOneAndUpdate({ _id: req.params.id, tenantId }, updateData, { new: true });
+        const order = await orderRepository.update(req.params.id, updateData, tenantId);
 
         if (order?.customerContact && typeof sendCustomerNotification === 'function') {
+            const Settings = require('../settings/settings.model').default;
             const settings = await Settings.findOne({ tenantId: order.tenantId || appConfig.defaultTenantId });
             const statusText = statusCopy[status] || status;
-            const trackingCode = order.trackingCode || 'sin código';
+            const trackingCode = (order as any).trackingCode || 'sin código';
             const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || 'http://localhost:3000/track', trackingCode);
             const templateKey = (status in statusCopy ? status : 'pending') as 'pending' | 'in_progress' | 'completed' | 'delivered' | 'cancelled';
             const template = settings?.customerMessageTemplates?.[templateKey]
@@ -275,7 +254,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 businessName: settings?.businessName || 'Global 3D',
             });
 
-            await sendCustomerNotification(order.customerContact, message);
+            await sendCustomerNotification((order as any).customerContact, message);
         }
 
         res.json(order);
@@ -301,17 +280,17 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'itemIndex requerido' });
         }
 
-        const order = await Order.findOne({ _id: id, tenantId });
+        const order = await orderRepository.findById(id, tenantId);
         if (!order) {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
 
         const index = Number(itemIndex);
-        if (!order.items[index]) {
+        if (!(order as any).items[index]) {
             return res.status(400).json({ message: 'Ítem inválido' });
         }
 
-        const item: any = order.items[index];
+        const item: any = (order as any).items[index];
         const qty = Number(item.quantity || 0);
         const alreadyPrinted = Number(item.printedQuantity || 0);
 
@@ -324,6 +303,7 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
 
         // 2️⃣ ¡CLAVE! Liberamos la impresora SIEMPRE que se termina una pieza
         try {
+            const Printer = require('../printers/printer.model').default;
             if (Printer) {
                 await Printer.updateMany(
                     { currentOrderId: id }, 
@@ -335,10 +315,10 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
         }
 
         // 3️⃣ Recalcular estado global del pedido según items impresos
-        const totalItems = order.items.length;
+        const totalItems = (order as any).items.length;
         let printedItems = 0;
 
-        order.items.forEach((it: any) => {
+        (order as any).items.forEach((it: any) => {
             const q = Number(it.quantity || 0);
             const printed = Number(it.printedQuantity || 0);
             if (q > 0 && printed >= q) printedItems += 1;
@@ -346,16 +326,16 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
 
         if (printedItems === totalItems && totalItems > 0) {
             // Si ya no falta nada, el pedido se completa
-            order.status = 'completed';
-            order.finishedAt = new Date();
+            (order as any).status = 'completed';
+            (order as any).finishedAt = new Date();
         } else {
             // Si faltan piezas, VUELVE A LA COLA y reseteamos el tiempo
-            order.status = 'pending';
-            order.startedAt = undefined;
-            order.printTimeMinutes = undefined;
+            (order as any).status = 'pending';
+            (order as any).startedAt = undefined;
+            (order as any).printTimeMinutes = undefined;
         }
 
-        await order.save();
+        await (order as any).save();
 
         return res.json(order);
     } catch (error) {
@@ -407,16 +387,16 @@ export const registerOrderSale = async (req: Request, res: Response) => {
 export const getOrderByTrackingCode = async (req: Request, res: Response) => {
     try {
         const { trackingCode } = req.params;
-        const order = await Order.findOne({ trackingCode: String(trackingCode).toUpperCase() });
+        const order = await orderRepository.findByTrackingCode(String(trackingCode));
 
         if (!order) {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
 
-        const currentStep = Math.max(statusSteps.indexOf(order.status), 0);
+        const currentStep = Math.max(statusSteps.indexOf((order as any).status), 0);
         const progress = Math.round((currentStep / (statusSteps.length - 1)) * 100);
 
-        const statusLabel = statusCopy[order.status] || order.status;
+        const statusLabel = statusCopy[(order as any).status] || (order as any).status;
         const steps = statusSteps.map((s, i) => ({
             key: s,
             label: statusCopy[s] || s,
@@ -426,20 +406,20 @@ export const getOrderByTrackingCode = async (req: Request, res: Response) => {
         }));
 
         return res.json({
-            trackingCode: order.trackingCode,
+            trackingCode: (order as any).trackingCode,
             clientName: order.clientName,
-            status: order.status,
+            status: (order as any).status,
             statusLabel,
             progress,
-            dueDate: order.dueDate,
+            dueDate: (order as any).dueDate,
             createdAt: order.createdAt,
-            notes: order.notes,
-            items: order.items,
-            total: order.total,
-            paymentMethod: order.paymentMethod,
-            deposit: order.deposit,
-            customerSatisfaction: order.customerSatisfaction,
-            customerFeedback: order.customerFeedback,
+            notes: (order as any).notes,
+            items: (order as any).items,
+            total: (order as any).total,
+            paymentMethod: (order as any).paymentMethod,
+            deposit: (order as any).deposit,
+            customerSatisfaction: (order as any).customerSatisfaction,
+            customerFeedback: (order as any).customerFeedback,
             media: { message: 'Tu pedido está en producción' },
             statusSteps: steps,
         });
@@ -462,18 +442,18 @@ export const submitOrderFeedback = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'La calificación debe estar entre 1 y 5' });
         }
 
-        const order = await Order.findOne({ trackingCode: String(trackingCode).toUpperCase() });
+        const order = await orderRepository.findByTrackingCode(String(trackingCode));
         if (!order) {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
 
-        if (order.status !== 'delivered') {
+        if ((order as any).status !== 'delivered') {
             return res.status(400).json({ message: 'Solo puedes valorar pedidos entregados' });
         }
 
-        order.customerSatisfaction = parsedRating;
-        order.customerFeedback = String(feedback || '').trim();
-        await order.save();
+        (order as any).customerSatisfaction = parsedRating;
+        (order as any).customerFeedback = String(feedback || '').trim();
+        await (order as any).save();
 
         return res.json({ message: 'Gracias por tu opinión', order });
     } catch (error) {
@@ -490,26 +470,27 @@ export const resendTrackingToCustomer = async (req: Request, res: Response) => {
         const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
         const { id } = req.params;
 
-        const order = await Order.findOne({ _id: id, tenantId });
+        const order = await orderRepository.findById(id, tenantId);
         if (!order) return res.status(404).json({ message: 'Pedido no encontrado' });
 
-        if (!order.customerContact) {
+        if (!(order as any).customerContact) {
             return res.status(400).json({ message: 'Este pedido no tiene contacto del cliente' });
         }
 
+        const Settings = require('../settings/settings.model').default;
         const settings = await Settings.findOne({ tenantId: tenantId || appConfig.defaultTenantId });
-        const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || 'http://localhost:3000/track', order.trackingCode);
+        const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || 'http://localhost:3000/track', (order as any).trackingCode);
         const template = settings?.customerMessageTemplates?.resendTracking
             || 'Hola {clientName} 👋 Aquí tienes nuevamente tu código de seguimiento: {trackingCode}. Consulta tu pedido en {trackingUrl}';
 
         const msg = fillTemplate(template, {
             clientName: order.clientName,
-            trackingCode: order.trackingCode,
-            status: statusCopy[order.status] || order.status,
+            trackingCode: (order as any).trackingCode,
+            status: statusCopy[(order as any).status] || (order as any).status,
             trackingUrl,
             businessName: settings?.businessName || 'Global 3D',
         });
-        const sent = await sendCustomerNotification(order.customerContact, msg);
+        const sent = await sendCustomerNotification((order as any).customerContact, msg);
 
         if (!sent) {
             return res.status(500).json({ message: 'No se pudo enviar el mensaje de seguimiento' });
@@ -528,44 +509,7 @@ export const resendTrackingToCustomer = async (req: Request, res: Response) => {
 export const getOrdersSummary = async (req: Request, res: Response) => {
     try {
         const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
-        const orders = await Order.find({ tenantId }).select('status total createdAt customerSatisfaction dueDate finishedAt');
-
-        const now = new Date();
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-        const summary = {
-            totalOrders: orders.length,
-            pending: 0,
-            inProgress: 0,
-            completed: 0,
-            delivered: 0,
-            cancelled: 0,
-            monthlyRevenue: 0,
-            averageSatisfaction: 0,
-        };
-
-        let ratingsCount = 0;
-        let ratingsTotal = 0;
-
-        orders.forEach((order: any) => {
-            if (order.status === 'pending') summary.pending += 1;
-            if (order.status === 'in_progress') summary.inProgress += 1;
-            if (order.status === 'completed') summary.completed += 1;
-            if (order.status === 'delivered') summary.delivered += 1;
-            if (order.status === 'cancelled') summary.cancelled += 1;
-
-            if (order.createdAt >= monthStart && order.status !== 'cancelled') {
-                summary.monthlyRevenue += Number(order.total || 0);
-            }
-
-            if (Number.isFinite(Number(order.customerSatisfaction))) {
-                ratingsCount += 1;
-                ratingsTotal += Number(order.customerSatisfaction);
-            }
-        });
-
-        summary.averageSatisfaction = ratingsCount ? Number((ratingsTotal / ratingsCount).toFixed(2)) : 0;
-
+        const summary = await orderRepository.getOrdersSummary(tenantId);
         return res.json(summary);
     } catch (error) {
         console.error('Error getOrdersSummary:', error);
@@ -581,23 +525,23 @@ export const getOrderTimeline = async (req: Request, res: Response) => {
         const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
         const { id } = req.params;
 
-        const order = await Order.findOne({ _id: id, tenantId });
+        const order = await orderRepository.findById(id, tenantId);
         if (!order) {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
 
         const timeline = [
             { key: 'created', label: 'Pedido creado', date: order.createdAt },
-            { key: 'started', label: 'Producción iniciada', date: order.startedAt || null },
-            { key: 'finished', label: 'Producción finalizada', date: order.finishedAt || null },
-            { key: 'delivered', label: 'Pedido entregado', date: order.status === 'delivered' ? order.updatedAt : null },
+            { key: 'started', label: 'Producción iniciada', date: (order as any).startedAt || null },
+            { key: 'finished', label: 'Producción finalizada', date: (order as any).finishedAt || null },
+            { key: 'delivered', label: 'Pedido entregado', date: (order as any).status === 'delivered' ? (order as any).updatedAt : null },
         ];
 
         return res.json({
-            orderId: order._id,
-            trackingCode: order.trackingCode,
-            status: order.status,
-            dueDate: order.dueDate || null,
+            orderId: (order as any)._id,
+            trackingCode: (order as any).trackingCode,
+            status: (order as any).status,
+            dueDate: (order as any).dueDate || null,
             timeline,
         });
     } catch (error) {
@@ -612,6 +556,7 @@ export const getOrderTimeline = async (req: Request, res: Response) => {
 export const fixOrdersData = async (req: Request, res: Response) => {
     try {
         const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+        const Order = require('./order.model').default;
         await Order.collection.updateMany({ tenantId }, { $rename: { "customerName": "clientName" } });
         res.json({ message: "✅ ¡Base de datos reparada!" });
     } catch (error) {

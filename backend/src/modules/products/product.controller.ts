@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
-import Product from "./product.model";
-import Sale from "../sales/sale.model"; // 👈 IMPORTANTE: Asegúrate de importar el modelo de Ventas
+import ProductRepository from '../../repositories/product.repository';
+import Sale from "../sales/sale.model";
 import { InventoryService } from "./inventory.service";
+
+const productRepository = new ProductRepository();
+
 /* ======================================================
    🔒 ADMIN – OBTENER PRODUCTOS
 ====================================================== */
@@ -17,26 +20,10 @@ export const getProducts = async (req: Request, res: Response) => {
     const category = String(req.query.category || "").trim();
     const lowStock = String(req.query.lowStock || "false") === "true";
 
-    const query: any = { tenantId };
-
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { sku: { $regex: search, $options: "i" } },
-      ];
-    }
-
-    if (category) {
-      query.category = category;
-    }
-
-    if (lowStock) {
-      query.$expr = { $lte: ["$stock", { $ifNull: ["$minStock", 5] }] };
-    }
-
-    const products = await Product.find(query).sort({
-      category: 1,
-      name: 1,
+    const products = await productRepository.findByTenant(tenantId, {
+      search: search || undefined,
+      category: category || undefined,
+      lowStock,
     });
 
     return res.json(products);
@@ -53,11 +40,10 @@ export const getPublicProducts = async (req: Request, res: Response) => {
   try {
     const tenantId = String(req.query.tenantId || process.env.DEFAULT_TENANT_ID || "global3d_hq");
 
-    const products = await Product.find({
-      tenantId,
+    const products = await productRepository.findByTenant(tenantId, {
       isPublic: true,
-      stock: { $gt: 0 },
-    }).sort({ createdAt: -1 });
+      inStock: true,
+    });
 
     return res.json(products);
   } catch (error) {
@@ -104,26 +90,11 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
     // 1. INTENTAR BUSCAR EXISTENTE (Por SKU o Por Nombre)
-    let product = null;
-
-    // Prioridad 1: Buscar por SKU exacto
-    if (sku) {
-        product = await Product.findOne({ tenantId, sku });
-    }
-
-    // Prioridad 2: Si no hay SKU o no encontró, buscar por Nombre (Insensible a mayúsculas)
-    if (!product) {
-        product = await Product.findOne({
-            tenantId,
-            name: { $regex: new RegExp(`^${name}$`, "i") }
-        });
-    }
+    let product = await productRepository.findBySkuOrName(tenantId, sku, name);
 
     // 🔄 CASO A: EL PRODUCTO YA EXISTE -> ACTUALIZAR Y SUMAR STOCK
     if (product) {
-      product.stock += numbers.stock; // ✨ AQUÍ ESTÁ LA MAGIA: SUMA, NO REEMPLAZA
-
-      // Actualizamos datos si vienen nuevos
+      product.stock += numbers.stock;
       product.price = numbers.price;
       product.cost = numbers.cost;
       product.minStock = numbers.minStock;
@@ -138,9 +109,9 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
     // ✨ CASO B: NO EXISTE -> CREAR NUEVO
-    const newProduct = new Product({
+    const newProduct = await productRepository.create({
       name,
-      sku: sku || `GEN-${Date.now()}`, // Si no pones SKU, genera uno automático
+      sku: sku || `GEN-${Date.now()}`,
       category: category || "General",
       price: numbers.price,
       cost: numbers.cost,
@@ -150,26 +121,27 @@ export const createProduct = async (req: Request, res: Response) => {
       imageUrl: imageUrl || "",
       isPublic: Boolean(isPublic),
       tenantId,
-    });
+    } as any);
 
-    await newProduct.save();
     return res.status(201).json(newProduct);
 
   } catch (error: any) {
     console.error("createProduct:", error);
-    return res.status(500).json({ message: "Error guardando producto" });
+    const detail = process.env.NODE_ENV !== 'production' ? (error?.message ?? String(error)) : undefined;
+    return res.status(500).json({ message: 'Error guardando producto' + (detail ? `: ${detail}` : '') });
   }
 };
 
 /* ======================================================
-   ❌ ELIMINAR PRODUCTO
+   ❌ ELIMINAR PRODUCTO (SOFT DELETE)
 ====================================================== */
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
     const tenantId = (req as any).user?.tenantId;
-    
-    const deleted = await Product.findOneAndDelete({ _id: req.params.id, tenantId });
+    const { id } = req.params;
 
+    const deleted = await productRepository.delete(id, tenantId);
+    
     if (!deleted) {
       return res.status(404).json({ message: "Producto no encontrado" });
     }
@@ -224,11 +196,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Stock mínimo inválido" });
     }
 
-    const updatedProduct = await Product.findOneAndUpdate(
-      { _id: id, tenantId },
-      updates,
-      { new: true }
-    );
+    const updatedProduct = await productRepository.update(id, updates, tenantId);
 
     if (!updatedProduct) {
       return res.status(404).json({ message: "Producto no encontrado" });
@@ -241,11 +209,12 @@ export const updateProduct = async (req: Request, res: Response) => {
 };
 
 /* ======================================================
-   ⚡ VENTA RÁPIDA (CORREGIDA)
+    ⚡ VENTA RÁPIDA (CORREGIDA)
 ====================================================== */
 export const quickSell = async (req: Request, res: Response) => {
     try {
         const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+        const user = (req as any).user;
         if (!tenantId) {
             return res.status(401).json({ message: "No autorizado" });
         }
@@ -254,6 +223,8 @@ export const quickSell = async (req: Request, res: Response) => {
             const { product, sale } = await InventoryService.quickSell(
                 tenantId,
                 req.params.id,
+                user?.id,
+                user?.name,
             );
 
             res.json({ message: "Venta registrada", product, sale });
@@ -272,17 +243,22 @@ export const quickSell = async (req: Request, res: Response) => {
     }
 };
 
-// 👇 AGREGA ESTO AL FINAL DEL CONTROLADOR DE PRODUCTOS
 export const bulkAddStock = async (req: Request, res: Response) => {
     try {
-        const { items } = req.body; // Recibimos el array [{name: "gorilon rojo", quantity: 3}, ...]
+        const { items } = req.body;
         const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+        const user = (req as any).user;
 
         if (!tenantId) {
             return res.status(401).json({ message: "No autorizado" });
         }
 
-        const results = await InventoryService.bulkAddStock(tenantId, items);
+        const results = await InventoryService.bulkAddStock(
+            tenantId,
+            items,
+            user?.id,
+            user?.name,
+        );
 
         res.json({ message: "Stock procesado correctamente", results });
     } catch (error) {
@@ -296,38 +272,8 @@ export const getProductsSummary = async (req: Request, res: Response) => {
         const tenantId = (req as any).user?.tenantId;
         if (!tenantId) return res.status(401).json({ message: 'No autorizado' });
 
-        const products = await Product.find({ tenantId }).select('stock minStock price cost');
-
-        let totalProducts = products.length;
-        let totalUnits = 0;
-        let lowStockCount = 0;
-        let outOfStockCount = 0;
-        let inventorySaleValue = 0;
-        let inventoryCostValue = 0;
-
-        products.forEach((product: any) => {
-            const stock = Number(product.stock || 0);
-            const minStock = Number(product.minStock ?? 5);
-            const price = Number(product.price || 0);
-            const cost = Number(product.cost || 0);
-
-            totalUnits += stock;
-            inventorySaleValue += stock * price;
-            inventoryCostValue += stock * cost;
-
-            if (stock <= 0) outOfStockCount += 1;
-            if (stock > 0 && stock <= minStock) lowStockCount += 1;
-        });
-
-        return res.json({
-            totalProducts,
-            totalUnits,
-            lowStockCount,
-            outOfStockCount,
-            inventorySaleValue,
-            inventoryCostValue,
-            estimatedGrossMarginValue: inventorySaleValue - inventoryCostValue,
-        });
+        const summary = await productRepository.getProductsSummary(tenantId);
+        return res.json(summary);
     } catch (error) {
         console.error('getProductsSummary:', error);
         return res.status(500).json({ message: 'Error obteniendo resumen de inventario' });

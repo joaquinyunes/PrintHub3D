@@ -1,12 +1,10 @@
 import { Router } from 'express';
-import { getSettings, updateSettings } from './settings.controller';
 import { protect, adminOnly } from '../auth/auth.middleware';
-import { withTenant } from '../../middleware/tenant.middleware';
+import apiKeyRoutes from './api-key.routes';
 
 const router = Router();
 
-// Ajustes de negocio: requieren admin
-router.get('/', protect, withTenant, adminOnly, getSettings);
-router.put('/', protect, withTenant, adminOnly, updateSettings); // Usamos PUT para actualizar
+// Montar rutas de API Keys bajo /api/settings/keys
+router.use('/keys', protect, adminOnly, apiKeyRoutes);
 
 export default router;

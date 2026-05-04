@@ -1,22 +1,13 @@
-import { apiUrl } from "./api";
+import { UserData } from "@/types";
 
-export interface UserData {
-  id?: string;
-  name?: string;
-  role: string;
-  email?: string;
-  tenantId?: string;
-}
-
-export const getAuthHeaders = () => {
+export const getAuthHeaders = (): Record<string, string> => {
   const stored = localStorage.getItem("user");
   if (!stored) return {};
   
   try {
     const parsed = JSON.parse(stored);
-    return {
-      "Authorization": `Bearer ${parsed.token}`
-    };
+    const token = parsed.token ?? parsed?.accessToken;
+    return token ? { "Authorization": `Bearer ${token}` } : {};
   } catch {
     return {};
   }
@@ -28,16 +19,18 @@ export const getStoredUser = (): UserData | null => {
   
   try {
     const parsed = JSON.parse(stored);
-    return parsed.user || null;
+    return (parsed.user ?? parsed) as UserData;
   } catch {
     return null;
   }
 };
 
-export const saveAuth = (token: string, user: UserData) => {
-  localStorage.setItem("user", JSON.stringify({ token, user }));
+export const saveAuth = (token: string, user: UserData, refreshToken?: string): void => {
+  const payload: Record<string, any> = { token, user };
+  if (refreshToken) payload.refreshToken = refreshToken;
+  localStorage.setItem("user", JSON.stringify(payload));
 };
 
-export const clearAuth = () => {
+export const clearAuth = (): void => {
   localStorage.removeItem("user");
 };

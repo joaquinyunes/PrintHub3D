@@ -3,18 +3,13 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingCart, Box, Search, ArrowRight, Package, Instagram, MapPin, Phone, LogOut, Menu, X } from "lucide-react";
+import { ShoppingCart, Search, ArrowRight, Package, Instagram, MapPin, LogOut, Menu, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { apiUrl } from "@/lib/api";
-
-interface Product {
-  _id: string;
-  name: string;
-  price: number;
-  imageUrl?: string;
-  category: string;
-  description?: string;
-}
+import HeroSection from "@/components/HeroSection";
+import ProductCard from "@/components/ProductCard";
+import IdeasGrid from "@/components/IdeasGrid";
+import type { Product, Idea, Printer } from "@/types";
 
 interface Idea {
   name: string;
@@ -235,65 +230,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      <header className="pt-16 pb-8 text-center px-4">
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">Catálogo Online</h1>
-        <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto">Modelos 3D personalizados de alta calidad</p>
-        
-        <div className="mt-6 h-[1px] w-32 mx-auto bg-gradient-to-r from-transparent via-blue-500 to-transparent" />
-        
-        <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-400 mt-6">
-          <span>⭐ <span className="text-yellow-400">4.9/5</span> clientes</span>
-          <span>📦 <span className="text-green-400">+150</span> pedidos</span>
-          <span>🚚 Entrega <span className="text-blue-400">24-72hs</span></span>
-        </div>
-        
-        <div className="flex flex-wrap justify-center gap-3 mt-6">
-          <Link href="#productos" className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 shadow-lg shadow-blue-500/30 rounded-xl font-medium transition flex items-center gap-2">
-            Ver Catálogo <ArrowRight className="w-4 h-4" />
-          </Link>
-          <a href="https://wa.me/5493794000000?text=Hola! Quiero info sobre impresiones 3D" target="_blank"
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90 shadow-lg shadow-green-500/30 rounded-xl font-medium transition flex items-center gap-2">
-            Consultar
-          </a>
-        </div>
-      </header>
+      <HeroSection 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        trackingCode={trackingCode}
+        setTrackingCode={setTrackingCode}
+        handleTrackOrder={handleTrackOrder}
+        handleWhatsAppBuy={handleWhatsAppBuy}
+        user={user}
+        handleLogout={handleLogout}
+      />
 
-      <section id="ideas" className="py-16 px-4 bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">¿Qué podés imprimir?</h2>
-            <p className="text-gray-400">Modelos populares de MakerWorld · Precio incluye impresión</p>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
-            {ideas.map((idea, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: i * 0.05 }}
-                className="relative group overflow-hidden bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl hover:scale-[1.06] hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300">
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition pointer-events-none">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition duration-1000" />
-                </div>
-                <div className="aspect-square overflow-hidden">
-                  {idea.image && <img src={idea.image} alt={idea.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />}
-                </div>
-                <div className="p-3">
-                  <h3 className="text-sm font-bold text-white truncate">{idea.name}</h3>
-                  <p className="text-xs text-gray-500">{idea.downloads} downloads</p>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-blue-400 font-bold">${idea.price}</span>
-                    <button onClick={() => {
-                      const text = `Hola! Quiero este modelo: ${idea.name} 👉 ${idea.link}`;
-                      window.open(`https://wa.me/5493794000000?text=${encodeURIComponent(text)}`, "_blank");
-                    }} className="bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90 shadow-lg shadow-green-500/30 text-white px-2 py-1 rounded-lg text-xs">Pedir</button>
-                  </div>
-                </div>
-                {idea.trending && (
-                  <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded font-bold">🔥 Trending</span>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <IdeasGrid ideas={displayIdeas} handleWhatsAppBuy={handleWhatsAppBuy} />
 
       <section id="impresoras" className="py-16 px-4 bg-white/[0.02]">
         <div className="max-w-7xl mx-auto">
@@ -304,11 +252,7 @@ export default function HomePage() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {printers.map((printer, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: i * 0.1 }}
-                className="relative group overflow-hidden bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl hover:scale-[1.06] hover:-translate-y-1 hover:shadow-2xl hover:shadow-orange-500/30 transition-all duration-300">
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition pointer-events-none">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition duration-1000" />
-                </div>
+              <div key={i} className="relative group overflow-hidden bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl hover:scale-[1.06] hover:-translate-y-1 hover:shadow-2xl hover:shadow-orange-500/30 transition-all duration-300">
                 <div className="aspect-[4/3] bg-gray-800/50 overflow-hidden">
                   {printer.imageUrl && <img src={printer.imageUrl} alt={printer.name} className="w-full h-full object-contain p-4 group-hover:scale-105 transition duration-500" />}
                 </div>
@@ -321,7 +265,7 @@ export default function HomePage() {
                       className="bg-gradient-to-r from-orange-500 to-red-600 hover:opacity-90 shadow-lg shadow-orange-500/30 text-white px-4 py-2 rounded-xl text-sm font-medium transition">Ver Producto</button>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -369,29 +313,7 @@ export default function HomePage() {
           ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {filteredProducts.map((product, idx) => (
-                <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: idx * 0.05 }}
-                className="relative group overflow-hidden bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl hover:scale-[1.06] hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300">
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition pointer-events-none">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition duration-1000" />
-                </div>
-                <div className="aspect-square bg-gray-800/50 overflow-hidden">
-                    {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" /> :
-                      <div className="w-full h-full flex items-center justify-center text-gray-700"><Box className="w-16 h-16" /></div>}
-                    <div className="absolute top-2 right-2">
-                      <span className="px-2 py-1 bg-black/60 backdrop-blur rounded-lg text-xs text-gray-300">{product.category}</span>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-bold truncate mb-1">{product.name}</h3>
-                    <p className="text-xs text-gray-500 line-clamp-2">{product.description || "Personalizado"}</p>
-                    <div className="flex justify-between items-center mt-3">
-                      <span className="text-xl font-bold text-blue-400">${product.price}</span>
-                      <button onClick={() => handleWhatsAppBuy(product)} className="bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90 shadow-lg shadow-green-500/30 text-white p-2 rounded-xl transition" title="Comprar por WhatsApp">
-                        <ShoppingCart size={18} />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
+                <ProductCard key={product._id} product={product} handleWhatsAppBuy={handleWhatsAppBuy} idx={idx} />
               ))}
             </div>
           ) : (

@@ -1,7 +1,12 @@
-import Order, { IOrder } from './order.model';
-import Product from '../products/product.model';
+import OrderRepository from '../../repositories/order.repository';
+import ProductRepository from '../../repositories/product.repository';
 import Sale from '../sales/sale.model';
 import Client from '../clients/client.model';
+import { InventoryService } from '../products/inventory.service';
+import InventoryMovement from '../inventory/inventory-movement.model';
+
+const orderRepository = new OrderRepository();
+const productRepository = new ProductRepository();
 
 interface OrderItemInput {
   productId?: string;
@@ -38,7 +43,7 @@ const buildTrackingCode = () => {
 };
 
 export const OrderService = {
-  async createOrder(input: CreateOrderInput): Promise<IOrder> {
+  async createOrder(input: CreateOrderInput) {
     const {
       tenantId,
       clientName,
@@ -68,10 +73,7 @@ export const OrderService = {
         let productCost = 0;
         if (item.productId && !item.isCustom) {
           try {
-            const product = await Product.findOne({
-              _id: item.productId,
-              tenantId,
-            });
+            const product = await productRepository.findById(item.productId, tenantId);
             if (product) productCost = product.cost ?? 0;
           } catch (err) {
             console.error('Error buscando producto en OrderService:', err);
@@ -95,7 +97,8 @@ export const OrderService = {
     const profit = calculatedTotal - calculatedCost;
     const trackingCode = buildTrackingCode();
 
-    const newOrder = new Order({
+    // Crear orden
+    const newOrder = await orderRepository.create({
       clientName,
       origin: origin || 'Local',
       paymentMethod: paymentMethod || 'Efectivo',
@@ -110,9 +113,36 @@ export const OrderService = {
       profit,
       status: 'pending',
       tenantId,
-    });
+    } as any);
 
-    const savedOrder = await newOrder.save();
+    // Registrar movimientos de inventario si hay productos asociados
+    for (const item of enrichedItems) {
+      if (item.productId && !item.isCustom) {
+        try {
+          const product = await productRepository.findById(item.productId, tenantId);
+          if (product) {
+            const previousStock = product.stock;
+            product.stock -= item.quantity;
+            await product.save();
+
+            await new InventoryMovement({
+              tenantId,
+              productId: product._id,
+              productName: product.name,
+              type: 'order_consumption',
+              quantity: item.quantity,
+              previousStock,
+              newStock: product.stock,
+              unit: 'unidades',
+              reason: `Orden ${trackingCode}`,
+              orderId: (newOrder as any)._id?.toString(),
+            }).save();
+          }
+        } catch (invError) {
+          console.error('Error actualizando inventario:', invError);
+        }
+      }
+    }
 
     // Actualizar CRM de forma no bloqueante
     try {
@@ -141,7 +171,7 @@ export const OrderService = {
       );
     }
 
-    return savedOrder;
+    return newOrder;
   },
 
   async registerOrderSale(input: RegisterOrderSaleInput) {
@@ -151,7 +181,7 @@ export const OrderService = {
       throw new Error('TenantId requerido para registrar venta de pedido');
     }
 
-    const order = await Order.findOne({ _id: orderId, tenantId });
+    const order = await orderRepository.findById(orderId, tenantId);
     if (!order) {
       throw new Error('Pedido no encontrado');
     }
@@ -171,14 +201,14 @@ export const OrderService = {
     }
 
     const totalStats = {
-      price: order.total,
+      price: (order as any).total,
       cost: totalCost,
-      profit: order.total - totalCost,
+      profit: (order as any).total - totalCost,
     };
 
     const newSale = new Sale({
-      productName: `Pedido: ${order.clientName}`,
-      productId: order._id,
+      productName: `Pedido: ${(order as any).clientName}`,
+      productId: (order as any)._id,
       quantity: 1,
       price: totalStats.price,
       cost: totalStats.cost,
@@ -190,11 +220,13 @@ export const OrderService = {
 
     await newSale.save();
 
-    order.status = 'delivered';
-    (order as any).isSaleRegistered = true;
-    await order.save();
+    await orderRepository.update(orderId, { 
+      status: 'delivered', 
+      isSaleRegistered: true 
+    } as any, tenantId);
 
-    return { sale: newSale, order };
+    const updatedOrder = await orderRepository.findById(orderId, tenantId);
+
+    return { sale: newSale, order: updatedOrder };
   },
 };
-

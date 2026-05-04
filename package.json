@@ -1,16 +1,38 @@
 {
-  "devDependencies": {
-    "autoprefixer": "^10.4.23",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18"
+  "name": "printhub3d",
+  "version": "1.0.0",
+  "description": "Sistema completo de gestión para impresiones 3D",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "format": "prettier --write \"**/*.{js,ts,jsx,tsx,json,css,md}\"",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "prepare": "husky install"
   },
-  "dependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "bcryptjs": "^3.0.3",
-    "clsx": "^2.1.1",
-    "jsonwebtoken": "^9.0.3",
-    "lucide-react": "^0.562.0",
-    "tailwind-merge": "^3.4.0"
+  "keywords": [
+    "3d-printing",
+    "pos",
+    "nextjs",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.7",
+    "concurrently": "^9.1.2",
+    "eslint": "^8.48.0",
+    "eslint-config-prettier": "^9.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.0",
+    "prettier": "^3.5.3",
+    "tailwindcss": "^4.1.7"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx}": ["eslint --fix", "prettier --write"],
+    "*.{json,css,md}": ["prettier --write"]
   }
+}
 }
