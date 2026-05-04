@@ -3,13 +3,15 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingCart, Search, ArrowRight, Package, Instagram, MapPin, LogOut, Menu, X } from "lucide-react";
+import { ShoppingCart, Search, ArrowRight, Package, Instagram, MapPin, LogOut, Menu, X, Box, Phone } from "lucide-react";
+import CartIcon from "@/components/CartIcon";
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from "@/lib/config";
 import { motion } from "framer-motion";
 import { apiUrl } from "@/lib/api";
 import HeroSection from "@/components/HeroSection";
 import ProductCard from "@/components/ProductCard";
 import IdeasGrid from "@/components/IdeasGrid";
-import type { Product, Idea, Printer } from "@/types";
+import type { Product } from "@/types";
 
 interface Idea {
   name: string;
@@ -139,7 +141,7 @@ export default function HomePage() {
 
   const handleWhatsAppBuy = (item: any) => {
     const text = `Hola! 👋 Quiero comprar: *${item.name}* ($${item.price}).`;
-    window.open(`https://wa.me/5493794000000?text=${encodeURIComponent(text)}`, "_blank");
+    window.open(`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   const handleTrackOrder = (e: React.FormEvent) => {
@@ -173,7 +175,8 @@ export default function HomePage() {
             <Link href="#ideas" className="text-gray-300 hover:text-white text-sm font-medium transition hover:text-blue-400">Ideas</Link>
             <Link href="#impresoras" className="text-gray-300 hover:text-white text-sm font-medium transition hover:text-blue-400">Impresoras</Link>
             <Link href="#contacto" className="text-gray-300 hover:text-white text-sm font-medium transition hover:text-blue-400">Contacto</Link>
-            
+            <CartIcon />
+
             {user?.role === "admin" ? (
               <div className="flex items-center gap-3 pl-4 border-l border-gray-800">
                 <Link href="/admin" className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-bold hover:from-blue-700 hover:to-purple-700 transition">
@@ -202,7 +205,8 @@ export default function HomePage() {
           <Link href="#productos" className="block py-3 text-gray-300 hover:text-white border-b border-gray-800" onClick={() => setMenuOpen(false)}>Productos</Link>
           <Link href="#ideas" className="block py-3 text-gray-300 hover:text-white border-b border-gray-800" onClick={() => setMenuOpen(false)}>Ideas</Link>
           <Link href="#impresoras" className="block py-3 text-gray-300 hover:text-white border-b border-gray-800" onClick={() => setMenuOpen(false)}>Impresoras</Link>
-          <Link href="#contacto" className="block py-3 text-gray-300 hover:text-white" onClick={() => setMenuOpen(false)}>Contacto</Link>
+          <Link href="#contacto" className="block py-3 text-gray-300 hover:text-white border-b border-gray-800" onClick={() => setMenuOpen(false)}>Contacto</Link>
+          <Link href="/cart" className="block py-3 text-gray-300 hover:text-white" onClick={() => setMenuOpen(false)}>Carrito</Link>
         </div>
       )}
 
@@ -331,10 +335,10 @@ export default function HomePage() {
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Contacto</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            <a href="https://wa.me/5493794000000" target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-xl p-6 text-center hover:border-green-600 transition group">
+            <a href={`https://wa.me/${WHATSAPP_PHONE}`} target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-xl p-6 text-center hover:border-green-600 transition group">
               <Phone className="w-8 h-8 text-green-500 mx-auto mb-3 group-hover:scale-110 transition" />
               <h3 className="font-medium mb-1">WhatsApp</h3>
-              <p className="text-gray-500 text-sm">+54 9379 4000000</p>
+              <p className="text-gray-500 text-sm">{WHATSAPP_DISPLAY}</p>
             </a>
             <a href="https://instagram.com/global3dcorrientes" target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-xl p-6 text-center hover:border-pink-600 transition group">
               <Instagram className="w-8 h-8 text-pink-500 mx-auto mb-3 group-hover:scale-110 transition" />
@@ -362,7 +366,7 @@ export default function HomePage() {
         </div>
       </footer>
 
-      <a href="https://wa.me/5493794000000" target="_blank"
+      <a href={`https://wa.me/${WHATSAPP_PHONE}`} target="_blank"
         className="fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 p-4 rounded-full shadow-lg shadow-green-600/30 z-50 transition hover:scale-110" title="Chatear por WhatsApp">
         <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.964-.94 1.162-.173.199-.347.223-.644.075-.197-.103-1.379-1.437-2.612-3.078-.297-.199-.496-.297-.673.15-.176.297-.697.872-1.075.994-.379.123-.646.148-1.143.049-.496-.099-2.425-1.588-3.868-3.012-.298-.298-.497-.447-.696-.447-.02 0-.04 0-.06 0-.2 0-.485.099-.698.298l-1.095 2.697c-.099.297-.022.595.099.793.149.198.397.396.793.495.396.099.793.099 1.141.099.348 0 .695-.099 1.041-.298.349-.198.768-.595.924-.994.099-.299.099-.596.049-.793-.099-.198-.448-1.591-.616-2.137-.149-.546-.298-1.193-.546-1.193z"/>

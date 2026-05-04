@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import { protect, adminOnly } from '../auth/auth.middleware';
 
 const router = Router();
 
@@ -13,7 +14,7 @@ async function scrapeTrends(query: string): Promise<any[]> {
 
   try {
     const url = `https://duckduckgo.com/?q=${encodeURIComponent(query + ' 3d print')}&iax=images&ia=images`;
-    
+
     const res = await axios.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -26,10 +27,10 @@ async function scrapeTrends(query: string): Promise<any[]> {
 
     $('img').each((i, el) => {
       if (i >= 10) return;
-      
+
       const src = $(el).attr('src');
       const alt = $(el).attr('alt');
-      
+
       if (src && src.startsWith('http') && !src.includes('duckduckgo')) {
         results.push({
           name: alt || query,
@@ -53,16 +54,16 @@ async function scrapeTrends(query: string): Promise<any[]> {
   }
 }
 
-router.get('/search', async (req, res) => {
+router.get('/search', protect, adminOnly, async (req, res) => {
   try {
     const { q } = req.query;
-    
+
     if (!q) {
       return res.status(400).json({ message: 'Query requerida' });
     }
 
     const results = await scrapeTrends(q as string);
-    
+
     res.json(results);
   } catch (error) {
     console.error('Search error:', error);
@@ -70,7 +71,7 @@ router.get('/search', async (req, res) => {
   }
 });
 
-router.get('/trending', async (req, res) => {
+router.get('/trending', protect, adminOnly, async (req, res) => {
   const trends = [
     'phone holder',
     'organizer drawer',
@@ -88,7 +89,7 @@ router.get('/trending', async (req, res) => {
   res.json(allResults.slice(0, 20));
 });
 
-router.get('/clear-cache', (req, res) => {
+router.get('/clear-cache', protect, adminOnly, (req, res) => {
   cache.clear();
   res.json({ message: 'Cache limpiado' });
 });

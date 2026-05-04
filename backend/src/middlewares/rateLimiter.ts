@@ -19,4 +19,14 @@ export const authLimiter = rateLimit({
   skipSuccessfulRequests: true, // No contar requests exitosos
 });
 
+// Límite estricto para rutas de pagos (previene spam en MercadoPago)
+export const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // Solo 5 intentos por IP por ventana
+  message: 'Demasiadas solicitudes de pago. Por favor, intenta más tarde.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+});
+
 export default limiter;

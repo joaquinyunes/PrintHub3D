@@ -33,6 +33,7 @@ import apiKeyRoutes from './modules/settings/api-key.routes';
 import reportRoutes from './modules/reports/report.routes';
 import tenantRoutes from './modules/tenants/tenant.routes';
 import healthRoutes from './routes/health.routes';
+import whatsappRoutes from './modules/notifications/whatsapp.routes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -82,6 +83,8 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/tenant', tenantRoutes);
 // Health check
 app.use('/api/health', healthRoutes);
+// WhatsApp
+app.use('/api/whatsapp', whatsappRoutes);
 
 // Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

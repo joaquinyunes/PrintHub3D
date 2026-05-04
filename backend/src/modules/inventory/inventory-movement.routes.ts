@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import InventoryMovement from './inventory-movement.model';
 import { protect, adminOnly } from '../auth/auth.middleware';
+import { withTenant } from '../../middleware/tenant.middleware';
 
 const router = Router();
 
 // Obtener log de movimientos de inventario
-router.get('/movements', protect, adminOnly, async (req: any, res) => {
+router.get('/movements', protect, withTenant, adminOnly, async (req: any, res) => {
   try {
     const { productId, type, from, to, page = 1, limit = 50 } = req.query;
     const tenantId = req.user.tenantId;
@@ -45,7 +46,7 @@ router.get('/movements', protect, adminOnly, async (req: any, res) => {
 });
 
 // Obtener resumen de un producto
-router.get('/movements/product/:productId', protect, adminOnly, async (req: any, res) => {
+router.get('/movements/product/:productId', protect, withTenant, adminOnly, async (req: any, res) => {
   try {
     const { productId } = req.params;
     const tenantId = req.user.tenantId;

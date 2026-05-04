@@ -22,10 +22,10 @@ export const MercadoPagoService = {
 
     const items = input.deposit
       ? input.items.map(item => ({
-          title: `${item.title} (Seña 30%)`,
+          title: `${item.title} (Seña 50%)`,
           quantity: item.quantity,
           currency_id: 'ARS',
-          unit_price: Math.round(item.unitPrice * 0.3 * 100) / 100,
+          unit_price: Math.round(item.unitPrice * 0.5 * 100) / 100,
         }))
       : input.items.map(item => ({
           title: item.title,
@@ -40,9 +40,9 @@ export const MercadoPagoService = {
         external_reference: input.orderId,
         payer: input.customerEmail ? { email: input.customerEmail } : undefined,
         back_urls: {
-          success: `${process.env.CLIENT_URL || 'http://localhost:3000'}/orders`,
-          failure: `${process.env.CLIENT_URL || 'http://localhost:3000'}/orders`,
-          pending: `${process.env.CLIENT_URL || 'http://localhost:3000'}/orders`,
+          success: `${process.env.CLIENT_URL || 'http://localhost:3000'}/cart`,
+          failure: `${process.env.CLIENT_URL || 'http://localhost:3000'}/cart`,
+          pending: `${process.env.CLIENT_URL || 'http://localhost:3000'}/cart`,
         },
         auto_return: 'approved',
         notification_url: `${process.env.API_URL || 'http://localhost:5000'}/api/payments/webhook`,

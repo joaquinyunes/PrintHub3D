@@ -2,12 +2,13 @@ import { Router, Request, Response } from 'express';
 import Order from '../orders/order.model';
 import { MercadoPagoService } from './mercadopago.service';
 import { enqueueNotification } from '../../queue/notificationQueue';
+import { paymentLimiter } from '../../middlewares/rateLimiter';
 import logger from '../../config/logger';
 
 const router = Router();
 
-// Crear preferencia de pago en MercadoPago
-router.post('/create-preference', async (req: Request, res: Response) => {
+// Crear preferencia de pago en MercadoPago (protegido contra spam)
+router.post('/create-preference', paymentLimiter, async (req: Request, res: Response) => {
   try {
     const { orderId, deposit } = req.body;
 
@@ -46,7 +47,7 @@ router.post('/create-preference', async (req: Request, res: Response) => {
   }
 });
 
-// Webhook de MercadoPago
+// Webhook de MercadoPago (sin limitador para asegurar recepción)
 router.post('/webhook', async (req: Request, res: Response) => {
   try {
     const signature = req.headers['x-hub-signature'] || req.headers['x-signature'];
@@ -103,8 +104,8 @@ router.post('/webhook', async (req: Request, res: Response) => {
   }
 });
 
-// Obtener estado de pago (para frontend)
-router.get('/status/:orderId', async (req: Request, res: Response) => {
+// Obtener estado de pago (para frontend - protegido contra spam)
+router.get('/status/:orderId', paymentLimiter, async (req: Request, res: Response) => {
   try {
     const order = await Order.findOne({ _id: req.params.orderId });
     if (!order) {

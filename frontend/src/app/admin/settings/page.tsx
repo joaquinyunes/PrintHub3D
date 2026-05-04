@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { Save, Building, Phone, DollarSign, MessageSquare, Database } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Save, Building, Phone, DollarSign, MessageSquare, Database, Wifi, WifiOff, QrCode, RefreshCw, Loader2 } from 'lucide-react';
 import { apiUrl } from '@/lib/api';
 
 interface CustomerTemplates {
@@ -35,6 +35,11 @@ const defaultTemplates: CustomerTemplates = {
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
+
+  const [waStatus, setWaStatus] = useState<{ isReady: boolean; hasQr: boolean }>({ isReady: false, hasQr: false });
+  const [qrImage, setQrImage] = useState<string>("");
+  const [connecting, setConnecting] = useState(false);
+  const eventSource = useRef<EventSource | null>(null);
 
   const [formData, setFormData] = useState<SettingsForm>({
     businessName: '',
@@ -88,6 +93,70 @@ export default function SettingsPage() {
       },
     });
   };
+
+  const connectWhatsApp = () => {
+    setConnecting(true);
+    eventSource.current = new EventSource(apiUrl('/api/whatsapp/qr'), {
+      headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem("user") || "{}").token}` }
+    });
+
+    eventSource.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.qr) {
+        setQrImage(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(data.qr)}`);
+        setConnecting(false);
+      }
+    };
+
+    eventSource.current.addEventListener('connected', () => {
+      setWaStatus({ isReady: true, hasQr: false });
+      setQrImage("");
+      setConnecting(false);
+      eventSource.current?.close();
+    });
+
+    eventSource.current.addEventListener('disconnected', () => {
+      setWaStatus({ isReady: false, hasQr: true });
+      eventSource.current?.close();
+      fetchWaStatus();
+    });
+
+    eventSource.current.onerror = () => {
+      setConnecting(false);
+    };
+  };
+
+  const fetchWaStatus = async () => {
+    try {
+      const stored = localStorage.getItem("user");
+      const token = stored ? JSON.parse(stored).token : null;
+      const res = await fetch(apiUrl('/api/whatsapp/status'), {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+      setWaStatus({ isReady: data.isReady, hasQr: data.hasQr });
+      if (data.hasQr && !data.isReady) {
+        connectWhatsApp();
+      }
+    } catch { /* silencioso */ }
+  };
+
+  const reconnectWa = async () => {
+    try {
+      const stored = localStorage.getItem("user");
+      const token = stored ? JSON.parse(stored).token : null;
+      await fetch(apiUrl('/api/whatsapp/reconnect'), {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      connectWhatsApp();
+    } catch { /* silencioso */ }
+  };
+
+  useEffect(() => {
+    fetchWaStatus();
+    return () => { eventSource.current?.close(); };
+  }, []);
 
   const handleSave = async () => {
     setLoading(true);
@@ -172,6 +241,49 @@ export default function SettingsPage() {
             <p className="text-[10px] text-gray-500 mt-1">
               Se usará en los enlaces de seguimiento enviados al cliente.
             </p>
+          </div>
+        </div>
+
+        <div className="bg-card border border-white/10 rounded-xl p-6 space-y-4">
+          <h3 className="font-bold flex items-center gap-2">
+            {waStatus.isReady ? <Wifi className="h-4 w-4 text-green-500" /> : <WifiOff className="h-4 w-4 text-red-500" />}
+            WhatsApp
+          </h3>
+          <div className="flex items-center gap-2 text-sm">
+            {waStatus.isReady ? (
+              <span className="text-green-400 flex items-center gap-1"><Wifi className="h-3 w-3" /> Conectado</span>
+            ) : (
+              <span className="text-red-400 flex items-center gap-1"><WifiOff className="h-3 w-3" /> Desconectado</span>
+            )}
+          </div>
+          {qrImage && (
+            <div className="flex flex-col items-center gap-2 p-4 bg-white rounded-lg">
+              <img src={qrImage} alt="QR WhatsApp" className="w-48 h-48" />
+              <p className="text-xs text-black text-center">Escanea con tu WhatsApp</p>
+            </div>
+          )}
+          {connecting && (
+            <div className="flex items-center gap-2 text-sm text-yellow-400">
+              <Loader2 className="h-4 w-4 animate-spin" /> Esperando QR...
+            </div>
+          )}
+          <div className="flex gap-2">
+            {!waStatus.isReady && !qrImage && (
+              <button
+                onClick={connectWhatsApp}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm flex items-center gap-2"
+              >
+                <QrCode className="h-4 w-4" /> Conectar QR
+              </button>
+            )}
+            {waStatus.isReady && (
+              <button
+                onClick={reconnectWa}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded text-sm flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" /> Reconectar
+              </button>
+            )}
           </div>
         </div>
 

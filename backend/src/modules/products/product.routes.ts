@@ -1,27 +1,26 @@
 // product.routes.ts
 import { Router } from 'express';
-import { 
-    getProducts, 
-    createProduct, 
-    deleteProduct, 
-    updateProduct, 
-    quickSell, // 👈 Importante
+import {
+    getProducts,
+    createProduct,
+    deleteProduct,
+    updateProduct,
+    quickSell,
     getPublicProducts,
     bulkAddStock,
     getProductsSummary
 } from './product.controller';
-
-import { protect } from '../auth/auth.middleware';
+import { protect, adminOnly } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
 
 const router = Router();
-router.post('/bulk-stock', protect, withTenant, bulkAddStock);
-router.get('/summary', protect, withTenant, getProductsSummary);
-router.get('/', protect, withTenant, getProducts); // Admin
-router.get('/public', getPublicProducts); // Tienda
-router.post('/', protect, withTenant, createProduct); // Crear/Fusionar
-router.delete('/:id', protect, withTenant, deleteProduct);
-router.put('/:id', protect, withTenant, updateProduct);
-router.post('/:id/sell', protect, withTenant, quickSell); // 👈 Ruta necesaria para el botón VENDER
+router.post('/bulk-stock', protect, withTenant, adminOnly, bulkAddStock);
+router.get('/summary', protect, withTenant, adminOnly, getProductsSummary);
+router.get('/', protect, withTenant, adminOnly, getProducts);
+router.get('/public', getPublicProducts);
+router.post('/', protect, withTenant, adminOnly, createProduct);
+router.delete('/:id', protect, withTenant, adminOnly, deleteProduct);
+router.put('/:id', protect, withTenant, adminOnly, updateProduct);
+router.post('/:id/sell', protect, withTenant, adminOnly, quickSell);
 
 export default router;

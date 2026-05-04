@@ -1,8 +1,9 @@
 import { Client, LocalAuth } from 'whatsapp-web.js';
 import * as qrcode from 'qrcode-terminal';
 import axios from 'axios';
+import { EventEmitter } from 'events';
 import Chat from '../chat/chat.model';
-import Settings from '../settings/settings.model'; // ✅ Importación correcta
+import Settings from '../settings/settings.model';
 import { appConfig } from '../../config';
 
 const client = new Client({
@@ -10,18 +11,32 @@ const client = new Client({
     puppeteer: { args: ['--no-sandbox'] }
 });
 
+export const whatsappEvents = new EventEmitter();
+
 let isReady = false;
+let currentQr = '';
 
 // 1. QR
 client.on('qr', (qr) => {
     console.log('📱 ESCANEA EL QR DE WHATSAPP');
+    currentQr = qr;
     qrcode.generate(qr, { small: true });
+    whatsappEvents.emit('qr', qr);
 });
 
 // 2. CONEXIÓN LISTA
 client.on('ready', () => {
     console.log('✅ WhatsApp Conectado y Sincronizando al Hub...');
     isReady = true;
+    currentQr = '';
+    whatsappEvents.emit('ready');
+});
+
+// 3. DESCONEXIÓN
+client.on('disconnected', () => {
+    console.log('❌ WhatsApp desconectado');
+    isReady = false;
+    whatsappEvents.emit('disconnected');
 });
 
 // 3. ESCUCHAR Y GUARDAR MENSAJES (CEREBRO PRINCIPAL)
@@ -150,6 +165,28 @@ export const sendCustomerNotification = async (phone: string, message: string) =
         return true;
     } catch (error) {
         console.error('Error enviando notificación al cliente:', error);
+        return false;
+    }
+};
+
+// 4. OBTENER ESTADO DE CONEXIÓN
+export const getWhatsAppStatus = () => {
+    return {
+        isReady,
+        hasQr: !!currentQr
+    };
+};
+
+// 5. RECONECTAR (Logout y Reiniciar)
+export const reconnectWhatsApp = async () => {
+    try {
+        await client.destroy();
+        isReady = false;
+        currentQr = '';
+        client.initialize();
+        return true;
+    } catch (error) {
+        console.error('Error al reconectar WhatsApp:', error);
         return false;
     }
 };

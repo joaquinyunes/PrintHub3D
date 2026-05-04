@@ -1,7 +1,8 @@
 import React from "react";
 import Link from "next/link";
 import { ShoppingCart, Box, Search, ArrowRight, Package } from "lucide-react";
-import { MotionDiv } from "./MotionDiv"; // Asumiremos un wrapper simple para framer-motion
+import { MotionDiv } from "./MotionDiv";
+import { WHATSAPP_PHONE } from "@/lib/config";
 
 interface HeroSectionProps {
   searchQuery: string;
@@ -38,7 +39,7 @@ export default function HeroSection({
         <a href="#productos" className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 shadow-lg shadow-blue-500/30 rounded-xl font-medium transition flex items-center gap-2">
           Ver Catálogo <ArrowRight className="w-4 h-4" />
         </a>
-        <a href="https://wa.me/5493794000000?text=Hola! Quiero info sobre impresiones 3D" target="_blank"
+        <a href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent("Hola! Quiero info sobre impresiones 3D")}`} target="_blank"
           className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90 shadow-lg shadow-green-500/30 rounded-xl font-medium transition flex items-center gap-2">
           Consultar
         </a>

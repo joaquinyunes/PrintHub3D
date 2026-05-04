@@ -1,104 +1,96 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState } from "react";
+import { ShoppingCart, CreditCard, Loader2 } from "lucide-react";
+import type { CartItem } from "@/context/CartContext";
 import { apiUrl } from "@/lib/api";
+import { MERCADO_PAGO_ALIAS } from "@/lib/config";
 
-interface Product {
-  _id: string;
-  name: string;
-  price: number;
-  imageUrl?: string;
-  category: string;
+interface PaymentButtonsProps {
+  total: number;
+  depositTotal: number;
+  items: CartItem[];
+  onWhatsAppCheckout: () => void;
+  clearCart: () => void;
 }
 
-interface UserData {
-  name: string;
-  role: string;
-  email?: string;
-  token?: string;
-}
-
-export default function PaymentButtons({ product }: { product: Product }) {
-  const router = useRouter();
-  const [user, setUser] = useState<UserData | null>(null);
+export default function PaymentButtons({ total, depositTotal, items, onWhatsAppCheckout, clearCart }: PaymentButtonsProps) {
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
-  }, []);
-
-  const handlePayment = async (deposit: boolean) => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
+  const handleMercadoPago = async (payFull: boolean) => {
     setLoading(true);
     try {
-      const res = await fetch(apiUrl("/api/payments/create-payment"), {
+      const itemsList = items.map(item => ({
+        title: item.product.name,
+        quantity: item.quantity,
+        unit_price: item.product.price,
+      }));
+
+      const res = await fetch(apiUrl("/api/payments/create-preference"), {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token || ""}`
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          productName: product.name,
-          price: product.price,
-          deposit
+          items: itemsList,
+          deposit: !payFull,
         })
       });
 
-      const data = await res.json();
+      if (!res.ok) throw new Error("Error creando preferencia");
 
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Completá el pago por WhatsApp");
-        const phone = "5493794000000";
-        const text = deposit 
-          ? `Hola! Quiero pagar la seña (30%) de: *${product.name}* ($${Math.round(product.price * 0.3)})`
-          : `Hola! Quiero comprar: *${product.name}* ($${product.price})`;
-        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
+      const data = await res.json();
+      if (data.initPoint) {
+        clearCart();
+        window.location.href = data.initPoint;
       }
-    } catch (e) {
-      console.error(e);
-      alert("Error al procesar");
+    } catch (err) {
+      console.error("MercadoPago error:", err);
+      alert("Error al procesar el pago. Intentá de nuevo.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleWhatsApp = (deposit: boolean) => {
-    const phone = "5493794000000";
-    const amount = deposit ? Math.round(product.price * 0.3) : product.price;
-    const text = deposit
-      ? `Hola! Quiero pagar la seña (30%) de: *${product.name}* ($${amount})`
-      : `Hola! Quiero comprar: *${product.name}* ($${amount})`;
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
-  };
-
   return (
-    <div className="flex flex-col gap-2 mt-3">
+    <div className="space-y-3">
       <button
-        onClick={() => handleWhatsApp(false)}
+        onClick={onWhatsAppCheckout}
         disabled={loading}
-        className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-700 text-white py-3 rounded-xl font-medium transition flex items-center justify-center gap-2"
+        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition shadow-lg shadow-green-600/30"
       >
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.964-.94 1.162-.173.199-.347.223-.644.075-.197-.103-1.379-1.437-2.612-3.078-.297-.199-.496-.297-.673.15-.176.297-.697.872-1.075.994-.379.123-.646.148-1.143.049-.496-.099-2.425-1.588-3.868-3.012-.298-.298-.497-.447-.696-.447-.02 0-.04 0-.06 0-.2 0-.485.099-.698.298l-1.095 2.697c-.099.297-.022.595.099.793.149.198.397.396.793.495.396.099.793.099 1.141.099.348 0 .695-.099 1.041-.298.349-.198.768-.595.924-.994.099-.299.099-.596.049-.793-.099-.198-.448-1.591-.616-2.137-.149-.546-.298-1.193-.546-1.193z"/>
-        </svg>
-        Comprar - ${product.price}
+        <ShoppingCart className="w-5 h-5" />
+        Comprar por WhatsApp (Seña 50%)
       </button>
-      
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-800"></div>
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-gray-900 px-2 text-gray-500">o pagá con</span>
+        </div>
+      </div>
+
       <button
-        onClick={() => handleWhatsApp(true)}
+        onClick={() => handleMercadoPago(false)}
         disabled={loading}
-        className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 text-white py-2 rounded-xl font-medium transition text-sm"
+        className="w-full bg-[#009EE3] hover:bg-[#008BD0] text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition disabled:opacity-50"
       >
-        Señar 30% (${Math.round(product.price * 0.3)}) - Abonar por WhatsApp
+        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
+        Pagar Seña (50%) - ${depositTotal.toLocaleString("es-AR")}
       </button>
+
+      <button
+        onClick={() => handleMercadoPago(true)}
+        disabled={loading}
+        className="w-full bg-[#009EE3] hover:bg-[#008BD0] text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition disabled:opacity-50"
+      >
+        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
+        Pagar Total - ${total.toLocaleString("es-AR")}
+      </button>
+
+      <div className="text-center text-xs text-gray-500 mt-2">
+        <p>Alias para transferencia: <span className="text-blue-400 font-mono">{MERCADO_PAGO_ALIAS}</span></p>
+      </div>
     </div>
   );
 }

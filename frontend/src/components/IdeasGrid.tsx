@@ -1,7 +1,7 @@
 import React from "react";
-import { TrendingSearch } from "./TrendingSearch"; // Asumo que existe o creamos uno genérico
+import TrendingSearch from "./TrendingSearch";
 import { Idea } from "@/types";
-import { MotionDiv } from "./MotionDiv"; // Wrapper para framer-motion
+import { MotionDiv } from "./MotionDiv";
 
 interface IdeasGridProps {
   ideas: Idea[];

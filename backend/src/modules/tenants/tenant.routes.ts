@@ -4,8 +4,8 @@ import { protect, adminOnly } from '../auth/auth.middleware';
 
 const router = Router();
 
-// Obtener configuración del tenant
-router.get('/', protect, async (req: any, res) => {
+// Obtener configuración del tenant (requiere autenticación)
+router.get('/', protect, adminOnly, async (req: any, res) => {
   try {
     const tenantId = req.user.tenantId;
     let settings = await TenantSettings.findOne({ tenantId }).lean();
@@ -22,7 +22,7 @@ router.get('/', protect, async (req: any, res) => {
   }
 });
 
-// Actualizar configuración
+// Actualizar configuración (solo admin)
 router.put('/', protect, adminOnly, async (req: any, res) => {
   try {
     const tenantId = req.user.tenantId;

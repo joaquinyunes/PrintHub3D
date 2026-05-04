@@ -9,7 +9,9 @@
     "build": "tsc",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "worker:whatsapp": "ts-node src/workers/whatsapp.worker.ts"
+    "worker:whatsapp": "ts-node src/workers/whatsapp.worker.ts",
+    "test": "jest --detectOpenHandles --forceExit",
+    "test:watch": "jest --watch"
   },
   "keywords": [],
   "author": "",
@@ -49,14 +51,18 @@
     "@types/node": "^25.0.3",
     "@types/nodemailer": "^6.4.17",
     "@types/qrcode-terminal": "^0.12.2",
+    "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^5.59.0",
     "@typescript-eslint/parser": "^5.59.0",
     "eslint": "^8.48.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-react": "^7.32.2",
+    "jest": "^29.7.0",
     "mongodb-memory-server": "^8.12.0",
     "nodemon": "^3.1.11",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.3.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

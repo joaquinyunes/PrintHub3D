@@ -1,11 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { protect, adminOnly } from '../auth/auth.middleware';
+import { withTenant } from '../../middleware/tenant.middleware';
 import { enqueuePDFJob } from '../../queue/pdfQueue';
 
 const router = Router();
 
 // Solicitar reporte de ventas
-router.post('/sales', protect, adminOnly, async (req: any, res) => {
+router.post('/sales', protect, withTenant, adminOnly, async (req: any, res) => {
   try {
     const { format = 'pdf', dateFrom, dateTo } = req.body;
 
@@ -29,7 +30,7 @@ router.post('/sales', protect, adminOnly, async (req: any, res) => {
 });
 
 // Solicitar remito de orden
-router.post('/remito/:orderId', protect, adminOnly, async (req: any, res) => {
+router.post('/remito/:orderId', protect, withTenant, adminOnly, async (req: any, res) => {
   try {
     const { orderId } = req.params;
 
@@ -47,7 +48,7 @@ router.post('/remito/:orderId', protect, adminOnly, async (req: any, res) => {
 });
 
 // Solicitar presupuesto
-router.post('/presupuesto', protect, adminOnly, async (req: any, res) => {
+router.post('/presupuesto', protect, withTenant, adminOnly, async (req: any, res) => {
   try {
     const { items, clientName } = req.body;
 

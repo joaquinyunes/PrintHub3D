@@ -9,6 +9,5 @@ const router = Router();
 router.get('/', protect, withTenant, adminOnly, getPrinters);
 router.post('/', protect, withTenant, adminOnly, createPrinter);
 router.delete('/:id', protect, withTenant, adminOnly, deletePrinter);
-// Si en el frontend usamos PATCH, acá también tiene que ser patch
-router.patch('/:id/status', updatePrinterStatus);
+router.patch('/:id/status', protect, withTenant, adminOnly, updatePrinterStatus);
 export default router;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { apiUrl } from "@/lib/api";
 import { Search, ExternalLink, Loader2 } from "lucide-react";
+import { WHATSAPP_PHONE } from "@/lib/config";
 
 interface TrendItem {
   name: string;
@@ -101,7 +102,7 @@ export default function TrendingSearch({ onAddProduct }: TrendingSearchProps) {
 
       <div className="mt-4 text-center">
         <a
-          href="https://wa.me/5493794000000?text=Hola! Quiero suggest una tendencia"
+          href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent("Hola! Quiero sugerir una tendencia")}`}
           target="_blank"
           className="text-blue-400 hover:text-blue-300 text-sm flex items-center justify-center gap-2"
         >

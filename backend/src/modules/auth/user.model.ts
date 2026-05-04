@@ -5,7 +5,7 @@ export interface IUser extends Document {
     name: string;
     email: string;
     password: string;
-    role: 'admin' | 'client';
+    role: 'admin' | 'user' | 'staff' | 'reseller';
     tenantId: string;
     createdAt: Date;
     verified: boolean;
@@ -23,9 +23,9 @@ const UserSchema: Schema = new Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['admin', 'client'], default: 'client' }, 
+    role: { type: String, enum: ['admin', 'user', 'staff', 'reseller'], default: 'user' }, 
     tenantId: { type: String, default: appConfig.defaultTenantId },
-    verified: { type: Boolean, default: false },
+    verified: { type: Boolean, default: true },
     verificationToken: { type: String },
     verificationExpires: { type: Date },
     magicCode: { type: String },
