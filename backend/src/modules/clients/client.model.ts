@@ -2,12 +2,13 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IClient extends Document {
     name: string;
-    email?: string; // Opcional (a veces solo tienes Instagram o WhatsApp)
+    email?: string;
     phone?: string;
-    socialHandle?: string; // Ej: @juanperez (IG)
-    source: string; // De dónde vino (Instagram, Local, etc)
-    totalSpent: number; // Cuánto dinero nos dejó en total
-    orderCount: number; // Cuántas veces compró
+    socialHandle?: string;
+    source: string;
+    avatar?: string;
+    totalSpent: number;
+    orderCount: number;
     lastOrderDate: Date;
     notes?: string;
     tenantId: string;
@@ -19,6 +20,7 @@ const ClientSchema: Schema = new Schema({
     phone: { type: String },
     socialHandle: { type: String },
     source: { type: String, default: 'local' },
+    avatar: { type: String },
     
     // Métricas Automáticas
     totalSpent: { type: Number, default: 0 },

@@ -56,3 +56,28 @@ export const getClients = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Error obteniendo clientes' });
     }
 };
+
+export const updateClient = async (req: Request, res: Response) => {
+    try {
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+        const { id } = req.params;
+        
+        if (!tenantId) {
+            return res.status(401).json({ message: 'No autorizado' });
+        }
+
+        const client = await Client.findOneAndUpdate(
+            { _id: id, tenantId },
+            req.body,
+            { new: true }
+        );
+
+        if (!client) {
+            return res.status(404).json({ message: 'Cliente no encontrado' });
+        }
+
+        res.json(client);
+    } catch (error) {
+        res.status(500).json({ message: 'Error actualizando cliente' });
+    }
+};

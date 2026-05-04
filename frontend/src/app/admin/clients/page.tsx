@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Users, Search, Star, MessageCircle, Instagram, Facebook } from 'lucide-react';
+import { Users, Search, Star, MessageCircle, Instagram, Facebook, Camera } from 'lucide-react';
+import { apiUrl } from '@/lib/api';
 
 interface Client {
   _id: string;
   name: string;
   source: string;
+  avatar?: string;
   totalSpent: number;
   orderCount: number;
   lastOrderDate: string;
@@ -19,9 +21,13 @@ export default function ClientsPage() {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/clients');
+        const stored = localStorage.getItem("user");
+        const token = stored ? JSON.parse(stored).token : '';
+        const res = await fetch(apiUrl('/api/clients'), {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         const data = await res.json();
-        setClients(data);
+        setClients(data.items || data);
       } catch (err) {
         console.error(err);
       } finally {
@@ -30,6 +36,22 @@ export default function ClientsPage() {
     };
     fetchClients();
   }, []);
+
+  const updateAvatar = async (clientId: string, avatarUrl: string) => {
+    const stored = localStorage.getItem("user");
+    const token = stored ? JSON.parse(stored).token : '';
+    
+    await fetch(apiUrl(`/api/clients/${clientId}`), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ avatar: avatarUrl })
+    });
+    
+    setClients(prev => prev.map(c => c._id === clientId ? { ...c, avatar: avatarUrl } : c));
+  };
 
   const getSourceIcon = (source: string) => {
     if (source === 'instagram') return <Instagram className="h-4 w-4 text-pink-500" />;
@@ -62,8 +84,27 @@ export default function ClientsPage() {
             )}
 
             <div className="flex items-center gap-4 mb-4">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center font-bold text-lg">
-                {client.name.charAt(0).toUpperCase()}
+              <div className="relative group">
+                {client.avatar ? (
+                  <img 
+                    src={client.avatar} 
+                    alt={client.name}
+                    className="h-12 w-12 rounded-full object-cover border-2 border-white/10"
+                  />
+                ) : (
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center font-bold text-lg">
+                    {client.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <button 
+                  onClick={() => {
+                    const url = prompt('Ingresá la URL de la imagen:', client.avatar || '');
+                    if (url) updateAvatar(client._id, url);
+                  }}
+                  className="absolute -bottom-1 -right-1 bg-blue-600 p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                >
+                  <Camera className="h-3 w-3 text-white" />
+                </button>
               </div>
               <div>
                 <h3 className="font-bold text-lg">{client.name}</h3>
