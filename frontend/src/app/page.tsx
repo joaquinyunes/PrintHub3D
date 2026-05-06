@@ -11,6 +11,7 @@ import { apiUrl } from "@/lib/api";
 import HeroSection from "@/components/HeroSection";
 import ProductCard from "@/components/ProductCard";
 import IdeasGrid from "@/components/IdeasGrid";
+import ScrollVideoPlayer from "@/components/ScrollVideoPlayer";
 import type { Product } from "@/types";
 
 interface Idea {
@@ -244,6 +245,14 @@ export default function HomePage() {
         user={user}
         handleLogout={handleLogout}
       />
+
+      {/* Scroll-Driven Video Section - Apple Style 
+         Para activarlo:
+         1. Extrae los frames de tu video con: node scripts/extract-frames.js tu-video.mp4
+         2. Los frames se guardarán en public/frames/
+         3. Descomenta el componente abajo
+      */}
+      {/* <ScrollVideoPlayer totalFrames={300} width={1920} height={1080} /> */}
 
       <IdeasGrid ideas={displayIdeas} handleWhatsAppBuy={handleWhatsAppBuy} />
 
