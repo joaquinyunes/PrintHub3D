@@ -216,7 +216,17 @@ export default function MediaPage() {
               <div className="text-xs font-bold text-gray-400 uppercase mb-2">{item.productName}</div>
               
               {item.type === 'video' && item.videoUrl ? (
-                <video src={item.videoUrl} className="w-full h-32 object-cover rounded-lg mb-2" controls/>
+                <div className="space-y-2">
+                  <video src={apiUrl(item.videoUrl)} className="w-full h-32 object-cover rounded-lg" controls/>
+                  <a 
+                    href={apiUrl(item.videoUrl)} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-400 hover:text-blue-300 underline"
+                  >
+                    Ver video
+                  </a>
+                </div>
               ) : item.imageUrl ? (
                 <img src={item.imageUrl} alt={item.productName} className="w-full h-32 object-cover rounded-lg mb-2"/>
               ) : (

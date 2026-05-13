@@ -22,9 +22,11 @@
   "license": "ISC",
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.7",
+    "@typescript-eslint/eslint-plugin": "^8.59.3",
     "concurrently": "^9.1.2",
     "eslint": "^8.48.0",
     "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "^7.37.5",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.0",
     "prettier": "^3.5.3",

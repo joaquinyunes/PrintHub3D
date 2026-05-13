@@ -1019,7 +1019,7 @@ export default function HomeSettingsPage() {
                   />
                 </label>
                 {code.videoUrl && (
-                  <a href={code.videoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 text-xs">Ver Video</a>
+                  <a href={apiUrl(code.videoUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-400 text-xs">Ver Video</a>
                 )}
                 <button onClick={() => removeCustomCode(i)} className="text-red-400 p-2">
                   <X className="w-4 h-4" />

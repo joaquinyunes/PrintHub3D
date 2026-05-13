@@ -49,11 +49,17 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(helmet()); // Seguridad cabeceras HTTP
 app.use(limiter);
 app.use(express.json());
-//app.use(mongoSanitize()); // Previene inyección NoSQL
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+  setHeaders: (res) => {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}));
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 
 // Conexión Base de Datos con manejo de errores
 mongoose
@@ -63,6 +69,46 @@ mongoose
         logger.error('❌ Error MongoDB:', err);
         process.exit(1);
     });
+
+    // 1. Configuración de Seguridad con Helmet (Ajustado para permitir videos)
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
+// 2. Configuración CORS
+app.use(cors({
+  origin: appConfig.corsOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true,
+}));
+
+app.use(limiter);
+app.use(express.json());
+
+// 3. Carpeta de Uploads con cabecera de acceso permitida
+app.use('/uploads', (req, res, next) => {
+  res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(__dirname, '../uploads')));
+
+// Conexión Base de Datos
+mongoose
+    .connect(appConfig.mongoUri)
+    .then(() => logger.info('✅ Base de datos conectada'))
+    .catch((err) => {
+        logger.error('❌ Error MongoDB:', err);
+        process.exit(1);
+    });
+
+// Montaje de Rutas
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/health', healthRoutes);
+
+app.use(errorHandler);
 
 // Montaje de Rutas
 app.use('/api/tasks', taskRoutes);
