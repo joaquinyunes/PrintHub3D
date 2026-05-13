@@ -1,5 +1,5 @@
-import OrderRepository from '../../repositories/order.repository';
-import ProductRepository from '../../repositories/product.repository';
+import { OrderRepository } from '../../repositories/order.repository';
+import { ProductRepository } from '../../repositories/product.repository';
 import Sale from '../sales/sale.model';
 import Client from '../clients/client.model';
 import { InventoryService } from '../products/inventory.service';
@@ -14,6 +14,7 @@ interface OrderItemInput {
   quantity: number;
   price: number;
   isCustom?: boolean;
+  productType?: string;
   printTimeMinutes?: number;
 }
 
@@ -36,10 +37,58 @@ export interface RegisterOrderSaleInput {
   finalCost?: number | string | null;
 }
 
-const buildTrackingCode = () => {
+const slugifyPart = (raw: string) => {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/ñ/gi, 'n')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48);
+};
+
+const formatDateDDMMYYYY = (d: Date) => {
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = String(d.getFullYear());
+  return `${day}${month}${year}`;
+};
+
+const buildCustomTrackingBase = (
+  clientName: string,
+  items: any[],
+  dueDate?: string | Date | null,
+) => {
+  const customItem = items.find((item: any) => item.isCustom);
+  const productLabel =
+    (customItem?.productType && String(customItem.productType).trim()) ||
+    (customItem?.productName && String(customItem.productName).trim()) ||
+    'custom';
+
+  const clientSlug = slugifyPart(clientName) || 'cliente';
+  const productSlug = slugifyPart(productLabel) || 'producto';
+  const d = dueDate ? new Date(dueDate) : new Date();
+  const dateStr = formatDateDDMMYYYY(Number.isNaN(d.getTime()) ? new Date() : d);
+
+  return `${clientSlug}-${productSlug}-${dateStr}`.toLowerCase();
+};
+
+const buildRandomTrackingCode = () => {
   const random = Math.random().toString(36).slice(2, 7).toUpperCase();
   const stamp = Date.now().toString(36).slice(-4).toUpperCase();
   return `PH-${stamp}${random}`;
+};
+
+const ensureUniqueTrackingCode = async (preferred: string): Promise<string> => {
+  let candidate = preferred;
+  for (let n = 0; n < 40; n += 1) {
+    const existing = await orderRepository.findByTrackingCode(candidate);
+    if (!existing) return candidate;
+    candidate = `${preferred}-${n + 2}`;
+  }
+  return `${preferred}-${Date.now().toString(36)}`;
 };
 
 export const OrderService = {
@@ -95,7 +144,12 @@ export const OrderService = {
     );
 
     const profit = calculatedTotal - calculatedCost;
-    const trackingCode = buildTrackingCode();
+    const hasCustomItem = items.some((item: any) => item.isCustom);
+    const trackingBase =
+      hasCustomItem && clientName
+        ? buildCustomTrackingBase(clientName, items, dueDate)
+        : buildRandomTrackingCode();
+    const trackingCode = await ensureUniqueTrackingCode(trackingBase);
 
     // Crear orden
     const newOrder = await orderRepository.create({

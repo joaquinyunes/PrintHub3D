@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus, CheckCircle2, X, Loader2, Trash2, Package, 
@@ -13,11 +13,11 @@ import { apiUrl } from "@/lib/api";
 
 // --- 1. INTERFACES Y TIPOS ---
 interface Product { _id: string; name: string; price: number; stock: number; }
-interface OrderItem { productId?: string; productName: string; quantity: number; price: number; isCustom?: boolean; printTimeMinutes?: number; }
+interface OrderItem { productId?: string; productName: string; quantity: number; price: number; isCustom?: boolean; printTimeMinutes?: number; productType?: string; }
 interface OrderFile { name: string; url: string; }
 interface Order { 
     _id: string; clientName: string; origin?: string; paymentMethod?: string; 
-    deposit?: number; notes?: string; total: number; 
+    deposit?: number; notes?: string; total: number; trackingCode?: string;
     status: string; createdAt: string; items: (OrderItem & { printedQuantity?: number })[]; isSaleRegistered?: boolean;
     dueDate?: string; files?: OrderFile[]; chatLink?: string;
 }
@@ -34,6 +34,62 @@ const ORIGIN_CONFIG: Record<string, { color: string, icon: any }> = {
 };
 const ORIGINS = Object.keys(ORIGIN_CONFIG);
 const PAYMENTS = ["Efectivo", "Transferencia", "Débito", "Crédito", "USDT", "MercadoPago"];
+
+/** Tipos por defecto si no hay filas en Admin → Inicio → Videos por código. */
+const FALLBACK_ORDER_PRODUCT_TYPES: { value: string; label: string }[] = [
+  { value: "vasoriver", label: "Vaso River" },
+  { value: "vasoboca", label: "Vaso Boca" },
+  { value: "vasoracing", label: "Vaso Racing" },
+  { value: "vasoindependiente", label: "Vaso Independiente" },
+  { value: "vasohuracan", label: "Vaso Huracán" },
+  { value: "porta", label: "Porta Latas" },
+  { value: "figura", label: "Figura" },
+  { value: "llavero", label: "Llavero" },
+  { value: "trofeo", label: "Trofeo" },
+  { value: "funko", label: "Funko" },
+  { value: "otro", label: "Otro" },
+];
+
+function normalizeTypeKey(raw: string) {
+  return raw
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/ñ/g, "n")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+/** Combina tipos definidos en Videos por código (admin) + lista por defecto, sin duplicados. */
+function mergeOrderProductTypes(
+  customCodes: Array<{ code?: string; name?: string }>,
+): { value: string; label: string }[] {
+  const out: { value: string; label: string }[] = [{ value: "", label: "Sin tipo" }];
+  const seen = new Set<string>([""]);
+
+  const push = (value: string, label: string) => {
+    const v = String(value || "").trim();
+    if (!v) return;
+    const key = normalizeTypeKey(v);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    out.push({ value: v, label: String(label || "").trim() || v });
+  };
+
+  if (Array.isArray(customCodes)) {
+    for (const row of customCodes) {
+      const code = String(row?.code || "").trim();
+      if (!code) continue;
+      push(code, String(row?.name || "").trim() || code);
+    }
+  }
+
+  for (const row of FALLBACK_ORDER_PRODUCT_TYPES) {
+    push(row.value, row.label);
+  }
+
+  return out;
+}
 
 const TABS = [
     { id: 'production', label: 'EN PRODUCCIÓN', description: 'Pendientes y en proceso', icon: Factory, color: 'text-blue-400', statuses: ['pending', 'in_progress'] },
@@ -71,9 +127,17 @@ export default function OrderListPage() {
   const [tempFile, setTempFile] = useState({ name: "", url: "" });
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [itemTab, setItemTab] = useState<"product" | "custom">("product"); 
-  const [itemInput, setItemInput] = useState({ id: "", qty: 1, customName: "", customPrice: "", printTimeMinutes: 30 });
+  const [itemInput, setItemInput] = useState({ id: "", qty: 1, customName: "", customPrice: "", printTimeMinutes: 30, productType: "" });
   const [printOrder, setPrintOrder] = useState<Order | null>(null);
   const [printIndex, setPrintIndex] = useState<number | null>(null);
+  const [createdOrderCode, setCreatedOrderCode] = useState<string | null>(null);
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [settingsCustomCodes, setSettingsCustomCodes] = useState<Array<{ code?: string; name?: string }>>([]);
+
+  const orderProductTypeOptions = useMemo(
+    () => mergeOrderProductTypes(settingsCustomCodes),
+    [settingsCustomCodes],
+  );
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -82,9 +146,10 @@ export default function OrderListPage() {
     setSession(currentSession);
     const loadData = async () => {
         try {
-            const [resO, resP] = await Promise.all([
+            const [resO, resP, resS] = await Promise.all([
                 fetch(apiUrl("/api/orders"), { headers: { Authorization: `Bearer ${currentSession.token}` } }),
-                fetch(apiUrl("/api/products"), { headers: { Authorization: `Bearer ${currentSession.token}` } })
+                fetch(apiUrl("/api/products"), { headers: { Authorization: `Bearer ${currentSession.token}` } }),
+                fetch(apiUrl("/api/settings"), { headers: { Authorization: `Bearer ${currentSession.token}` } }),
             ]);
             if(resO.ok) {
               const rawOrders = await resO.json();
@@ -96,10 +161,46 @@ export default function OrderListPage() {
               setOrders(ordersData);
             }
             if(resP.ok) setProducts(await resP.json());
+            if (resS.ok) {
+              try {
+                const settings = await resS.json();
+                const cc =
+                  settings?.homepageSections?.customCodes ??
+                  settings?.customCodes ??
+                  [];
+                setSettingsCustomCodes(Array.isArray(cc) ? cc : []);
+              } catch {
+                setSettingsCustomCodes([]);
+              }
+            }
         } catch (e) { console.error(e); } finally { setLoading(false); }
     };
     loadData();
   }, [router]);
+
+  useEffect(() => {
+    if (!isModalOpen || !session?.token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(apiUrl("/api/settings"), {
+          headers: { Authorization: `Bearer ${session.token}` },
+        });
+        if (!res.ok || cancelled) return;
+        const settings = await res.json();
+        const cc =
+          settings?.homepageSections?.customCodes ??
+          settings?.customCodes ??
+          [];
+        if (!cancelled) setSettingsCustomCodes(Array.isArray(cc) ? cc : []);
+      } catch {
+        if (!cancelled) setSettingsCustomCodes([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isModalOpen, session?.token]);
 
   // --- LÓGICA DE AGRUPACIÓN (MANTENIDA) ---
   const getGroupedOrders = () => {
@@ -169,6 +270,14 @@ export default function OrderListPage() {
               const saved = await res.json();
               if(editingOrderId) setOrders(orders.map(o => o._id === saved._id ? saved : o));
               else setOrders([saved, ...orders]);
+              
+              // Si hay un item personalizado, mostrar el código de tracking
+              const hasCustomItem = cart.some(i => i.isCustom);
+              if (hasCustomItem && saved.trackingCode) {
+                setCreatedOrderCode(saved.trackingCode);
+                setShowCodeModal(true);
+              }
+              
               setIsModalOpen(false);
           }
       } catch(e) { console.error(e); }
@@ -249,7 +358,11 @@ export default function OrderListPage() {
           const p = products.find(x => x._id === itemInput.id);
           if(p && itemInput.qty > 0) { setCart([...cart, { productId: p._id, productName: p.name, price: Number(p.price), quantity: Number(itemInput.qty), isCustom: false, printTimeMinutes: Number(itemInput.printTimeMinutes) || 30 }]); setItemInput({ ...itemInput, qty: 1, printTimeMinutes: 30 }); }
       } else {
-          if(itemInput.customName && itemInput.customPrice) { setCart([...cart, { productName: itemInput.customName, price: Number(itemInput.customPrice), quantity: Number(itemInput.qty) || 1, isCustom: true, printTimeMinutes: Number(itemInput.printTimeMinutes) || 30 }]); setItemInput({ ...itemInput, customName: "", customPrice: "", printTimeMinutes: 30 }); }
+          if(itemInput.customName && itemInput.customPrice) { 
+            const productName = itemInput.productType ? `${itemInput.customName} (${itemInput.productType})` : itemInput.customName;
+            setCart([...cart, { productName, price: Number(itemInput.customPrice), quantity: Number(itemInput.qty) || 1, isCustom: true, printTimeMinutes: Number(itemInput.printTimeMinutes) || 30, productType: itemInput.productType || undefined }]); 
+            setItemInput({ ...itemInput, customName: "", customPrice: "", productType: "", qty: 1, printTimeMinutes: 30 }); 
+          }
       }
   };
   const calculateTotal = () => cart.reduce((acc, i) => acc + (Number(i.price) * Number(i.quantity)), 0);
@@ -376,29 +489,134 @@ export default function OrderListPage() {
                             </div>
 
                             {/* Inputs Agregar Item */}
-                            <div className="flex gap-2 mb-4 bg-white/5 p-2 rounded-2xl border border-white/5">
+                            <div
+                              className={`mb-4 bg-white/5 p-2 rounded-2xl border border-white/5 ${
+                                itemTab === "custom" ? "flex flex-col gap-3" : "flex gap-2 flex-wrap items-center"
+                              }`}
+                            >
                                 {itemTab==="product" ? (
-                                    <div className="relative flex-1">
+                                    <div className="relative flex-1 min-w-[200px]">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4"/>
-                                        <select className="w-full bg-transparent border-none pl-9 py-3 text-sm text-white outline-none appearance-none" value={itemInput.id} onChange={e=>setItemInput({...itemInput, id: e.target.value})}>
-                                            <option value="" className="bg-black">Seleccionar producto...</option>
-                                            {products.map(p=><option key={p._id} value={p._id} className="bg-black">{p.name} (${p.price})</option>)}
+                                        <select
+                                          className="w-full bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-3 py-3 text-sm text-white outline-none focus:border-blue-500 appearance-none [&>option]:bg-zinc-900 [&>option]:text-white"
+                                          value={itemInput.id}
+                                          onChange={e=>setItemInput({...itemInput, id: e.target.value})}
+                                        >
+                                            <option value="">Seleccionar producto...</option>
+                                            {products.map(p=><option key={p._id} value={p._id}>{p.name} (${p.price})</option>)}
                                         </select>
                                     </div>
                                 ):(
-                                    <input className="flex-1 bg-transparent border-none px-4 py-3 text-sm text-white outline-none" placeholder="Descripción del servicio..." value={itemInput.customName} onChange={e=>setItemInput({...itemInput, customName: e.target.value})}/>
+                                    <>
+                                      <div className="flex flex-wrap gap-2 items-center w-full">
+                                        <input
+                                          className="flex-1 min-w-[200px] bg-zinc-900/80 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-purple-500"
+                                          placeholder="Nombre del producto (ej: Vaso River)"
+                                          value={itemInput.customName}
+                                          onChange={e=>setItemInput({...itemInput, customName: e.target.value})}
+                                        />
+                                        <div className="relative w-32 min-w-[7rem] border border-white/10 rounded-xl bg-zinc-900/80">
+                                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">$</span>
+                                          <input
+                                            type="number"
+                                            className="w-full bg-transparent border-none pl-7 pr-2 py-3 text-white outline-none text-sm"
+                                            placeholder="Precio"
+                                            value={itemInput.customPrice}
+                                            onChange={e=>setItemInput({...itemInput, customPrice: e.target.value})}
+                                          />
+                                        </div>
+                                        <div className="w-20 min-w-[5rem] border border-white/10 rounded-xl bg-zinc-900/80">
+                                          <input
+                                            type="number"
+                                            className="w-full bg-transparent border-none py-3 text-center text-white outline-none text-sm"
+                                            value={itemInput.qty}
+                                            onChange={e=>setItemInput({...itemInput, qty: Number(e.target.value)})}
+                                          />
+                                        </div>
+                                        <div className="w-24 min-w-[6rem] border border-white/10 rounded-xl bg-zinc-900/80 flex items-center justify-center gap-1 px-1" title="Tiempo de impresión (minutos)">
+                                          <Timer size={12} className="text-zinc-500 shrink-0"/>
+                                          <input
+                                            type="number"
+                                            className="w-full bg-transparent border-none py-3 text-center text-white outline-none text-xs min-w-0"
+                                            value={itemInput.printTimeMinutes}
+                                            onChange={e=>setItemInput({...itemInput, printTimeMinutes: Number(e.target.value)})}
+                                          />
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={handleAddItem}
+                                          className="bg-white text-black px-4 py-3 rounded-xl hover:bg-gray-200 transition-colors font-bold shrink-0"
+                                        >
+                                          <Plus size={18}/>
+                                        </button>
+                                      </div>
+                                      <div className="rounded-xl border border-purple-500/25 bg-zinc-950/90 p-3">
+                                        <p className="text-[11px] font-bold text-purple-200 uppercase tracking-widest mb-2">
+                                          Tipo de producto
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                          {orderProductTypeOptions.map((t, optIdx) => {
+                                            const selected = itemInput.productType === t.value;
+                                            return (
+                                              <button
+                                                key={`opt-${optIdx}-${t.value || "none"}`}
+                                                type="button"
+                                                onClick={() => setItemInput({ ...itemInput, productType: t.value })}
+                                                className={`rounded-lg px-3 py-2 text-xs font-bold border transition-colors ${
+                                                  selected
+                                                    ? "bg-purple-600 border-purple-300 text-white shadow-md shadow-purple-900/40"
+                                                    : "bg-zinc-900 border-white/15 text-zinc-100 hover:border-white/35 hover:bg-zinc-800"
+                                                }`}
+                                              >
+                                                {t.label}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                        <p className="text-[10px] text-zinc-400 mt-2 leading-relaxed">
+                                          Para <span className="text-zinc-200 font-semibold">agregar tipos nuevos</span>, andá a{" "}
+                                          <a
+                                            href="/admin/home#videos-por-codigo"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-purple-300 hover:text-purple-200 underline font-semibold"
+                                          >
+                                            Admin → Inicio web → Videos por código
+                                          </a>
+                                          : cada fila (código + nombre + video) aparece acá como tipo. Guardá en Inicio y reabrí este pedido para refrescar.
+                                        </p>
+                                      </div>
+                                    </>
                                 )}
                                 
-                                {itemTab==="custom" && <div className="relative w-32 border-l border-white/10"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span><input type="number" className="w-full bg-transparent border-none pl-6 py-3 text-white outline-none" placeholder="Precio" value={itemInput.customPrice} onChange={e=>setItemInput({...itemInput, customPrice: e.target.value})}/></div>}
-                                
-                                <div className="w-20 border-l border-white/10"><input type="number" className="w-full bg-transparent border-none py-3 text-center text-white outline-none" value={itemInput.qty} onChange={e=>setItemInput({...itemInput, qty: Number(e.target.value)})}/></div>
-                                
-                                <div className="w-20 border-l border-white/10 flex items-center justify-center gap-1" title="Tiempo de impresión (minutos)">
-                                    <Timer size={12} className="text-gray-500"/>
-                                    <input type="number" className="w-12 bg-transparent border-none py-3 text-center text-white outline-none text-xs" value={itemInput.printTimeMinutes} onChange={e=>setItemInput({...itemInput, printTimeMinutes: Number(e.target.value)})} />
-                                </div>
-                                
-                                <button onClick={handleAddItem} className="bg-white text-black px-4 rounded-xl hover:bg-gray-200 transition-colors font-bold"><Plus size={18}/></button>
+                                {itemTab==="product" && (
+                                  <>
+                                    <div className="w-20 border-l border-white/10">
+                                      <input
+                                        type="number"
+                                        className="w-full bg-zinc-900/50 border border-white/10 rounded-xl py-3 text-center text-white outline-none text-sm"
+                                        value={itemInput.qty}
+                                        onChange={e=>setItemInput({...itemInput, qty: Number(e.target.value)})}
+                                      />
+                                    </div>
+                                    <div className="w-24 border-l border-white/10 flex items-center justify-center gap-1 px-1" title="Tiempo de impresión (minutos)">
+                                      <Timer size={12} className="text-gray-500"/>
+                                      <input
+                                        type="number"
+                                        className="w-12 bg-transparent border-none py-3 text-center text-white outline-none text-xs"
+                                        value={itemInput.printTimeMinutes}
+                                        onChange={e=>setItemInput({...itemInput, printTimeMinutes: Number(e.target.value)})}
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={handleAddItem}
+                                      className="bg-white text-black px-4 rounded-xl hover:bg-gray-200 transition-colors font-bold"
+                                    >
+                                      <Plus size={18}/>
+                                    </button>
+                                  </>
+                                )}
                             </div>
 
                             {/* Lista Carrito */}
@@ -514,6 +732,46 @@ export default function OrderListPage() {
                 </div>
             </div>
         )}
+        
+        {/* MODAL MOSTRAR CÓDIGO DE Tracking */}
+        {showCodeModal && createdOrderCode && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-300">
+            <div className="w-full max-w-lg bg-gradient-to-br from-purple-900/80 to-black border border-purple-500/30 rounded-3xl p-8 shadow-2xl shadow-purple-500/20">
+              <div className="text-center mb-6">
+                <div className="text-5xl mb-3">🎯</div>
+                <h2 className="text-2xl font-black text-white mb-2">¡Código de Seguimiento Creado!</h2>
+                <p className="text-purple-300 text-sm">Este código sirve para que el cliente rastree su pedido y vea el video personalizado</p>
+              </div>
+              
+              <div className="bg-black/50 rounded-2xl p-6 mb-6 border border-purple-500/20">
+                <label className="text-[10px] font-bold text-purple-400 uppercase tracking-widest block mb-3 text-center">Código para el Cliente</label>
+                <div className="text-center">
+                  <span className="inline-block bg-purple-600/30 text-purple-300 px-6 py-3 rounded-xl font-mono text-2xl font-black tracking-wider">
+                    {createdOrderCode}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 text-center mt-3">El cliente debe buscar este código en /track</p>
+              </div>
+              
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-6">
+                <p className="text-yellow-400 text-xs font-bold mb-1">📋 IMPORTANTE</p>
+                <p className="text-gray-400 text-xs">Para que el cliente pueda ver el video, necesitas:</p>
+                <ol className="text-xs text-gray-500 mt-2 space-y-1 list-decimal list-inside">
+                  <li>Ir a <a href="/admin/home" target="_blank" className="text-purple-400 hover:underline">/admin/home</a></li>
+                  <li>En &quot;Videos por código&quot;, usar el mismo texto que el tipo de producto o el nombre (ej: <span className="text-purple-300">vasoriver</span> o <span className="text-purple-300">vaso-boca</span>); varios clientes con el mismo tipo verán el mismo video</li>
+                  <li>Subir el video correspondiente y guardar</li>
+                </ol>
+              </div>
+              
+              <button 
+                onClick={() => { setShowCodeModal(false); setCreatedOrderCode(null); }}
+                className="w-full bg-purple-600 hover:bg-purple-500 py-4 rounded-xl text-white font-black uppercase tracking-widest transition-all hover:scale-105"
+              >
+                Entendido ✓
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -545,6 +803,11 @@ function OrderCard({ order, activeTab, onEdit, onDeliver, onStatusChange, onPay,
                         <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{order.origin}</span>
                     </div>
                     <h4 className="font-bold text-white text-lg line-clamp-1">{order.clientName}</h4>
+                    {order.items?.some((it: any) => it.isCustom) && order.trackingCode && (
+                        <p className="mt-1 text-[10px] font-mono text-purple-300/90 truncate" title={order.trackingCode}>
+                            Código: {order.trackingCode}
+                        </p>
+                    )}
                     {/* FECHA */}
                     {order.dueDate && (
                         <div className="flex items-center gap-1.5 mt-2 text-[10px] text-gray-500 font-bold uppercase tracking-wide">

@@ -21,6 +21,7 @@ export interface Idea {
   desc: string;
   link: string;
   image?: string;
+  imageUrl?: string;
   price: number;
   trending?: boolean;
 }

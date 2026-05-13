@@ -137,10 +137,13 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-2">
           <p className="text-xs text-muted-foreground">
             Acceso restringido únicamente a personal autorizado.
           </p>
+          <a href="/register" className="text-xs text-blue-400 hover:text-blue-300">
+            ¿Eres cliente? Crea tu cuenta aquí
+          </a>
         </div>
       </div>
     </div>

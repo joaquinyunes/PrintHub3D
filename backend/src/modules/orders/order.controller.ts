@@ -1,10 +1,12 @@
 import { Request, Response } from 'express';
-import OrderRepository from '../../repositories/order.repository';
-import ProductRepository from '../../repositories/product.repository';
+import { OrderRepository } from '../../repositories/order.repository';
+import { ProductRepository } from '../../repositories/product.repository';
 import Sale from '../sales/sale.model';
 import { sendAdminNotification, sendCustomerNotification } from '../notifications/notification.service';
 import { OrderService } from './order.service';
 import { appConfig } from '../../config';
+import Settings from '../settings/settings.model';
+import { findCustomVideoUrl } from '../../utils/customCodeVideoMatch';
 
 const orderRepository = new OrderRepository();
 const productRepository = new ProductRepository();
@@ -405,6 +407,17 @@ export const getOrderByTrackingCode = async (req: Request, res: Response) => {
             media: null
         }));
 
+        let customVideoUrl: string | null = null;
+        try {
+            const tenantId = (order as any).tenantId || appConfig.defaultTenantId;
+            const settings = await Settings.findOne({ tenantId }).lean();
+            const raw = (settings as any)?.homepageSections?.customCodes;
+            const customCodes = Array.isArray(raw) ? raw : [];
+            customVideoUrl = findCustomVideoUrl(String(trackingCode), customCodes);
+        } catch (lookupErr) {
+            console.error('getOrderByTrackingCode customVideo lookup:', lookupErr);
+        }
+
         return res.json({
             trackingCode: (order as any).trackingCode,
             clientName: order.clientName,
@@ -422,6 +435,7 @@ export const getOrderByTrackingCode = async (req: Request, res: Response) => {
             customerFeedback: (order as any).customerFeedback,
             media: { message: 'Tu pedido está en producción' },
             statusSteps: steps,
+            customVideoUrl,
         });
     } catch (error) {
         console.error('Error getOrderByTrackingCode:', error);

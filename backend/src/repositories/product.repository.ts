@@ -1,4 +1,4 @@
-import { FilterQuery } from 'mongoose';
+import mongoose from 'mongoose';
 import { BaseRepository } from './base.repository';
 import Product, { IProduct } from '../modules/products/product.model';
 

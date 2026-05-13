@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import ProductRepository from '../../repositories/product.repository';
+import { ProductRepository } from '../../repositories/product.repository';
 import Sale from "../sales/sale.model";
 import { InventoryService } from "./inventory.service";
 

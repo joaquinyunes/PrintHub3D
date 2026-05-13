@@ -17,10 +17,12 @@ export interface ISettings extends Document {
         resendTracking: string;
     };
     homepageSections: {
-        ideas: { name: string; icon: string; category: string; downloads: string; link: string }[];
+        ideas: { name: string; icon: string; category: string; downloads: string; link: string; imageUrl?: string }[];
         printers: { name: string; description: string; imageUrl: string; price: number; link: string }[];
         printersTitle: string;
         printersSubtitle: string;
+        scrollVideo?: { videoSrc: string; title: string; price: string };
+        customCodes?: { code: string; name: string; videoUrl: string }[];
     };
     tenantId: string;
 }
@@ -61,6 +63,8 @@ const SettingsSchema: Schema = new Schema({
         printers: { type: Schema.Types.Mixed, default: [] },
         printersTitle: { type: String, default: 'Impresoras 3D' },
         printersSubtitle: { type: String, default: 'Vendemos impresoras Bambu Lab y accesorios' },
+        scrollVideo: { type: Schema.Types.Mixed, default: { videoSrc: '/copakling-optimized.mp4', title: 'Impresora 3D Bambu Lab', price: '469000' } },
+        customCodes: { type: Schema.Types.Mixed, default: [] },
     },
     tenantId: { type: String, default: appConfig.defaultTenantId }
 });

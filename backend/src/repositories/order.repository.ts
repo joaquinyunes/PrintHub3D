@@ -1,5 +1,7 @@
-import { FilterQuery, Types } from 'mongoose';
+import mongoose from 'mongoose';
 import { BaseRepository } from './base.repository';
+
+const { Types } = mongoose;
 import Order, { IOrder } from '../modules/orders/order.model';
 
 export class OrderRepository extends BaseRepository<IOrder> {
@@ -8,8 +10,11 @@ export class OrderRepository extends BaseRepository<IOrder> {
   }
 
   async findByTrackingCode(trackingCode: string): Promise<IOrder | null> {
-    return await this.model.findOne({ 
-      trackingCode: trackingCode.toUpperCase() 
+    const trimmed = String(trackingCode || "").trim();
+    if (!trimmed) return null;
+    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return await this.model.findOne({
+      trackingCode: new RegExp(`^${escaped}$`, "i"),
     } as FilterQuery<IOrder>);
   }
 

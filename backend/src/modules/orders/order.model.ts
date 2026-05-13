@@ -23,6 +23,7 @@ export interface IOrder extends Document {
         quantity: number;
         price: number;
         isCustom: boolean;
+        productType?: string;
         printedQuantity?: number;
         printTimeMinutes?: number;
     }>;
@@ -69,6 +70,7 @@ const OrderSchema: Schema = new Schema({
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
         isCustom: { type: Boolean, default: false },
+        productType: { type: String, default: "" },
         printedQuantity: { type: Number, default: 0 },
         printTimeMinutes: { type: Number, default: 30 }
     }],

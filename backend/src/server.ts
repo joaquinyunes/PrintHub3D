@@ -4,11 +4,13 @@ import cors from 'cors';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import { createServer } from 'http';
+import path from 'path';
 import { appConfig } from './config';
+
 import logger from './config/logger';
 import { errorHandler } from './middleware/errorHandler';
 import limiter from './middlewares/rateLimiter';
-import swaggerSpec from './config/swagger';
+import { swaggerSpec } from './config/swagger';
 import swaggerUi from 'swagger-ui-express';
 
 // Importación de Rutas
@@ -34,6 +36,7 @@ import reportRoutes from './modules/reports/report.routes';
 import tenantRoutes from './modules/tenants/tenant.routes';
 import healthRoutes from './routes/health.routes';
 import whatsappRoutes from './modules/notifications/whatsapp.routes';
+import aiRoutes from './routes/ai.routes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -47,9 +50,10 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(helmet()); // Seguridad cabeceras HTTP
-app.use(mongoSanitize()); // Previene inyección NoSQL
 app.use(limiter);
 app.use(express.json());
+//app.use(mongoSanitize()); // Previene inyección NoSQL
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Conexión Base de Datos con manejo de errores
 mongoose
@@ -85,6 +89,8 @@ app.use('/api/tenant', tenantRoutes);
 app.use('/api/health', healthRoutes);
 // WhatsApp
 app.use('/api/whatsapp', whatsappRoutes);
+// AI
+app.use('/api/ai', aiRoutes);
 
 // Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

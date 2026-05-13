@@ -1,5 +1,7 @@
-import mongoose, { Document, FilterQuery, Model, UpdateQuery, SortOrder } from 'mongoose';
+import mongoose from 'mongoose';
 import cacheService from '../services/cache.service';
+
+const { Document, Model, UpdateQuery } = mongoose;
 
 export interface PaginationOptions {
   page?: number;

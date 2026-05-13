@@ -13,6 +13,7 @@ export const CreateOrderSchema = z.object({
     quantity: z.number().min(1, 'Cantidad mínima es 1'),
     price: z.number().min(0, 'Precio debe ser positivo'),
     isCustom: z.boolean().optional(),
+    productType: z.string().optional(),
     printTimeMinutes: z.number().min(0).optional(),
   })).min(1, 'Debe haber al menos un producto'),
   dueDate: z.union([z.string(), z.date(), z.null()]).optional(),

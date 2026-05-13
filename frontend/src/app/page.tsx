@@ -1,35 +1,39 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShoppingCart, Search, ArrowRight, Package, Instagram, MapPin, LogOut, Menu, X, Box, Phone } from "lucide-react";
 import CartIcon from "@/components/CartIcon";
 import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from "@/lib/config";
-import { motion } from "framer-motion";
 import { apiUrl } from "@/lib/api";
 import HeroSection from "@/components/HeroSection";
 import ProductCard from "@/components/ProductCard";
-import IdeasGrid from "@/components/IdeasGrid";
-import ScrollVideoPlayer from "@/components/ScrollVideoPlayer";
+import ScrollAnimation from "@/components/ScrollAnimation";
+import ScrollAnimationImpresora from "@/components/ScrollAnimationImpresora";
 import type { Product } from "@/types";
 
-interface Idea {
-  name: string;
-  downloads: string;
-  desc: string;
-  link: string;
-  image?: string;
-  price: number;
-  trending?: boolean;
-}
-
-interface Printer {
+interface ShowcaseProduct {
+  id: string;
   name: string;
   price: number;
   imageUrl?: string;
-  link: string;
-  description: string;
+  description?: string;
+  videoUrl?: string;
+}
+
+interface ShowcaseSubCategory {
+  id: string;
+  name: string;
+  products: ShowcaseProduct[];
+}
+
+interface ShowcaseCategory {
+  id: string;
+  name: string;
+  icon?: string;
+  imageUrl?: string;
+  subCategories: ShowcaseSubCategory[];
 }
 
 export default function HomePage() {
@@ -43,27 +47,39 @@ export default function HomePage() {
   const [productsError, setProductsError] = useState("");
   
   const [trackingCode, setTrackingCode] = useState("");
-  // NEW: dynamic home data for Ideas and Printers
-  const [ideasData, setIdeasData] = useState<Idea[]>([]);
-  const [printersData, setPrintersData] = useState<Printer[]>([]);
-  const [homeLoading, setHomeLoading] = useState(true);
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [trackingError, setTrackingError] = useState("");
+  
+  // Dynamic home sections from admin
+  const [homeSections, setHomeSections] = useState<any>(null);
+  const [openShowcaseCategory, setOpenShowcaseCategory] = useState<ShowcaseCategory | null>(null);
 
-  const ideas: Idea[] = [
-    { name: "iPhone Stand", downloads: "15k+", desc: "Soporte para celular", link: "https://makerworld.bambulab.com/es/model/23618", image: "https://images.unsplash.com/photo-1616348436918-d227853a0d4c?w=400&h=400&fit=crop", price: 2500, trending: true },
-    { name: "Under Desk Drawer", downloads: "12k+", desc: "Cajón secreto", link: "https://makerworld.bambulab.com/es/model/18956", image: "https://images.unsplash.com/photo-1558618666-fda70efd1e81?w=400&h=400&fit=crop", price: 3000, trending: true },
-    { name: "OTF Fidget", downloads: "10k+", desc: "Spinner táctil", link: "https://makerworld.bambulab.com/es/model/45201", image: "https://images.unsplash.com/photo-1609146804283-2276bfb19e40?w=400&h=400&fit=crop", price: 1500 },
-    { name: "Cable Wrapper", downloads: "8k+", desc: "Organizador", link: "https://makerworld.bambulab.com/es/model/34567", image: "https://images.unsplash.com/photo-1625723044792-44b16c3f5a5d?w=400&h=400&fit=crop", price: 1200 },
-    { name: "Filament Clip", downloads: "7k+", desc: "Clip universal", link: "https://makerworld.bambulab.com/es/model/12345", image: "https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=400&h=400&fit=crop", price: 800 },
-    { name: "Capybara", downloads: "5k+", desc: "Capy caminante", link: "https://makerworld.bambulab.com/es/model/67890", image: "https://images.unsplash.com/photo-1535295972055-1c76275bb4c2?w=400&h=400&fit=crop", price: 3500 },
-  ];
+  const resolveMediaUrl = (path?: string) => {
+    if (!path) return "";
+    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+    return apiUrl(path.startsWith("/") ? path : `/${path}`);
+  };
 
-  const printers: Printer[] = [
-    { name: "Bambu Lab A1", price: 469000, imageUrl: "https://images.unsplash.com/photo-1631549916768-4115659e404e?w=600&h=400&fit=crop", link: "https://store.bambulab.com/products/a1", description: "Impresora IDEAL para começar" },
-    { name: "Bambu Lab P1P", price: 1159000, imageUrl: "https://images.unsplash.com/photo-1565689157206-850c86b1b131?w=600&h=400&fit=crop", link: "https://store.bambulab.com/products/p1p", description: "Alta velocidade e precisão" },
-    { name: "Bambu Lab X1C", price: 1599000, imageUrl: "https://images.unsplash.com/photo-1581092918056-0c4c0acd9807?w=600&h=400&fit=crop", link: "https://store.bambulab.com/products/x1c", description: "Flagship com multi-material" },
-  ];
+  const showcaseCategoriesFromAdmin = useMemo(() => {
+    const list = homeSections?.productCategories;
+    if (!Array.isArray(list) || list.length === 0) return null;
+    const withNames = list.filter((c: { name?: string }) => String(c?.name || "").trim());
+    return withNames.length ? withNames : null;
+  }, [homeSections]);
+
+  const FALLBACK_CATEGORY_CARDS = useMemo(
+    () => [
+      { icon: "🥫", name: "Porta Latas", desc: "Personalizado a medida" },
+      { icon: "🥤", name: "Vasos", desc: "River, Boca, Racing y más" },
+      { icon: "🏆", name: "Trofeos", desc: "Calidad premium" },
+      { icon: "🔑", name: "Llaveros", desc: "Diseños únicos" },
+      { icon: "🎮", name: "Funkos", desc: "Coleccionables" },
+      { icon: "🎲", name: "Juegos", desc: "Piezas para tablero" },
+      { icon: "📦", name: "Guardadores", desc: "Figuritas y más" },
+      { icon: "⭐", name: "Más", desc: "Ver catálogo completo" },
+    ],
+    [],
+  );
 
   const fallbackProducts: Product[] = [
     { _id: "1", name: "Soporte Celular Premium", price: 2500, imageUrl: "https://images.unsplash.com/photo-1616348436918-d227853a0d4c?w=400&h=400&fit=crop", description: "Soporte de aluminio para escritorio", category: "Accesorios" },
@@ -83,9 +99,6 @@ export default function HomePage() {
   });
 
   const categories = [...new Set(displayProducts.map(p => p.category).filter(Boolean))];
-  // SD: dynamic home content display helpers
-  const displayIdeas = ideasData.length > 0 ? ideasData : ideas;
-  const displayPrinters = printersData.length > 0 ? printersData : printers;
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -114,24 +127,18 @@ export default function HomePage() {
       }
     };
     loadData();
-    // Load home data (ideas & printers) from API
-    const loadHomeData = async () => {
+
+    // Load settings from admin
+    const loadSettings = async () => {
       try {
-        const [ideasRes, printersRes] = await Promise.all([
-          fetch(apiUrl("/api/home/ideas")),
-          fetch(apiUrl("/api/home/printers"))
-        ]);
-        const ideasJson = await ideasRes.json();
-        const printersJson = await printersRes.json();
-        if (Array.isArray(ideasJson)) setIdeasData(ideasJson as Idea[]);
-        if (Array.isArray(printersJson)) setPrintersData(printersJson as Printer[]);
+        const res = await fetch(apiUrl("/api/settings"));
+        const data = await res.json();
+        if (data.homepageSections) setHomeSections(data.homepageSections);
       } catch (e) {
-        console.error("Error loading home data:", e);
-      } finally {
-        setHomeLoading(false);
+        console.error("Error loading settings:", e);
       }
     };
-    loadHomeData();
+    loadSettings();
   }, []);
 
   const handleLogout = () => {
@@ -147,94 +154,101 @@ export default function HomePage() {
 
   const handleTrackOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!trackingCode.trim()) return;
-    const code = trackingCode.trim().toUpperCase();
+    const code = trackingCode.trim();
+    if (!code) return;
     router.push(`/track?code=${encodeURIComponent(code)}`);
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white font-sans">
+    <div className="min-h-screen bg-black text-white font-sans">
+      {/* Background effects */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-500/20 blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-purple-500/20 blur-[120px] rounded-full" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-500/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-purple-500/10 blur-[120px] rounded-full" />
       </div>
 
-      <nav className="fixed top-0 w-full z-50 bg-gray-950/80 backdrop-blur-xl border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group cursor-pointer">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+      {/* NAVBAR */}
+      <nav className="fixed top-0 w-full z-50 bg-black/90 backdrop-blur-2xl border-b border-white/10">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all shadow-lg shadow-blue-500/30">
               <Box className="w-6 h-6 text-white" />
             </div>
-            <div className="hidden sm:block">
-              <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Global 3D</span>
-              <p className="text-[10px] text-gray-500 -mt-1">Corrientes</p>
+            <div>
+              <span className="text-xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">{homeSections?.heroTitle || "Global 3D"}</span>
+              <p className="text-[10px] text-gray-500 tracking-[0.3em] uppercase -mt-1">Corrientes</p>
             </div>
           </Link>
 
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="#productos" className="text-gray-300 hover:text-white text-sm font-medium transition hover:text-blue-400">Productos</Link>
-            <Link href="#ideas" className="text-gray-300 hover:text-white text-sm font-medium transition hover:text-blue-400">Ideas</Link>
-            <Link href="#impresoras" className="text-gray-300 hover:text-white text-sm font-medium transition hover:text-blue-400">Impresoras</Link>
-            <Link href="#contacto" className="text-gray-300 hover:text-white text-sm font-medium transition hover:text-blue-400">Contacto</Link>
-            <CartIcon />
+          <div className="hidden lg:flex items-center gap-1">
+            {[
+              { href: "#rastreo", label: "📦 Rastreo" },
+              { href: "#producto-estrella", label: "⭐ Producto Estrella" },
+              { href: "#categorias", label: "Categorías" },
+              { href: "#productos", label: "Productos" },
+              { href: "#contacto", label: "Contacto" }
+            ].map((item, i) => (
+              <Link key={i} href={item.href} className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200 relative group">
+                {item.label}
+                <span className="absolute -bottom-1 left-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full group-hover:w-full group-hover:left-0 transition-all duration-300" />
+              </Link>
+            ))}
+          </div>
 
+          <div className="flex items-center gap-3">
+            <CartIcon />
             {user?.role === "admin" ? (
-              <div className="flex items-center gap-3 pl-4 border-l border-gray-800">
-                <Link href="/admin" className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-bold hover:from-blue-700 hover:to-purple-700 transition">
-                  Admin
-                </Link>
-                <button onClick={handleLogout} className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-400 transition">
-                  <LogOut className="w-3 h-3" />
-                  Salir
+              <div className="flex items-center gap-2">
+                <Link href="/admin" className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all">Admin</Link>
+                <button onClick={handleLogout} className="p-2.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
+                  <LogOut className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <Link href="/admin/login" className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition border border-gray-700">
-                Ingresar
-              </Link>
+              <Link href="/admin/login" className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl border border-white/10 transition-all">Ingresar</Link>
             )}
+            <button className="lg:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>
+              {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
-
-          <button className="md:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
         </div>
+
+        {menuOpen && (
+          <div className="lg:hidden fixed top-16 left-0 right-0 bg-black border-b border-white/10 p-4 z-40">
+            <Link href="#rastreo" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>📦 Rastreo</Link>
+            <Link href="#producto-estrella" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>⭐ Producto Estrella</Link>
+            <Link href="#categorias" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>Categorías</Link>
+            <Link href="#productos" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>Productos</Link>
+            <Link href="#contacto" className="block py-3 text-gray-300 hover:text-white" onClick={() => setMenuOpen(false)}>Contacto</Link>
+          </div>
+        )}
       </nav>
 
-      {menuOpen && (
-        <div className="fixed top-16 left-0 right-0 bg-gray-900 border-b border-gray-800 p-4 md:hidden z-40">
-          <Link href="#productos" className="block py-3 text-gray-300 hover:text-white border-b border-gray-800" onClick={() => setMenuOpen(false)}>Productos</Link>
-          <Link href="#ideas" className="block py-3 text-gray-300 hover:text-white border-b border-gray-800" onClick={() => setMenuOpen(false)}>Ideas</Link>
-          <Link href="#impresoras" className="block py-3 text-gray-300 hover:text-white border-b border-gray-800" onClick={() => setMenuOpen(false)}>Impresoras</Link>
-          <Link href="#contacto" className="block py-3 text-gray-300 hover:text-white border-b border-gray-800" onClick={() => setMenuOpen(false)}>Contacto</Link>
-          <Link href="/cart" className="block py-3 text-gray-300 hover:text-white" onClick={() => setMenuOpen(false)}>Carrito</Link>
-        </div>
-      )}
-
-      <section className="pt-24 pb-6 px-4">
-        <div className="max-w-2xl mx-auto">
+      {/* 1. 📦 RASTREO */}
+      <section id="rastreo" className="pt-28 pb-12 px-4">
+        <div className="max-w-xl mx-auto">
           <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-6 md:p-8">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Package className="h-8 w-8 text-blue-400" />
+              <Package className="h-7 w-7 text-blue-400" />
               <h2 className="text-xl md:text-2xl font-bold text-white">Rastrear Mi Pedido</h2>
             </div>
             <p className="text-gray-400 text-center mb-6 text-sm">Ingresá el código para ver el estado de producción</p>
             <form onSubmit={handleTrackOrder} className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                <input type="text" value={trackingCode} onChange={(e) => setTrackingCode(e.target.value.toUpperCase())} placeholder="Ej: JUA-X1Y2Z3"
+                <input type="text" value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} placeholder="Ej: joaquin-vasoboca-17032026"
                   className="w-full bg-gray-900 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500" />
               </div>
-              <button type="submit" disabled={trackingLoading || !trackingCode.trim()}
+              <button type="submit" disabled={!trackingCode.trim()}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-900 disabled:text-gray-500 text-white px-6 py-3 rounded-xl font-medium transition flex items-center justify-center gap-2">
                 Rastrear <ArrowRight className="h-4 w-4" />
               </button>
             </form>
-            {trackingError && <p className="text-red-400 text-sm text-center mt-3">{trackingError}</p>}
           </div>
         </div>
       </section>
 
+      {/* 2. 🏠 HERO */}
       <HeroSection 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -244,50 +258,188 @@ export default function HomePage() {
         handleWhatsAppBuy={handleWhatsAppBuy}
         user={user}
         handleLogout={handleLogout}
+        heroData={{
+          title: homeSections?.heroTitle || "Global 3D",
+          subtitle: homeSections?.heroSubtitle || "Transformamos tus ideas en objetos reales.",
+          description: homeSections?.heroDescription || "Impresión 3D de alta calidad en Corrientes",
+          badge: homeSections?.heroBadge || "Envíos gratis en pedidos mayores a $50.000",
+          stats: homeSections?.heroStats || { reviews: "4.9", reviewsCount: "200+ reseñas", orders: "500+", delivery: "24-72h" },
+          features: homeSections?.heroFeatures || ["Impresión rápida", "Calidad premium", "Envío rápido", "Soporte 24/7"]
+        }}
       />
 
-      {/* Scroll-Driven Video Section - Apple Style 
-         Para activarlo:
-         1. Extrae los frames de tu video con: node scripts/extract-frames.js tu-video.mp4
-         2. Los frames se guardarán en public/frames/
-         3. Descomenta el componente abajo
-      */}
-      {/* <ScrollVideoPlayer totalFrames={300} width={1920} height={1080} /> */}
-
-      <IdeasGrid ideas={displayIdeas} handleWhatsAppBuy={handleWhatsAppBuy} />
-
-      <section id="impresoras" className="py-16 px-4 bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Impresoras 3D</h2>
-            <p className="text-gray-400">Vendemos todas las Bambu Lab · Precio incluye distribución</p>
+      {/* 3. ⭐ PRODUCTO ESTRELLA */}
+      {homeSections?.productStar?.enabled !== false && (
+        <section id="producto-estrella" className="py-20 px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl md:text-5xl font-black text-white">Producto Estrella</h2>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {printers.map((printer, i) => (
-              <div key={i} className="relative group overflow-hidden bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl hover:scale-[1.06] hover:-translate-y-1 hover:shadow-2xl hover:shadow-orange-500/30 transition-all duration-300">
-                <div className="aspect-[4/3] bg-gray-800/50 overflow-hidden">
-                  {printer.imageUrl && <img src={printer.imageUrl} alt={printer.name} className="w-full h-full object-contain p-4 group-hover:scale-105 transition duration-500" />}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-white">{printer.name}</h3>
-                  <p className="text-xs text-gray-500">{printer.description}</p>
-                  <div className="flex justify-between items-center mt-3">
-                    <span className="text-xl font-bold text-orange-400">${printer.price.toLocaleString("es-AR")}</span>
-                    <button onClick={() => window.open(printer.link, "_blank")}
-                      className="bg-gradient-to-r from-orange-500 to-red-600 hover:opacity-90 shadow-lg shadow-orange-500/30 text-white px-4 py-2 rounded-xl text-sm font-medium transition">Ver Producto</button>
-                  </div>
-                </div>
-              </div>
-            ))}
+        </section>
+      )}
+
+      {/* 4. 🏆 VIDEO 1: COPA KLING (Scroll Animation) */}
+      {homeSections?.copaAnimation?.enabled !== false && (
+        <ScrollAnimation 
+          totalFrames={homeSections?.copaAnimation?.totalFrames || 73}
+          nativeWidth={744}
+          nativeHeight={1232}
+          framesDir={homeSections?.copaAnimation?.framesDir || '/frames-copakling/'}
+          title={homeSections?.copaAnimation?.title || 'Copa de la Liga'}
+          subtitle={homeSections?.copaAnimation?.subtitle || 'Diseño 3D de alta calidad con detalles premium'}
+          badge={homeSections?.copaAnimation?.badge || 'TROFEO PREMIUM'}
+          price={homeSections?.copaAnimation?.price || '$12.500'}
+          accentColor={homeSections?.copaAnimation?.accentColor || '#f59e0b'}
+        />
+      )}
+
+      {/* 5. 📂 CATEGORÍAS */}
+      <section id="categorias" className="py-20 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <span className="text-blue-400 text-sm uppercase tracking-wider font-bold">Explorá</span>
+            <h2 className="text-4xl md:text-5xl font-black text-white mt-2">Nuestras Categorías</h2>
+            <p className="text-zinc-300 mt-3 text-sm md:text-base max-w-xl mx-auto font-medium">
+              Tocá una categoría para ver subcategorías y productos (configurables en Admin → Inicio web).
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+            {showcaseCategoriesFromAdmin
+              ? showcaseCategoriesFromAdmin.map((cat: { id: string; name: string; icon?: string; subCategories?: { name?: string }[] }) => {
+                  const subs = Array.isArray(cat.subCategories) ? cat.subCategories : [];
+                  const preview =
+                    subs
+                      .map((s) => String(s?.name || "").trim())
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .join(" · ") || "Ver productos y videos";
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setOpenShowcaseCategory(cat as ShowcaseCategory)}
+                      className="group text-left relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/15 rounded-2xl p-6 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-500/40 transition-all shadow-lg shadow-black/40 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+                    >
+                      <div className="text-4xl mb-3 drop-shadow-md">{cat.icon || "📦"}</div>
+                      <h3 className="font-black text-white text-base leading-tight">{cat.name}</h3>
+                      <p className="text-sm text-zinc-200 mt-2 font-semibold leading-snug">{preview}</p>
+                    </button>
+                  );
+                })
+              : FALLBACK_CATEGORY_CARDS.map((item, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() =>
+                      document.getElementById("productos")?.scrollIntoView({ behavior: "smooth", block: "start" })
+                    }
+                    className="group text-left relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/15 rounded-2xl p-6 hover:scale-[1.02] hover:-translate-y-1 hover:border-amber-500/35 transition-all shadow-lg shadow-black/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                  >
+                    <div className="text-4xl mb-3 drop-shadow-md">{item.icon}</div>
+                    <h3 className="font-black text-white text-base leading-tight">{item.name}</h3>
+                    <p className="text-sm text-zinc-200 mt-2 font-semibold leading-snug">{item.desc}</p>
+                  </button>
+                ))}
           </div>
         </div>
       </section>
 
+      {openShowcaseCategory && (
+        <div
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="category-modal-title"
+          onClick={() => setOpenShowcaseCategory(null)}
+        >
+          <div
+            className="w-full sm:max-w-lg bg-zinc-950 border border-white/20 sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl shadow-black/60"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start gap-3 p-5 border-b border-white/10 bg-zinc-900/90 shrink-0">
+              <h3 id="category-modal-title" className="text-xl sm:text-2xl font-black text-white leading-tight pr-2">
+                <span className="mr-2" aria-hidden>{openShowcaseCategory.icon || "📦"}</span>
+                {openShowcaseCategory.name}
+              </h3>
+              <button
+                type="button"
+                className="shrink-0 rounded-xl p-2 text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
+                onClick={() => setOpenShowcaseCategory(null)}
+                aria-label="Cerrar"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-5 space-y-8 flex-1">
+              {(openShowcaseCategory.subCategories || []).length === 0 ? (
+                <p className="text-zinc-200 font-medium text-center py-6">
+                  Todavía no hay subcategorías cargadas. Configuralas en <span className="text-white font-bold">Admin → Inicio web → Categorías de productos</span>.
+                </p>
+              ) : (
+                openShowcaseCategory.subCategories.map((sub) => (
+                  <div key={sub.id}>
+                    <h4 className="text-xs font-black text-blue-400 uppercase tracking-[0.2em] mb-3 border-b border-blue-500/30 pb-2">
+                      {String(sub.name || "").trim() || "Sin nombre"}
+                    </h4>
+                    <div className="space-y-4">
+                      {(sub.products || []).length === 0 ? (
+                        <p className="text-zinc-300 text-sm font-medium">Sin productos en esta subcategoría.</p>
+                      ) : (
+                        (sub.products || []).map((p) => (
+                          <div
+                            key={p.id}
+                            className="bg-zinc-900/90 rounded-xl p-4 border border-white/10 space-y-3"
+                          >
+                            {p.imageUrl ? (
+                              <img
+                                src={resolveMediaUrl(p.imageUrl)}
+                                alt=""
+                                className="w-full max-h-48 object-cover rounded-lg border border-white/10"
+                              />
+                            ) : null}
+                            {p.videoUrl ? (
+                              <video
+                                src={resolveMediaUrl(p.videoUrl)}
+                                controls
+                                className="w-full rounded-lg border border-white/10 bg-black"
+                              />
+                            ) : null}
+                            <p className="text-lg font-black text-white">{String(p.name || "").trim() || "Producto"}</p>
+                            {p.description ? (
+                              <p className="text-sm text-zinc-100 leading-relaxed font-medium">{p.description}</p>
+                            ) : null}
+                            <p className="text-emerald-400 font-black text-xl">
+                              ${Number(p.price || 0).toLocaleString("es-AR")}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleWhatsAppBuy({
+                                  name: p.name || "Producto",
+                                  price: p.price ?? 0,
+                                })
+                              }
+                              className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-sm transition-colors"
+                            >
+                              Consultar por WhatsApp
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. 🛒 CATÁLOGO DE PRODUCTOS */}
       <section id="productos" className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Productos Disponibles</h2>
+          <div className="text-center mb-10">
+            <span className="inline-block px-4 py-1.5 bg-blue-500/10 text-blue-400 text-xs font-bold rounded-full mb-4">🛒 PRODUCTOS</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">Todos los Productos</h2>
           </div>
           
           {displayProducts.length > 0 && (
@@ -298,7 +450,7 @@ export default function HomePage() {
                   className="w-full bg-gray-900 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500" />
               </div>
               <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
-                className="bg-gray-900 border border-gray-800 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-blue-500">
+                className="bg-gray-900 border border-gray-800 rounded-xl py-3 px-4 text-white font-medium focus:outline-none focus:border-blue-500 [&>option]:bg-gray-900 [&>option]:text-white">
                 <option value="all">Todas las categorías</option>
                 {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
@@ -332,49 +484,67 @@ export default function HomePage() {
           ) : (
             <div className="text-center py-10 border border-dashed border-gray-800 rounded-xl">
               <p className="text-gray-500">No hay productos disponibles.</p>
-              <a href="https://wa.me/5493794000000?text=Hola! Quiero pedir un producto" target="_blank" className="text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block">Consultanos disponibilidad</a>
+              <a href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola! Quiero pedir un producto`} target="_blank" className="text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block">Consultanos disponibilidad</a>
             </div>
           )}
         </div>
       </section>
 
-      <section id="contacto" className="py-16 px-4 bg-white/[0.02]">
+      {/* 7. 🖨️ VIDEO 2: IMPRESORAS (Scroll Animation) */}
+      {homeSections?.impresoraAnimation?.enabled !== false && (
+        <ScrollAnimationImpresora 
+          totalFrames={homeSections?.impresoraAnimation?.totalFrames || 192}
+          nativeWidth={1280}
+          nativeHeight={720}
+          framesDir={homeSections?.impresoraAnimation?.framesDir || '/frames-mp/'}
+          title={homeSections?.impresoraAnimation?.title || 'Impresora 3D Bambu Lab X1C'}
+          subtitle={homeSections?.impresoraAnimation?.subtitle || 'La nueva generación de precisión y velocidad'}
+          badge={homeSections?.impresoraAnimation?.badge || '🖨️ PROFESIONAL'}
+          price={homeSections?.impresoraAnimation?.price || '$469.000'}
+          accentColor={homeSections?.impresoraAnimation?.accentColor || '#3b82f6'}
+        />
+      )}
+
+      {/* 8. 📞 CONTACTO */}
+      <section id="contacto" className="py-20 px-4 bg-white/[0.02]">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Contacto</h2>
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-3">Contacto</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            <a href={`https://wa.me/${WHATSAPP_PHONE}`} target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-xl p-6 text-center hover:border-green-600 transition group">
-              <Phone className="w-8 h-8 text-green-500 mx-auto mb-3 group-hover:scale-110 transition" />
-              <h3 className="font-medium mb-1">WhatsApp</h3>
-              <p className="text-gray-500 text-sm">{WHATSAPP_DISPLAY}</p>
+            <a href={`https://wa.me/${WHATSAPP_PHONE}`} target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-green-600 hover:scale-105 transition-all group">
+              <Phone className="w-10 h-10 text-green-500 mx-auto mb-4 group-hover:scale-110 transition-all" />
+              <h3 className="font-bold text-white text-lg mb-2">WhatsApp</h3>
+              <p className="text-gray-500">{WHATSAPP_DISPLAY}</p>
             </a>
-            <a href="https://instagram.com/global3dcorrientes" target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-xl p-6 text-center hover:border-pink-600 transition group">
-              <Instagram className="w-8 h-8 text-pink-500 mx-auto mb-3 group-hover:scale-110 transition" />
-              <h3 className="font-medium mb-1">Instagram</h3>
-              <p className="text-gray-500 text-sm">@global3dcorrientes</p>
+            <a href="https://instagram.com/global3dcorrientes" target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-pink-600 hover:scale-105 transition-all group">
+              <Instagram className="w-10 h-10 text-pink-500 mx-auto mb-4 group-hover:scale-110 transition-all" />
+              <h3 className="font-bold text-white text-lg mb-2">Instagram</h3>
+              <p className="text-gray-500">@global3dcorrientes</p>
             </a>
-            <div className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-xl p-6 text-center">
-              <MapPin className="w-8 h-8 text-blue-500 mx-auto mb-3" />
-              <h3 className="font-medium mb-1">Ubicación</h3>
-              <p className="text-gray-500 text-sm">Corrientes, Argentina</p>
+            <div className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center">
+              <MapPin className="w-10 h-10 text-blue-500 mx-auto mb-4" />
+              <h3 className="font-bold text-white text-lg mb-2">Ubicación</h3>
+              <p className="text-gray-500">Corrientes, Argentina</p>
             </div>
           </div>
         </div>
       </section>
 
-      <footer className="py-8 px-4 border-t border-gray-800">
+      {/* FOOTER */}
+      <footer className="py-10 px-4 border-t border-white/10">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Box className="w-4 h-4 text-white" />
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Box className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Global 3D</span>
+            <span className="font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent text-lg">{homeSections?.heroTitle || "Global 3D"}</span>
           </div>
           <p className="text-gray-600 text-sm">© 2024 Global 3D Corrientes. Todos los derechos reservados.</p>
         </div>
       </footer>
 
+      {/* WhatsApp FAB */}
       <a href={`https://wa.me/${WHATSAPP_PHONE}`} target="_blank"
         className="fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 p-4 rounded-full shadow-lg shadow-green-600/30 z-50 transition hover:scale-110" title="Chatear por WhatsApp">
         <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">

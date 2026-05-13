@@ -55,6 +55,7 @@ export const register = async (req: Request, res: Response) => {
 // --- LOGIN (Para Admin y Clientes) ---
 export const login = async (req: Request, res: Response) => {
     try {
+        console.log('🔐 Login attempt:', req.body.email);
         const { email, password } = req.body;
 
         const user = await User.findOne({ email }) as any;
@@ -67,7 +68,7 @@ export const login = async (req: Request, res: Response) => {
             });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, user.password).catch(() => false);
         if (!isMatch) {
             // Incrementar intentos fallidos
             user.loginAttempts = (user.loginAttempts || 0) + 1;
@@ -93,8 +94,8 @@ export const login = async (req: Request, res: Response) => {
         user.lockUntil = undefined;
         await user.save();
 
-        // Verificar si el email está verificado (opcional, comentar si no se requiere)
-        if (!user.verified) {
+        // Verificar si el email está verificado (solo para clientes, no admins)
+        if (!user.verified && user.role !== 'admin') {
             return res.status(403).json({ 
                 message: 'Por favor, verifica tu email antes de iniciar sesión.',
                 needsVerification: true,

@@ -42,6 +42,8 @@ interface OrderData {
     message: string;
   };
   statusSteps: StatusStep[];
+  /** URL del video personalizado (resuelta en servidor; no requiere login). */
+  customVideoUrl?: string | null;
 }
 
 function TrackContentInner() {
@@ -52,6 +54,7 @@ function TrackContentInner() {
   const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [customVideo, setCustomVideo] = useState<string | null>(null);
   
   useEffect(() => {
     if (!code) {
@@ -69,6 +72,18 @@ function TrackContentInner() {
         }
         
         setOrder(data);
+
+        const rawVideo = data.customVideoUrl;
+        if (rawVideo && String(rawVideo).trim()) {
+          const u = String(rawVideo).trim();
+          const absolute =
+            u.startsWith("http://") || u.startsWith("https://")
+              ? u
+              : apiUrl(u.startsWith("/") ? u : `/${u}`);
+          setCustomVideo(absolute);
+        } else {
+          setCustomVideo(null);
+        }
       } catch (err: any) {
         setError(err.message || "Error al cargar el pedido");
       } finally {
@@ -164,8 +179,20 @@ function TrackContentInner() {
               <h2 className="text-lg font-bold">Estado de tu Pedido</h2>
             </div>
             
-            <div className="aspect-video bg-zinc-800 rounded-xl mb-4 overflow-hidden flex items-center justify-center">
-              {order.media?.video ? (
+            <div className="relative aspect-video bg-zinc-800 rounded-xl mb-4 overflow-hidden flex items-center justify-center">
+              {customVideo ? (
+                <>
+                  <video
+                    src={customVideo}
+                    controls
+                    playsInline
+                    className="w-full h-full object-contain bg-black"
+                  />
+                  <div className="absolute bottom-3 left-3 bg-blue-500/80 text-white text-xs px-3 py-1 rounded-full font-bold pointer-events-none">
+                    🎬 Video personalizado del pedido
+                  </div>
+                </>
+              ) : order.media?.video ? (
                 <video 
                   src={order.media.video} 
                   autoPlay 
