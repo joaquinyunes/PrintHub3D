@@ -13,7 +13,6 @@ import limiter from './middlewares/rateLimiter';
 import { swaggerSpec } from './config/swagger';
 import swaggerUi from 'swagger-ui-express';
 
-// Importación de Rutas
 import authRoutes from './modules/auth/auth.routes';
 import magicAuthRoutes from './modules/auth/magic-auth.routes';
 import productRoutes from './modules/products/product.routes';
@@ -41,42 +40,11 @@ import aiRoutes from './routes/ai.routes';
 const app = express();
 const httpServer = createServer(app);
 
-// Configuración CORS dinámica
-const corsOptions = {
-  origin: appConfig.corsOrigins,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-app.use(limiter);
-app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
-  setHeaders: (res) => {
-    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
-  }
-}));
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
-// Conexión Base de Datos con manejo de errores
-mongoose
-    .connect(appConfig.mongoUri)
-    .then(() => logger.info('✅ Base de datos conectada'))
-    .catch((err) => {
-        logger.error('❌ Error MongoDB:', err);
-        process.exit(1);
-    });
-
-    // 1. Configuración de Seguridad con Helmet (Ajustado para permitir videos)
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-  })
-);
-// 2. Configuración CORS
 app.use(cors({
   origin: appConfig.corsOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -86,13 +54,12 @@ app.use(cors({
 app.use(limiter);
 app.use(express.json());
 
-// 3. Carpeta de Uploads con cabecera de acceso permitida
-app.use('/uploads', (req, res, next) => {
-  res.set('Cross-Origin-Resource-Policy', 'cross-origin');
-  next();
-}, express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+  setHeaders: (res) => {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}));
 
-// Conexión Base de Datos
 mongoose
     .connect(appConfig.mongoUri)
     .then(() => logger.info('✅ Base de datos conectada'))
@@ -101,16 +68,6 @@ mongoose
         process.exit(1);
     });
 
-// Montaje de Rutas
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/health', healthRoutes);
-
-app.use(errorHandler);
-
-// Montaje de Rutas
 app.use('/api/tasks', taskRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', magicAuthRoutes);
@@ -131,17 +88,12 @@ app.use('/api/external', externalRoutes);
 app.use('/api/settings/keys', apiKeyRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/tenant', tenantRoutes);
-// Health check
 app.use('/api/health', healthRoutes);
-// WhatsApp
 app.use('/api/whatsapp', whatsappRoutes);
-// AI
 app.use('/api/ai', aiRoutes);
 
-// Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Manejador de Errores Global (Siempre al final)
 app.use(errorHandler);
 
 const PORT = appConfig.port;
