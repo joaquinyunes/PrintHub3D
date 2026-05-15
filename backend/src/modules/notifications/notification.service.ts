@@ -18,7 +18,8 @@ export const sendAdminNotification = async (
   const { sendAdminNotification: sendAdminWhatsApp } = await import(
     './whatsapp.service'
   );
-  return sendAdminWhatsApp(message);
+  await sendAdminWhatsApp(message);
+  return true;
 };
 
 export const sendCustomerNotification = async (
@@ -40,6 +41,7 @@ export const sendCustomerNotification = async (
   const { sendCustomerNotification: sendCustomerWhatsApp } = await import(
     './whatsapp.service'
   );
-  return sendCustomerWhatsApp(phone, message);
+  await sendCustomerWhatsApp(phone, message);
+  return true;
 };
 

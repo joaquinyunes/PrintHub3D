@@ -29,13 +29,13 @@ const ApiKeySchema: Schema = new Schema({
 
 ApiKeySchema.index({ tenantId: 1, active: 1 });
 
-ApiKeySchema.pre('save', function(next) {
-  if (this.isNew && !this.key) {
+ApiKeySchema.pre('save', function() {
+  const self = this as any;
+  if (self.isNew && !self.key) {
     const raw = `sk_live_${crypto.randomBytes(24).toString('hex')}`;
-    this.key = raw;
-    this.hashedKey = crypto.createHash('sha256').update(raw).digest('hex');
+    self.key = raw;
+    self.hashedKey = crypto.createHash('sha256').update(raw).digest('hex');
   }
-  next();
 });
 
 export default mongoose.model<IApiKey>('ApiKey', ApiKeySchema);

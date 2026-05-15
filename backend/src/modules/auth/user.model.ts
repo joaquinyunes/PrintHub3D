@@ -9,6 +9,7 @@ export interface IUser extends Document {
     tenantId: string;
     createdAt: Date;
     verified: boolean;
+    avatar?: string;
     verificationToken?: string;
     verificationExpires?: Date;
     magicCode?: string;

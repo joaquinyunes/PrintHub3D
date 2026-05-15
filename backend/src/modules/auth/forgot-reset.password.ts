@@ -39,7 +39,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
 // POST /api/auth/reset-password/:token
 export const resetPassword = async (req: Request, res: Response) => {
   try {
-    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+    const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await User.findOne({
       passwordResetToken: hashedToken,

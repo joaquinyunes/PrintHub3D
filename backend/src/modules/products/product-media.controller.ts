@@ -20,7 +20,7 @@ const upload = multer({ storage });
 export const uploadProductImage = [upload.single('image'), async (req: Request, res: Response) => {
   try {
     const { productId } = req.body;
-    const file = (req as any).file as Express.Multer.File | undefined;
+    const file = (req as any).file;
     if (!productId || !file) {
       return res.status(400).json({ message: 'ProductoId e imagen son requeridos' });
     }

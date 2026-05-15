@@ -1,7 +1,11 @@
-import mongoose from 'mongoose';
+import mongoose, { Document, Model as MongooseModel } from 'mongoose';
 import cacheService from '../services/cache.service';
 
-const { Document, Model, UpdateQuery } = mongoose;
+type UpdateQuery<T> = Record<string, unknown>;
+type FilterQuery<T> = Record<string, unknown>;
+type SortOrder = 1 | -1;
+
+export { FilterQuery, UpdateQuery, SortOrder };
 
 export interface PaginationOptions {
   page?: number;
@@ -28,14 +32,14 @@ export interface FindResult<T> {
 }
 
 export abstract class BaseRepository<T extends Document> {
-  protected model: Model<T>;
+  protected model: any;
   protected useCache: boolean = false;
   protected cacheTTL: number = 300;
   protected collectionName: string;
 
-  constructor(model: Model<T>, options?: { useCache?: boolean; cacheTTL?: number }) {
+  constructor(model: any, options?: { useCache?: boolean; cacheTTL?: number }) {
     this.model = model;
-    this.collectionName = model.collection.collectionName;
+    this.collectionName = model.collection?.collectionName || 'unknown';
     if (options?.useCache !== undefined) this.useCache = options.useCache;
     if (options?.cacheTTL) this.cacheTTL = options.cacheTTL;
   }

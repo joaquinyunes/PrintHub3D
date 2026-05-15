@@ -30,6 +30,18 @@ export const disconnectWhatsApp = async () => {
     isReady = false;
 };
 
+export const reconnectWhatsApp = async () => {
+    throw new Error("WhatsApp no disponible");
+};
+
+export const sendAdminNotification = async (_message: string) => {
+    console.log("Admin notification:", _message);
+};
+
+export const sendCustomerNotification = async (_to: string, _message: string) => {
+    console.log("Customer notification to", _to, ":", _message);
+};
+
 export const sendWhatsAppAlert = async (message: string) => {
     console.log("Alerta WhatsApp:", message);
 };

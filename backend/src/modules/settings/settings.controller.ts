@@ -20,11 +20,12 @@ export const uploadHomeImage = [
     upload.single('image'),
     async (req: Request, res: Response) => {
         try {
-            if (!req.file) {
+            const file = (req as any).file;
+            if (!file) {
                 res.status(400).json({ message: 'No se recibió imagen' });
                 return;
             }
-            res.json({ imageUrl: `/uploads/${req.file.filename}` });
+            res.json({ imageUrl: `/uploads/${file.filename}` });
         } catch (error) {
             res.status(500).json({ message: 'Error al subir imagen' });
         }

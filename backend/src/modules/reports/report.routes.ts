@@ -5,12 +5,10 @@ import { enqueuePDFJob } from '../../queue/pdfQueue';
 
 const router = Router();
 
-// Solicitar reporte de ventas
 router.post('/sales', protect, withTenant, adminOnly, async (req: any, res) => {
   try {
     const { format = 'pdf', dateFrom, dateTo } = req.body;
-
-    const job = await enqueuePDFJob({
+    await enqueuePDFJob({
       type: 'report',
       tenantId: req.user.tenantId,
       userId: req.user.id,
@@ -19,11 +17,7 @@ router.post('/sales', protect, withTenant, adminOnly, async (req: any, res) => {
       dateTo,
       format,
     });
-
-    res.json({
-      message: 'Reporte en cola. Se notificará cuando esté listo.',
-      jobId: job?.id,
-    });
+    res.json({ message: 'Reporte en cola. Se notificará cuando esté listo.' });
   } catch (error) {
     res.status(500).json({ message: 'Error generando reporte' });
   }

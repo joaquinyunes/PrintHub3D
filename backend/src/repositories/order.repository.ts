@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
-import { BaseRepository } from './base.repository';
+import { BaseRepository, FilterQuery } from './base.repository';
 
 const { Types } = mongoose;
-import Order, { IOrder } from '../modules/orders/order.model';
+import Order from '../modules/orders/order.model';
+type IOrder = mongoose.Document;
 
 export class OrderRepository extends BaseRepository<IOrder> {
   constructor() {

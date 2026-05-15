@@ -1,4 +1,3 @@
-import { Payment, Preference } from 'mercadopago';
 import { appConfig } from '../../config';
 import logger from '../../config/logger';
 
@@ -34,7 +33,7 @@ export const MercadoPagoService = {
           unit_price: item.unitPrice,
         }));
 
-    const preference = await Preference.create({
+    const preference = await mercadopago.preferences.create({
       body: {
         items,
         external_reference: input.orderId,
@@ -79,7 +78,7 @@ export const MercadoPagoService = {
     const mercadopago = require('mercadopago');
     mercadopago.configure({ access_token: appConfig.mercadoPago.accessToken });
 
-    const payment = await Payment.findById({ id: paymentId });
+    const payment = await mercadopago.payment.findById(paymentId);
     return payment;
   },
 };

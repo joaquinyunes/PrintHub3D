@@ -4,7 +4,7 @@
   "description": "Backend API for PrintHub3D",
   "main": "dist/server.js",
   "scripts": {
-    "start": "node --max-old-space-size=450 dist/server.js",
+    "start": "node --max-old-space-size=400 dist/server.js",
     "dev": "nodemon --exec \"ts-node --transpile-only src/server.ts\"",
     "build": "tsc",
     "lint": "eslint src --ext .ts",
