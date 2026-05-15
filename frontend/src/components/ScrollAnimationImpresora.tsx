@@ -15,7 +15,7 @@ interface ScrollAnimationProps {
   sectionId?: string;
 }
 
-export default function ScrollAnimation({
+export default function ScrollAnimationImpresora({
   totalFrames = 192,
   nativeWidth = 1280,
   nativeHeight = 720,
@@ -33,7 +33,6 @@ export default function ScrollAnimation({
   const [loadProgress, setLoadProgress] = useState(0);
   const [showInfo, setShowInfo] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [currentFrame, setCurrentFrame] = useState(0);
   const framesRef = useRef<HTMLImageElement[]>([]);
   const rafRef = useRef<number>(0);
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -133,7 +132,6 @@ export default function ScrollAnimation({
       }
       
       ctx.drawImage(frame, sx, sy, sw, sh, 0, 0, vpW, vpH);
-      setCurrentFrame(idx);
     };
 
     let lastIdx = 0;
@@ -191,14 +189,13 @@ export default function ScrollAnimation({
         backgroundColor: "#000" 
       }}
     >
-      {/* Glowing background */}
       <div style={{
         position: "absolute",
         top: "30%",
         left: "50%",
         transform: "translate(-50%, -50%)",
-        width: "150vw",
-        height: "150vh",
+        width: "100%",
+        height: "100vh",
         background: `radial-gradient(ellipse at center, ${accent}15 0%, transparent 50%)`,
         pointerEvents: "none",
         zIndex: 1
@@ -207,13 +204,12 @@ export default function ScrollAnimation({
       <div style={{ 
         position: "sticky", 
         top: 0, 
-        width: "100vw", 
+        width: "100%", 
         height: "100vh", 
         overflow: "hidden", 
         backgroundColor: "#000",
         zIndex: 2
       }}>
-        {/* Loading Screen */}
         {loading && (
           <div style={{
             position: "absolute",
@@ -225,7 +221,6 @@ export default function ScrollAnimation({
             zIndex: 30,
             backgroundColor: "#000"
           }}>
-            {/* Animated spinner */}
             <div style={{
               width: "60px",
               height: "60px",
@@ -263,20 +258,18 @@ export default function ScrollAnimation({
           </div>
         )}
 
-        {/* Canvas - Full screen, no borders */}
         <canvas
           ref={canvasRef}
           style={{ 
             position: "absolute",
             top: 0,
             left: 0,
-            width: "100vw",
+            width: "100%",
             height: "100vh",
             display: loading ? "none" : "block"
           }}
         />
 
-        {/* Top gradient */}
         {!loading && (
           <div style={{
             position: "absolute",
@@ -290,7 +283,6 @@ export default function ScrollAnimation({
           }} />
         )}
 
-        {/* Bottom gradient with info */}
         <div style={{ 
           position: "absolute",
           bottom: 0,
@@ -304,7 +296,6 @@ export default function ScrollAnimation({
           zIndex: 10
         }}>
           <div className="max-w-3xl mx-auto text-center">
-            {/* Badge pill */}
             <div style={{
               display: "inline-flex",
               alignItems: "center",
@@ -327,7 +318,6 @@ export default function ScrollAnimation({
               </span>
             </div>
 
-            {/* Title */}
             <h2 style={{
               fontSize: "clamp(2.5rem, 6vw, 4.5rem)",
               fontWeight: "800",
@@ -339,7 +329,6 @@ export default function ScrollAnimation({
               {title}
             </h2>
             
-            {/* Subtitle */}
             <p style={{
               fontSize: "1.125rem",
               color: "rgba(255,255,255,0.65)",
@@ -348,7 +337,6 @@ export default function ScrollAnimation({
               {subtitle}
             </p>
 
-            {/* Price */}
             <div style={{
               display: "inline-block",
               background: "rgba(255,255,255,0.08)",
@@ -367,7 +355,6 @@ export default function ScrollAnimation({
               </span>
             </div>
 
-            {/* CTA */}
             <button 
               onClick={() => window.open(`https://wa.me/5493794000000?text=Hola! Me interesa: ${title}`, '_blank')}
               style={{
@@ -390,7 +377,6 @@ export default function ScrollAnimation({
           </div>
         </div>
 
-        {/* Scroll indicator */}
         {loaded && !showInfo && (
           <div style={{
             position: "absolute",

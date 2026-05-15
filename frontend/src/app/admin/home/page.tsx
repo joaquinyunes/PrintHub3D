@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/api";
-import { Plus, X, Trash2, ChevronDown, ChevronRight, Upload, Image as ImageIcon, Save, Loader2 } from "lucide-react";
+import { Plus, X, Trash2, ChevronDown, ChevronRight, Upload, Image as ImageIcon, Save, Loader2, DollarSign } from "lucide-react";
 
 interface ProductItem {
   id: string;
@@ -41,6 +41,7 @@ interface HomeSections {
   heroSubtitle: string;
   heroDescription: string;
   heroBadge: string;
+  monthlyGoal?: number;
   heroStats: { reviews: string; reviewsCount: string; orders: string; delivery: string };
   heroFeatures: string[];
   ideas: any[];
@@ -78,10 +79,19 @@ interface HomeSections {
   printersSubtitle: string;
   productCategories: ProductCategory[];
   customCodes: CustomCode[];
+  contactInfo: {
+    whatsapp: string;
+    whatsappDisplay: string;
+    instagram: string;
+    instagramUrl: string;
+    location: string;
+    email: string;
+  };
 }
 
 export default function HomeSettingsPage() {
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
   const [session, setSession] = useState<{ token: string; user: { role: string } } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -150,35 +160,29 @@ export default function HomeSettingsPage() {
         ]
       }
     ],
-    customCodes: []
-  });
-
-  useEffect(() => {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      const user = JSON.parse(stored);
-      setSession(user);
-      if (user.user.role !== 'admin') {
-        router.push('/');
-        return;
-      }
-      loadSettings(user.token);
-    } else {
-      router.push('/admin/login');
+    customCodes: [],
+    contactInfo: {
+      whatsapp: '',
+      whatsappDisplay: '',
+      instagram: '',
+      instagramUrl: '',
+      location: 'Corrientes, Argentina',
+      email: ''
     }
-  }, [router]);
+  });
 
   const loadSettings = async (token: string) => {
     try {
       const res = await fetch(apiUrl('/api/settings'), {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (data.homepageSections) {
-        setSections(prev => ({
-          ...prev,
-          ...data.homepageSections
-        }));
+      if (res.ok) {
+        const data = await res.json();
+        if (data.homepageSections) {
+          setSections({ ...data.homepageSections, monthlyGoal: data.monthlyGoal });
+        }
+      } else {
+        console.error("Error cargando settings:", res.status);
       }
     } catch (e) {
       console.error(e);
@@ -187,18 +191,54 @@ export default function HomeSettingsPage() {
     }
   };
 
+  useEffect(() => {
+    setIsMounted(true);
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      try {
+        const user = JSON.parse(stored);
+        setSession(user);
+        if (user.user.role !== 'admin') {
+          router.push('/');
+          return;
+        }
+        loadSettings(user.token);
+      } catch {
+        router.push('/admin/login');
+      }
+    } else {
+      router.push('/admin/login');
+    }
+  }, [router]);
+
+  if (!isMounted || loading) {
+    return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-blue-500"/></div>;
+  }
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      await fetch(apiUrl('/api/settings'), {
+      const { monthlyGoal, ...homepageSections } = sections;
+      const res = await fetch(apiUrl('/api/settings'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session?.token}`
         },
-        body: JSON.stringify({ homepageSections: sections })
-});
+      body: JSON.stringify({ monthlyGoal, homepageSections })
+    });
+    const text = await res.text();
+    console.log("Status:", res.status);
+    console.log("Respuesta completa:", text);
+    if (res.ok) {
+      const data = JSON.parse(text);
       alert("Guardado!");
+      if (data.homepageSections || data.monthlyGoal) {
+        setSections({ ...(data.homepageSections || {}), monthlyGoal: data.monthlyGoal });
+        }
+      } else {
+        alert("Error: " + text);
+      }
     } catch (e) {
       console.error(e);
       alert("Error al guardar");
@@ -355,17 +395,16 @@ export default function HomeSettingsPage() {
   const handleVideoUpload = async (index: number, file: File) => {
     if (!session) return;
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-      const res = await fetch(apiUrl('/api/settings/upload-image'), {
+      const response = await fetch(`/api/upload?filename=${file.name}`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${session.token}` },
-        body: formData
+        body: file,
       });
-      const data = await res.json();
-      const newCodes = [...sections.customCodes];
-      newCodes[index].videoUrl = data.imageUrl;
-      setSections(prev => ({ ...prev, customCodes: newCodes }));
+      const blob = await response.json();
+      if (blob.url) {
+        const newCodes = [...sections.customCodes];
+        newCodes[index].videoUrl = blob.url;
+        setSections(prev => ({ ...prev, customCodes: newCodes }));
+      }
     } catch (e) {
       console.error(e);
       alert('Error al subir video');
@@ -441,7 +480,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Título principal</label>
               <input
                 type="text"
-                value={sections.heroTitle}
+                value={sections?.heroTitle ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, heroTitle: e.target.value }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
                 placeholder="Global 3D"
@@ -451,7 +490,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Subtítulo</label>
               <input
                 type="text"
-                value={sections.heroSubtitle}
+                value={sections?.heroSubtitle ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, heroSubtitle: e.target.value }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
                 placeholder="Transformamos tus ideas en objetos reales."
@@ -461,7 +500,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Descripción</label>
               <input
                 type="text"
-                value={sections.heroDescription}
+                value={sections?.heroDescription ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, heroDescription: e.target.value }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
                 placeholder="Impresión 3D de alta calidad en Corrientes"
@@ -471,7 +510,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Badge (promo)</label>
               <input
                 type="text"
-                value={sections.heroBadge}
+                value={sections?.heroBadge ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, heroBadge: e.target.value }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
                 placeholder="Envíos gratis en pedidos mayores a $50.000"
@@ -483,7 +522,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Reviews (número)</label>
               <input
                 type="text"
-                value={sections.heroStats.reviews}
+                value={sections.heroStats?.reviews ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, heroStats: { ...prev.heroStats, reviews: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
                 placeholder="4.9"
@@ -493,7 +532,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Reviews count</label>
               <input
                 type="text"
-                value={sections.heroStats.reviewsCount}
+                value={sections.heroStats?.reviewsCount ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, heroStats: { ...prev.heroStats, reviewsCount: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
                 placeholder="200+ reseñas"
@@ -503,7 +542,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Pedidos</label>
               <input
                 type="text"
-                value={sections.heroStats.orders}
+                value={sections.heroStats?.orders ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, heroStats: { ...prev.heroStats, orders: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
                 placeholder="500+"
@@ -513,7 +552,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Entrega</label>
               <input
                 type="text"
-                value={sections.heroStats.delivery}
+                value={sections.heroStats?.delivery ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, heroStats: { ...prev.heroStats, delivery: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
                 placeholder="24-72h"
@@ -525,7 +564,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Feature 1</label>
               <input
                 type="text"
-                value={sections.heroFeatures[0]}
+                value={sections?.heroFeatures?.[0] ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, heroFeatures: [e.target.value, prev.heroFeatures[1], prev.heroFeatures[2], prev.heroFeatures[3]] }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
                 placeholder="Impresión rápida"
@@ -535,7 +574,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Feature 2</label>
               <input
                 type="text"
-                value={sections.heroFeatures[1]}
+                value={sections?.heroFeatures?.[1] ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, heroFeatures: [prev.heroFeatures[0], e.target.value, prev.heroFeatures[2], prev.heroFeatures[3]] }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
                 placeholder="Calidad premium"
@@ -545,7 +584,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Feature 3</label>
               <input
                 type="text"
-                value={sections.heroFeatures[2]}
+                value={sections?.heroFeatures?.[2] ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, heroFeatures: [prev.heroFeatures[0], prev.heroFeatures[1], e.target.value, prev.heroFeatures[3]] }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
                 placeholder="Envío rápido"
@@ -555,7 +594,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Feature 4</label>
               <input
                 type="text"
-                value={sections.heroFeatures[3]}
+                value={sections?.heroFeatures?.[3] ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, heroFeatures: [prev.heroFeatures[0], prev.heroFeatures[1], prev.heroFeatures[2], e.target.value] }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
                 placeholder="Soporte 24/7"
@@ -573,7 +612,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Título</label>
               <input
                 type="text"
-                value={sections.printersTitle}
+                value={sections?.printersTitle ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, printersTitle: e.target.value }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
               />
@@ -582,7 +621,7 @@ export default function HomeSettingsPage() {
               <label className="text-xs text-gray-500 block mb-1">Subtítulo</label>
               <input
                 type="text"
-                value={sections.printersSubtitle}
+                value={sections?.printersSubtitle ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, printersSubtitle: e.target.value }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3"
               />
@@ -590,14 +629,14 @@ export default function HomeSettingsPage() {
           </div>
 
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-gray-400">{sections.printers.length} impresoras</span>
+            <span className="text-sm text-gray-400">{sections.printers?.length ?? 0} impresoras</span>
             <button onClick={addPrinter} className="flex items-center gap-1 text-sm text-blue-400">
               <Plus className="w-4 h-4" /> Agregar
             </button>
           </div>
           
           <div className="space-y-3">
-            {sections.printers.map((printer, i) => (
+            {(sections.printers || []).map((printer, i) => (
               <div key={i} className="flex gap-2 items-center bg-black/30 p-3 rounded-xl">
                 <input
                   type="text"
@@ -648,7 +687,7 @@ export default function HomeSettingsPage() {
             <label className="flex items-center gap-2 text-sm">
               <input 
                 type="checkbox" 
-                checked={sections.productStar.enabled}
+                checked={sections.productStar?.enabled ?? false}
                 onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, enabled: e.target.checked } }))}
                 className="w-5 h-5 rounded"
               />
@@ -658,37 +697,37 @@ export default function HomeSettingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs text-gray-500 block mb-1">Título</label>
-              <input type="text" value={sections.productStar.title}
+                <input type="text" value={sections.productStar?.title ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, title: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Subtítulo</label>
-              <input type="text" value={sections.productStar.subtitle}
+              <input type="text" value={sections.productStar?.subtitle ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, subtitle: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Badge</label>
-              <input type="text" value={sections.productStar.badge}
+              <input type="text" value={sections.productStar?.badge ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, badge: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Precio</label>
-              <input type="text" value={sections.productStar.price}
+              <input type="text" value={sections.productStar?.price ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, price: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Precio Original (tachado)</label>
-              <input type="text" value={sections.productStar.originalPrice}
+              <input type="text" value={sections.productStar?.originalPrice ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, originalPrice: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Equipos (separados por coma)</label>
-              <input type="text" value={sections.productStar.teams.join(', ')}
+              <input type="text" value={sections.productStar?.teams?.join(', ') ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, teams: e.target.value.split(',').map(s => s.trim()) } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
@@ -702,7 +741,7 @@ export default function HomeSettingsPage() {
             <label className="flex items-center gap-2 text-sm">
               <input 
                 type="checkbox" 
-                checked={sections.copaAnimation.enabled}
+                checked={sections.copaAnimation?.enabled ?? false}
                 onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, enabled: e.target.checked } }))}
                 className="w-5 h-5 rounded"
               />
@@ -712,43 +751,43 @@ export default function HomeSettingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs text-gray-500 block mb-1">Título</label>
-              <input type="text" value={sections.copaAnimation.title}
+              <input                 type="text" value={sections.copaAnimation?.title ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, title: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Subtítulo</label>
-              <input type="text" value={sections.copaAnimation.subtitle}
+              <input type="text" value={sections.copaAnimation?.subtitle ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, subtitle: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Badge</label>
-              <input type="text" value={sections.copaAnimation.badge}
+              <input type="text" value={sections.copaAnimation?.badge ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, badge: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Precio</label>
-              <input type="text" value={sections.copaAnimation.price}
+              <input type="text" value={sections.copaAnimation?.price ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, price: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Color Acento (hex)</label>
-              <input type="text" value={sections.copaAnimation.accentColor}
+              <input type="text" value={sections.copaAnimation?.accentColor ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, accentColor: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Carpeta de Frames</label>
-              <input type="text" value={sections.copaAnimation.framesDir}
+              <input type="text" value={sections.copaAnimation?.framesDir ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, framesDir: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Total Frames</label>
-              <input type="number" value={sections.copaAnimation.totalFrames}
+              <input type="number" value={sections.copaAnimation?.totalFrames ?? 0}
                 onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, totalFrames: parseInt(e.target.value) || 0 } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
@@ -762,7 +801,7 @@ export default function HomeSettingsPage() {
             <label className="flex items-center gap-2 text-sm">
               <input 
                 type="checkbox" 
-                checked={sections.impresoraAnimation.enabled}
+                checked={sections.impresoraAnimation?.enabled ?? false}
                 onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, enabled: e.target.checked } }))}
                 className="w-5 h-5 rounded"
               />
@@ -772,43 +811,43 @@ export default function HomeSettingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs text-gray-500 block mb-1">Título</label>
-              <input type="text" value={sections.impresoraAnimation.title}
+              <input type="text" value={sections.impresoraAnimation?.title ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, title: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Subtítulo</label>
-              <input type="text" value={sections.impresoraAnimation.subtitle}
+              <input type="text" value={sections.impresoraAnimation?.subtitle ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, subtitle: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Badge</label>
-              <input type="text" value={sections.impresoraAnimation.badge}
+              <input type="text" value={sections.impresoraAnimation?.badge ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, badge: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Precio</label>
-              <input type="text" value={sections.impresoraAnimation.price}
+              <input type="text" value={sections.impresoraAnimation?.price ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, price: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Color Acento (hex)</label>
-              <input type="text" value={sections.impresoraAnimation.accentColor}
+              <input type="text" value={sections.impresoraAnimation?.accentColor ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, accentColor: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Carpeta de Frames</label>
-              <input type="text" value={sections.impresoraAnimation.framesDir}
+              <input type="text" value={sections.impresoraAnimation?.framesDir ?? ''}
                 onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, framesDir: e.target.value } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Total Frames</label>
-              <input type="number" value={sections.impresoraAnimation.totalFrames}
+              <input type="number" value={sections.impresoraAnimation?.totalFrames ?? 0}
                 onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, totalFrames: parseInt(e.target.value) || 0 } }))}
                 className="w-full bg-zinc-800 rounded-lg py-2 px-3" />
             </div>
@@ -827,7 +866,7 @@ export default function HomeSettingsPage() {
           </div>
           
           <div className="space-y-4">
-            {sections.productCategories.map((category, catIndex) => (
+            {(sections.productCategories || []).map((category, catIndex) => (
               <div key={category.id} className="bg-black/40 border border-white/10 rounded-xl p-4">
                 <div className="flex flex-wrap gap-2 items-center mb-4">
                   <input
@@ -871,7 +910,7 @@ export default function HomeSettingsPage() {
                     </button>
                   </div>
                   
-                  {category.subCategories.map((subCat, subIndex) => (
+                  {(category.subCategories || []).map((subCat, subIndex) => (
                     <div key={subCat.id} className="bg-zinc-800/80 rounded-lg p-3 border border-zinc-600/50">
                       <div className="flex gap-2 items-center mb-3">
                         <input
@@ -903,7 +942,7 @@ export default function HomeSettingsPage() {
                           </button>
                         </div>
                         
-                        {subCat.products.map((product, prodIndex) => (
+                        {(subCat.products || []).map((product, prodIndex) => (
                           <div key={product.id} className="flex flex-col gap-2 bg-black/30 p-3 rounded-lg border border-zinc-700/80">
                             <div className="flex flex-wrap gap-2 items-center">
                               <input
@@ -992,7 +1031,7 @@ export default function HomeSettingsPage() {
           </p>
           
           <div className="space-y-3">
-            {sections.customCodes.map((code, i) => (
+            {sections.customCodes ? sections.customCodes.map((code, i) => (
               <div key={i} className="flex flex-wrap gap-2 items-center bg-black/40 border border-white/10 p-3 rounded-xl">
                 <input
                   type="text"
@@ -1019,16 +1058,83 @@ export default function HomeSettingsPage() {
                   />
                 </label>
                 {code.videoUrl && (
-                  <a href={apiUrl(code.videoUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-400 text-xs">Ver Video</a>
+                  <a href={code.videoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 text-xs">Ver Video</a>
                 )}
                 <button onClick={() => removeCustomCode(i)} className="text-red-400 p-2">
                   <X className="w-4 h-4" />
                 </button>
               </div>
-            ))}
-            {sections.customCodes.length === 0 && (
+            )) : null}
+            {(sections.customCodes?.length ?? 0) === 0 && (
               <p className="text-gray-500 text-sm text-center py-4">No hay códigos personalizados. Agregá uno para vincular un video a un pedido.</p>
             )}
+          </div>
+        </div>
+
+        {/* 📞 INFORMACIÓN DE CONTACTO */}
+        <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 mb-6">
+          <h2 className="text-xl font-bold mb-4">📞 Información de Contacto</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">WhatsApp (solo números, ej: 5493794123456)</label>
+              <input
+                type="text"
+                value={sections.contactInfo?.whatsapp ?? ''}
+                onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, whatsapp: e.target.value } }))}
+                className="w-full bg-zinc-800 rounded-lg py-2 px-3"
+                placeholder="5493794123456"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">WhatsApp Visible (texto que ve el cliente)</label>
+              <input
+                type="text"
+                value={sections.contactInfo?.whatsappDisplay ?? ''}
+                onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, whatsappDisplay: e.target.value } }))}
+                className="w-full bg-zinc-800 rounded-lg py-2 px-3"
+                placeholder="+54 9 3794 123456"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Instagram (nombre de usuario)</label>
+              <input
+                type="text"
+                value={sections.contactInfo?.instagram ?? ''}
+                onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, instagram: e.target.value } }))}
+                className="w-full bg-zinc-800 rounded-lg py-2 px-3"
+                placeholder="global3dcorrientes"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">URL de Instagram</label>
+              <input
+                type="text"
+                value={sections.contactInfo?.instagramUrl ?? ''}
+                onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, instagramUrl: e.target.value } }))}
+                className="w-full bg-zinc-800 rounded-lg py-2 px-3"
+                placeholder="https://instagram.com/global3dcorrientes"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Ubicación</label>
+              <input
+                type="text"
+                value={sections.contactInfo?.location ?? ''}
+                onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, location: e.target.value } }))}
+                className="w-full bg-zinc-800 rounded-lg py-2 px-3"
+                placeholder="Corrientes, Argentina"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Email</label>
+              <input
+                type="email"
+                value={sections.contactInfo?.email ?? ''}
+                onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, email: e.target.value } }))}
+                className="w-full bg-zinc-800 rounded-lg py-2 px-3"
+                placeholder="contacto@global3d.com"
+              />
+            </div>
           </div>
         </div>
 
@@ -1040,6 +1146,22 @@ export default function HomeSettingsPage() {
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Guardar cambios
         </button>
+
+        <div className="mt-6 bg-black/40 border border-white/10 rounded-xl p-4">
+          <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <DollarSign className="w-4 h-4 text-emerald-500" /> Configuración General
+          </h3>
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">Meta mensual de facturación ($)</label>
+            <input
+              type="number"
+              value={sections.monthlyGoal ?? 2000000}
+              onChange={e => setSections(prev => ({ ...prev, monthlyGoal: Number(e.target.value) }))}
+              className="w-full bg-zinc-800 rounded-lg py-2 px-3"
+              placeholder="2000000"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

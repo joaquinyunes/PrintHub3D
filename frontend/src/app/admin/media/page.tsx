@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X, Image, Video, Trash2, Upload, CheckCircle2, Loader2, Search } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { apiUrl, resolveMediaUrl } from "@/lib/api";
 
 interface ProductMedia {
   _id: string;
@@ -123,9 +123,22 @@ export default function MediaPage() {
       reader.onload = () => setForm({ ...form, imageUrl: reader.result as string });
       reader.readAsDataURL(file);
     } else if (file.type.startsWith('video/')) {
-      const reader = new FileReader();
-      reader.onload = () => setForm({ ...form, videoUrl: reader.result as string });
-      reader.readAsDataURL(file);
+      try {
+        setSaving(true);
+        const response = await fetch(`/api/upload?filename=${file.name}`, {
+          method: 'POST',
+          body: file,
+        });
+        const blob = await response.json();
+        if (blob.url) {
+          setForm({ ...form, videoUrl: blob.url });
+        }
+      } catch (error) {
+        console.error('Error uploading video:', error);
+        alert('Error al subir el video');
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
@@ -217,9 +230,9 @@ export default function MediaPage() {
               
               {item.type === 'video' && item.videoUrl ? (
                 <div className="space-y-2">
-                  <video src={apiUrl(item.videoUrl)} className="w-full h-32 object-cover rounded-lg" controls/>
+                  <video src={resolveMediaUrl(item.videoUrl)} className="w-full h-32 object-cover rounded-lg" controls/>
                   <a 
-                    href={apiUrl(item.videoUrl)} 
+                    href={resolveMediaUrl(item.videoUrl)} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-xs text-blue-400 hover:text-blue-300 underline"
@@ -228,7 +241,7 @@ export default function MediaPage() {
                   </a>
                 </div>
               ) : item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.productName} className="w-full h-32 object-cover rounded-lg mb-2"/>
+                <img src={resolveMediaUrl(item.imageUrl)} alt={item.productName} className="w-full h-32 object-cover rounded-lg mb-2"/>
               ) : (
                 <div className="w-full h-32 bg-zinc-800 rounded-lg mb-2 flex items-center justify-center">
                   <Image size={32} className="text-zinc-600"/>

@@ -11,6 +11,17 @@ export const apiUrl = (path: string): string => {
   return `${base}${p}`;
 };
 
+export const resolveMediaUrl = (url: string): string => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  if (url.startsWith('/uploads') || url.startsWith('/')) {
+    return apiUrl(url);
+  }
+  return url;
+};
+
 export const fetcher = async <T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> => {
   try {
     const res = await fetch(apiUrl(url), {

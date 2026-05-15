@@ -86,7 +86,7 @@ export default function HeroSection({
   const features = heroData?.features || defaultFeatures;
 
   return (
-    <header className="relative pt-28 pb-24 px-4 overflow-hidden selection:bg-blue-500/30">
+    <header className="relative pt-28 pb-24 px-4 w-full overflow-hidden selection:bg-blue-500/30">
       <div className="absolute inset-0 bg-gradient-to-b from-blue-950/20 via-purple-900/10 to-black pointer-events-none -z-20" />
       
       <motion.div 

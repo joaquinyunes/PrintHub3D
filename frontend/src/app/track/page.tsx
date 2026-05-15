@@ -3,7 +3,7 @@
 import React, { Suspense, useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Package, CheckCircle, Clock, Zap, Box, Star } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { apiUrl, resolveMediaUrl } from "@/lib/api";
 
 interface StatusStep {
   key: string;
@@ -73,12 +73,7 @@ function TrackContentInner() {
 
         const rawVideo = data.customVideoUrl;
         if (rawVideo && String(rawVideo).trim()) {
-          const u = String(rawVideo).trim();
-          // Si el video es de /uploads, usamos apiUrl para el puerto 5000
-          const absolute = u.startsWith("/uploads") 
-            ? apiUrl(u) 
-            : (u.startsWith("http") ? u : (u.startsWith("/") ? u : `/${u}`));
-          setCustomVideo(absolute);
+          setCustomVideo(resolveMediaUrl(String(rawVideo).trim()));
         }
       } catch (err: any) {
         setError(err.message || "Error al cargar el pedido");

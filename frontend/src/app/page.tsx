@@ -131,9 +131,13 @@ export default function HomePage() {
     // Load settings from admin
     const loadSettings = async () => {
       try {
-        const res = await fetch(apiUrl("/api/settings"));
-        const data = await res.json();
-        if (data.homepageSections) setHomeSections(data.homepageSections);
+        const res = await fetch(apiUrl("/api/settings/public"));
+        if (res.ok) {
+          const data = await res.json();
+          if (data.homepageSections) setHomeSections(data.homepageSections);
+        } else {
+          console.error("Error loading settings:", res.status);
+        }
       } catch (e) {
         console.error("Error loading settings:", e);
       }
@@ -512,21 +516,26 @@ export default function HomePage() {
             <h2 className="text-4xl md:text-5xl font-black text-white mb-3">Contacto</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            <a href={`https://wa.me/${WHATSAPP_PHONE}`} target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-green-600 hover:scale-105 transition-all group">
+            <a href={`https://wa.me/${homeSections?.contactInfo?.whatsapp || WHATSAPP_PHONE}`} target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-green-600 hover:scale-105 transition-all group">
               <Phone className="w-10 h-10 text-green-500 mx-auto mb-4 group-hover:scale-110 transition-all" />
               <h3 className="font-bold text-white text-lg mb-2">WhatsApp</h3>
-              <p className="text-gray-500">{WHATSAPP_DISPLAY}</p>
+              <p className="text-gray-500">{homeSections?.contactInfo?.whatsappDisplay || WHATSAPP_DISPLAY}</p>
             </a>
-            <a href="https://instagram.com/global3dcorrientes" target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-pink-600 hover:scale-105 transition-all group">
+            <a href={homeSections?.contactInfo?.instagramUrl || 'https://instagram.com/global3dcorrientes'} target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-pink-600 hover:scale-105 transition-all group">
               <Instagram className="w-10 h-10 text-pink-500 mx-auto mb-4 group-hover:scale-110 transition-all" />
               <h3 className="font-bold text-white text-lg mb-2">Instagram</h3>
-              <p className="text-gray-500">@global3dcorrientes</p>
+              <p className="text-gray-500">@{homeSections?.contactInfo?.instagram || 'global3dcorrientes'}</p>
             </a>
             <div className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center">
               <MapPin className="w-10 h-10 text-blue-500 mx-auto mb-4" />
               <h3 className="font-bold text-white text-lg mb-2">Ubicación</h3>
-              <p className="text-gray-500">Corrientes, Argentina</p>
+              <p className="text-gray-500">{homeSections?.contactInfo?.location || 'Corrientes, Argentina'}</p>
             </div>
+            <a href={`mailto:${homeSections?.contactInfo?.email || 'contacto@global3d.com'}`} className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-blue-600 hover:scale-105 transition-all group">
+              <Phone className="w-10 h-10 text-blue-500 mx-auto mb-4 group-hover:scale-110 transition-all" />
+              <h3 className="font-bold text-white text-lg mb-2">Email</h3>
+              <p className="text-gray-500">{homeSections?.contactInfo?.email || 'contacto@global3d.com'}</p>
+            </a>
           </div>
         </div>
       </section>

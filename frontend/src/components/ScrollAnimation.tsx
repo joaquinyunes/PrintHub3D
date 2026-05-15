@@ -189,13 +189,12 @@ export default function ScrollAnimation({
         backgroundColor: "#0a0a0f" 
       }}
     >
-      {/* Animated glow background */}
       <div style={{
         position: "absolute",
         top: "40%",
         left: "50%",
         transform: "translate(-50%, -50%)",
-        width: "100vw",
+        width: "100%",
         height: "100vh",
         background: `radial-gradient(ellipse at center, ${accent}12 0%, transparent 60%)`,
         pointerEvents: "none",
@@ -205,13 +204,12 @@ export default function ScrollAnimation({
       <div style={{ 
         position: "sticky", 
         top: 0, 
-        width: "100vw", 
+        width: "100%", 
         height: "100vh", 
         overflow: "hidden", 
         backgroundColor: "#0a0a0f",
         zIndex: 2
       }}>
-        {/* Loading Screen */}
         {loading && (
           <div style={{
             position: "absolute",
@@ -223,7 +221,6 @@ export default function ScrollAnimation({
             zIndex: 30,
             backgroundColor: "#0a0a0f"
           }}>
-            {/* Trophy icon with glow */}
             <div style={{
               fontSize: "56px",
               marginBottom: "1.5rem",
@@ -232,7 +229,6 @@ export default function ScrollAnimation({
               🏆
             </div>
             
-            {/* Progress bar */}
             <div style={{
               width: "240px",
               height: "3px",
@@ -258,20 +254,18 @@ export default function ScrollAnimation({
           </div>
         )}
 
-        {/* Canvas - Full screen */}
         <canvas
           ref={canvasRef}
           style={{ 
             position: "absolute",
             top: 0,
             left: 0,
-            width: "100vw",
+            width: "100%",
             height: "100vh",
             display: loading ? "none" : "block"
           }}
         />
 
-        {/* Top gradient */}
         {!loading && (
           <div style={{
             position: "absolute",
@@ -285,7 +279,6 @@ export default function ScrollAnimation({
           }} />
         )}
 
-        {/* Bottom gradient with content */}
         <div style={{ 
           position: "absolute",
           bottom: 0,
@@ -299,7 +292,6 @@ export default function ScrollAnimation({
           zIndex: 10
         }}>
           <div className="max-w-3xl mx-auto text-center">
-            {/* Badge */}
             <div style={{
               display: "inline-flex",
               alignItems: "center",
@@ -322,7 +314,6 @@ export default function ScrollAnimation({
               </span>
             </div>
 
-            {/* Title */}
             <h2 style={{
               fontSize: "clamp(3rem, 8vw, 5rem)",
               fontWeight: "900",
@@ -334,7 +325,6 @@ export default function ScrollAnimation({
               {title}
             </h2>
             
-            {/* Subtitle */}
             <p style={{
               fontSize: "1.125rem",
               color: "rgba(255,255,255,0.55)",
@@ -343,7 +333,6 @@ export default function ScrollAnimation({
               {subtitle}
             </p>
 
-            {/* Price card */}
             <div style={{
               display: "inline-block",
               background: `${accent}15`,
@@ -362,7 +351,6 @@ export default function ScrollAnimation({
               </span>
             </div>
 
-            {/* Features */}
             <div style={{
               display: "flex",
               justifyContent: "center",
@@ -384,7 +372,6 @@ export default function ScrollAnimation({
               ))}
             </div>
 
-            {/* CTA Button */}
             <button 
               onClick={() => window.open(`https://wa.me/5493794000000?text=Hola! Me interesa: ${title}`, '_blank')}
               style={{
@@ -408,7 +395,6 @@ export default function ScrollAnimation({
           </div>
         </div>
 
-        {/* Scroll indicator */}
         {loaded && !showInfo && (
           <div style={{
             position: "absolute",

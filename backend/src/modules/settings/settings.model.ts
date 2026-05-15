@@ -17,12 +17,31 @@ export interface ISettings extends Document {
         resendTracking: string;
     };
     homepageSections: {
-        ideas: { name: string; icon: string; category: string; downloads: string; link: string; imageUrl?: string }[];
-        printers: { name: string; description: string; imageUrl: string; price: number; link: string }[];
+        monthlyGoal: number;
+        heroTitle: string;
+        heroSubtitle: string;
+        heroDescription: string;
+        heroBadge: string;
+        heroStats: { reviews: string; reviewsCount: string; orders: string; delivery: string };
+        heroFeatures: string[];
+        ideas: any[];
+        productStar: { enabled: boolean; title: string; subtitle: string; badge: string; price: string; originalPrice: string; teams: string[] };
+        copaAnimation: { enabled: boolean; title: string; subtitle: string; badge: string; price: string; accentColor: string; framesDir: string; totalFrames: number };
+        impresoraAnimation: { enabled: boolean; title: string; subtitle: string; badge: string; price: string; accentColor: string; framesDir: string; totalFrames: number };
+        printers: any[];
         printersTitle: string;
         printersSubtitle: string;
         scrollVideo?: { videoSrc: string; title: string; price: string };
-        customCodes?: { code: string; name: string; videoUrl: string }[];
+        productCategories: any[];
+        customCodes: any[];
+        contactInfo: {
+            whatsapp: string;
+            whatsappDisplay: string;
+            instagram: string;
+            instagramUrl: string;
+            location: string;
+            email: string;
+        };
     };
     tenantId: string;
 }
@@ -42,6 +61,7 @@ const SettingsSchema: Schema = new Schema({
     currencySymbol: { type: String, default: '$' },
     welcomeMessage: { type: String, default: 'Hola, bienvenido a Global 3D.' },
     filamentCostAverage: { type: Number, default: 15000 },
+    monthlyGoal: { type: Number, default: 2000000 },
     trackingBaseUrl: { type: String, default: 'http://localhost:3000/track' },
     customerMessageTemplates: {
         pending: { type: String, default: defaultTemplates.pending },
@@ -52,19 +72,62 @@ const SettingsSchema: Schema = new Schema({
         resendTracking: { type: String, default: defaultTemplates.resendTracking },
     },
     homepageSections: {
-        ideas: { type: Schema.Types.Mixed, default: [
-            { name: 'iPhone Stand', icon: '📱', category: 'Organizers', downloads: '15k+', link: '' },
-            { name: 'Under Desk Drawer', icon: '🗄️', category: 'Storage', downloads: '12k+', link: '' },
-            { name: 'OTF Fidget', icon: '🎯', category: 'Toys', downloads: '10k+', link: '' },
-            { name: 'Cable Wrapper', icon: '🔌', category: 'Organizers', downloads: '8k+', link: '' },
-            { name: 'Filament Clip', icon: '🎞️', category: 'Accessories', downloads: '7k+', link: '' },
-            { name: 'Capybara', icon: '🦫', category: 'Toys', downloads: '5k+', link: '' },
-        ]},
-        printers: { type: Schema.Types.Mixed, default: [] },
+        heroTitle: { type: String, default: 'Global 3D' },
+        heroSubtitle: { type: String, default: 'Transformamos tus ideas en objetos reales.' },
+        heroDescription: { type: String, default: 'Impresión 3D de alta calidad en Corrientes' },
+        heroBadge: { type: String, default: 'Envíos gratis en pedidos mayores a $50.000' },
+        monthlyGoal: { type: Number, default: 2000000 },
+        heroStats: {
+            reviews: { type: String, default: '4.9' },
+            reviewsCount: { type: String, default: '200+ reseñas' },
+            orders: { type: String, default: '500+' },
+            delivery: { type: String, default: '24-72h' },
+        },
+        heroFeatures: [{ type: String, default: [] }],
+        ideas: [{ type: Schema.Types.Mixed, default: [] }],
+        printers: [{ type: Schema.Types.Mixed, default: [] }],
         printersTitle: { type: String, default: 'Impresoras 3D' },
         printersSubtitle: { type: String, default: 'Vendemos impresoras Bambu Lab y accesorios' },
         scrollVideo: { type: Schema.Types.Mixed, default: { videoSrc: '/copakling-optimized.mp4', title: 'Impresora 3D Bambu Lab', price: '469000' } },
-        customCodes: { type: Schema.Types.Mixed, default: [] },
+        productStar: {
+            enabled: { type: Boolean, default: true },
+            title: { type: String, default: 'Vaso Personalizado River Plate' },
+            subtitle: { type: String, default: 'Impresión 3D de alta calidad con el escudo de tu equipo favorito.' },
+            badge: { type: String, default: '🔥 #1 MÁS VENDIDO' },
+            price: { type: String, default: '$3.500' },
+            originalPrice: { type: String, default: '$4.500' },
+            teams: [{ type: String, default: [] }],
+        },
+        copaAnimation: {
+            enabled: { type: Boolean, default: true },
+            title: { type: String, default: 'Copa de la Liga' },
+            subtitle: { type: String, default: 'Diseño 3D de alta calidad con detalles premium' },
+            badge: { type: String, default: '🏆 TROFEO PREMIUM' },
+            price: { type: String, default: '$12.500' },
+            accentColor: { type: String, default: '#f59e0b' },
+            framesDir: { type: String, default: '/frames-copakling/' },
+            totalFrames: { type: Number, default: 73 },
+        },
+        impresoraAnimation: {
+            enabled: { type: Boolean, default: true },
+            title: { type: String, default: 'Impresora 3D Bambu Lab X1C' },
+            subtitle: { type: String, default: 'La nueva generación de precisión y velocidad' },
+            badge: { type: String, default: '🖨️ PROFESIONAL' },
+            price: { type: String, default: '$469.000' },
+            accentColor: { type: String, default: '#3b82f6' },
+            framesDir: { type: String, default: '/frames-mp/' },
+            totalFrames: { type: Number, default: 192 },
+        },
+        productCategories: [{ type: Schema.Types.Mixed, default: [] }],
+        customCodes: [{ type: Schema.Types.Mixed, default: [] }],
+        contactInfo: {
+            whatsapp: { type: String, default: '' },
+            whatsappDisplay: { type: String, default: '' },
+            instagram: { type: String, default: '' },
+            instagramUrl: { type: String, default: '' },
+            location: { type: String, default: 'Corrientes, Argentina' },
+            email: { type: String, default: '' },
+        },
     },
     tenantId: { type: String, default: appConfig.defaultTenantId }
 });
