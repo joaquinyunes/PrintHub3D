@@ -16,6 +16,8 @@ interface ProductItem {
   effects?: string;
   animations?: string;
   stock?: number;
+  // 🟢 Aquí agregamos la propiedad faltante para arreglar el error:
+  categoryId?: string;
 }
 
 interface Category {
@@ -260,7 +262,8 @@ export default function CollectionPage({ title, subtitle, badge, categories, pro
       return a.name.localeCompare(b.name);
     });
 
-  const getCategoryById = (id: string) => categories.find(c => c.id === id);
+  // 🟢 Tipado seguro para que soporte un id opcional o undefined
+  const getCategoryById = (id?: string) => id ? categories.find(c => c.id === id) : undefined;
 
   return (
     <div className="min-h-screen bg-black text-white">
