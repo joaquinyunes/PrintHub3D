@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { apiUrl } from "@/lib/api";
 import CollectionPage from "@/components/CollectionPage";
 
@@ -46,6 +46,13 @@ interface SectionData {
     description?: string;
     subCategories: SubCategory[];
   }>;
+  // 🟢 Agregado el tipado de la barra de búsqueda para solucionar el error
+  allProductsSearch?: {
+    enabled: boolean;
+    placeholder: string;
+    sortOptions?: string[];
+    filterOptions?: string[];
+  };
 }
 
 export default function ProductosPage() {
@@ -186,7 +193,8 @@ export default function ProductosPage() {
           categories={categories}
           products={allProducts}
           accentColor="#3b82f6"
-          searchOptions={sectionData?.allProductsSearch}
+          // 🟢 Corregido con el fallback por si la base de datos devuelve un valor vacío al inicio
+          searchOptions={sectionData?.allProductsSearch || { enabled: true, placeholder: "Buscar productos..." }}
         />
       )}
     </div>
