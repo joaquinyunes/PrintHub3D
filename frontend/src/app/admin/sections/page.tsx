@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Edit, Save, X, ChevronDown, ChevronRight, Video, Package, Printer, Layers, Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Save, X, ChevronDown, ChevronRight, Video, Package, Printer, Layers, Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { apiUrl } from "@/lib/api";
 
 interface CustomVideo {
@@ -237,7 +237,7 @@ export default function SectionsPage() {
     const categories = [...sectionData.categories];
     categories[catIndex].subCategories[subIndex].products[prodIndex] = {
       ...categories[catIndex].subCategories[subIndex].products[prodIndex],
-      [field]: field === 'price' || field === 'enabled' ? value : value
+      [field]: value
     };
     setData({ ...data, [`${section}Section`]: { ...sectionData, categories } });
   };
@@ -307,7 +307,7 @@ export default function SectionsPage() {
                 </div>
                 <p className="text-gray-400 text-sm mb-4">
                   Agregá videos que se mostrarán cuando un cliente busque su pedido. 
-                  El código se compara con el código de seguimiento del pedido (ej: "vasoriver"匹配"joaquin-vasoriver-2026").
+                  El código se compara con el código de seguimiento del pedido (ej: "vasoriver").
                 </p>
                 
                 <div className="space-y-4">
@@ -375,16 +375,16 @@ export default function SectionsPage() {
           {(activeSection === 'productos' || activeSection === 'impresoras' || activeSection === 'filamentos') && (
             <CategoryManager
               section={activeSection}
-              categories={data[`${activeSection}Section` as keyof SectionData] as any}
+              categories={data[`${activeSection}Section` as keyof SectionData] as { categories: Category[] }}
               onAddCategory={() => addCategory(activeSection)}
-              onUpdateCategory={(catIndex: number, field: string, value: any) => updateCategory(activeSection, catIndex, field, value)}
-              onRemoveCategory={(catIndex: number) => removeCategory(activeSection, catIndex)}
-              onAddSubCategory={(catIndex: number) => addSubCategory(activeSection, catIndex)}
-              onUpdateSubCategory={(catIndex: number, subIndex: number, name: string) => updateSubCategory(activeSection, catIndex, subIndex, name)}
-              onRemoveSubCategory={(catIndex: number, subIndex: number) => removeSubCategory(activeSection, catIndex, subIndex)}
-              onAddProduct={(catIndex: number, subIndex: number) => addProduct(activeSection, catIndex, subIndex)}
-              onUpdateProduct={(catIndex: number, subIndex: number, prodIndex: number, field: string, value: any) => updateProduct(activeSection, catIndex, subIndex, prodIndex, field, value)}
-              onRemoveProduct={(catIndex: number, subIndex: number, prodIndex: number) => removeProduct(activeSection, catIndex, subIndex, prodIndex)}
+              onUpdateCategory={(catIndex, field, value) => updateCategory(activeSection, catIndex, field, value)}
+              onRemoveCategory={(catIndex) => removeCategory(activeSection, catIndex)}
+              onAddSubCategory={(catIndex) => addSubCategory(activeSection, catIndex)}
+              onUpdateSubCategory={(catIndex, subIndex, name) => updateSubCategory(activeSection, catIndex, subIndex, name)}
+              onRemoveSubCategory={(catIndex, subIndex) => removeSubCategory(activeSection, catIndex, subIndex)}
+              onAddProduct={(catIndex, subIndex) => addProduct(activeSection, catIndex, subIndex)}
+              onUpdateProduct={(catIndex, subIndex, prodIndex, field, value) => updateProduct(activeSection, catIndex, subIndex, prodIndex, field, value)}
+              onRemoveProduct={(catIndex, subIndex, prodIndex) => removeProduct(activeSection, catIndex, subIndex, prodIndex)}
             />
           )}
         </main>
@@ -405,7 +405,19 @@ function CategoryManager({
   onAddProduct,
   onUpdateProduct,
   onRemoveProduct
-}: any) {
+}: {
+  section: string;
+  categories: { categories: Category[] };
+  onAddCategory: () => void;
+  onUpdateCategory: (catIndex: number, field: any, value: any) => void;
+  onRemoveCategory: (catIndex: number) => void;
+  onAddSubCategory: (catIndex: number) => void;
+  onUpdateSubCategory: (catIndex: number, subIndex: number, name: string) => void;
+  onRemoveSubCategory: (catIndex: number, subIndex: number) => void;
+  onAddProduct: (catIndex: number, subIndex: number) => void;
+  onUpdateProduct: (catIndex: number, subIndex: number, prodIndex: number, field: any, value: any) => void;
+  onRemoveProduct: (catIndex: number, subIndex: number, prodIndex: number) => void;
+}) {
   const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({});
   const [expandedSubs, setExpandedSubs] = useState<Record<string, boolean>>({});
 
@@ -413,20 +425,20 @@ function CategoryManager({
   const toggleSub = (id: string) => setExpandedSubs((prev) => ({ ...prev, [id]: !prev[id] }));
 
   const colors = {
-    productos: 'blue',
-    impresoras: 'green',
-    filamentos: 'orange'
+    productos: { bgZone: 'bg-blue-900/20 border-blue-500/20', btn: 'bg-blue-600 hover:bg-blue-500' },
+    impresoras: { bgZone: 'bg-green-900/20 border-green-500/20', btn: 'bg-green-600 hover:bg-green-500' },
+    filamentos: { bgZone: 'bg-orange-900/20 border-orange-500/20', btn: 'bg-orange-600 hover:bg-orange-500' }
   };
-  const color = colors[section as keyof typeof colors] || 'blue';
+  const currentStyles = colors[section as keyof typeof colors] || colors.productos;
 
   return (
     <div className="space-y-6">
-      <div className={`bg-${color}-900/20 border border-${color}-500/20 rounded-2xl p-6`}>
+      <div className={`${currentStyles.bgZone} border rounded-2xl p-6`}>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-black uppercase">Categorías y Productos</h2>
           <button
             onClick={onAddCategory}
-            className={`bg-${color}-600 hover:bg-${color}-500 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2`}
+            className={`${currentStyles.btn} text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2`}
           >
             <Plus className="h-4 w-4"/> Nueva Categoría
           </button>
