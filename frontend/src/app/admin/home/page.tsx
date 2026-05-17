@@ -349,7 +349,9 @@ contactInfo: {
   const updateSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | 'impresorasSection' | 'filamentosSection', catIndex: number, subIndex: number, name: string) => {
     const section = sections[sectionKey];
     const categories = [...(section?.categories || [])];
-    categories[catIndex].subCategories[subIndex].name = name;
+    if (categories[catIndex]?.subCategories?.[subIndex]) {
+      categories[catIndex].subCategories[subIndex].name = name;
+    }
     setSections(prev => ({ ...prev, [sectionKey]: { ...section, categories } }));
   };
 
