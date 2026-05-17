@@ -95,7 +95,7 @@ interface HomeSections {
   printersSubtitle: string;
   productCategories: ProductCategory[];
   rastreoSection: { enabled: boolean; title: string; subtitle: string; badge: string; categories: SectionCategory[]; customVideos: any[] };
-  productosSection: { enabled: boolean; title: string; subtitle: string; badge: string; heroImage: string; categories: SectionCategory[]; allProductsSearch: { enabled: boolean; placeholder: string } };
+  productosSection: { enabled: boolean; title: string; subtitle: string; badge: string; heroImage: string; categories: SectionCategory[]; allProductsSearch: { enabled: boolean; placeholder: string; sortOptions?: string[]; filterOptions?: string[] } };
   impresorasSection: { enabled: boolean; title: string; subtitle: string; badge: string; heroImage: string; categories: SectionCategory[]; animation: any };
   filamentosSection: { enabled: boolean; title: string; subtitle: string; badge: string; heroImage: string; categories: SectionCategory[] };
   contactoSection: { enabled: boolean; title: string; subtitle: string; badge: string };
@@ -159,7 +159,7 @@ export default function HomeSettingsPage() {
     printersSubtitle: 'Vendemos impresoras Bambu Lab y accesorios',
     productCategories: [],
     rastreoSection: { enabled: true, title: 'Rastreá tu Pedido', subtitle: 'Ingresá tu código y seguí tu pedido en tiempo real', badge: '📦 RASTREO', categories: [], customVideos: [] },
-    productosSection: { enabled: true, title: 'Productos Personalizados', subtitle: 'Vasos, llaveros, trofeos y más', badge: '🏆 PRODUCTOS', heroImage: '', categories: [], allProductsSearch: { enabled: true, placeholder: 'Buscar productos...' } },
+    productosSection: { enabled: true, title: 'Productos Personalizados', subtitle: 'Vasos, llaveros, trofeos y más', badge: '🏆 PRODUCTOS', heroImage: '', categories: [], allProductsSearch: { enabled: true, placeholder: 'Buscar productos...', sortOptions: ['price_asc', 'price_desc', 'name_asc', 'name_desc', 'newest'], filterOptions: ['searchByName', 'searchByDescription', 'filterByPrice'] } },
     impresorasSection: { enabled: true, title: 'Impresoras 3D', subtitle: 'Bambu Lab y más', badge: '🖨️ IMPRESORAS', heroImage: '', categories: [], animation: { enabled: true, title: 'Impresora 3D Bambu Lab X1C', subtitle: 'La nueva generación', badge: '🖨️ PROFESIONAL', price: '$469.000', accentColor: '#3b82f6', framesDir: '/frames-mp/', totalFrames: 192 } },
     filamentosSection: { enabled: true, title: 'Filamentos y Materiales', subtitle: 'PLA, PETG, ABS y más', badge: '🧵 FILAMENTOS', heroImage: '', categories: [] },
     contactoSection: { enabled: true, title: 'Contactanos', subtitle: 'Estamos para ayudarte', badge: '📩 CONTACTO' },
@@ -300,7 +300,9 @@ contactInfo: {
 
   const updateSectionCategory = (sectionKey: 'rastreoSection' | 'productosSection' | 'impresorasSection' | 'filamentosSection', index: number, field: string, value: string) => {
     const newCategories = [...(sections[sectionKey]?.categories || [])];
-    newCategories[index] = { ...newCategories[index], [field]: value };
+    if (newCategories[index]) {
+      newCategories[index] = { ...newCategories[index], [field]: value };
+    }
     setSections(prev => ({
       ...prev,
       [sectionKey]: { ...prev[sectionKey], categories: newCategories }
@@ -355,44 +357,59 @@ contactInfo: {
     setSections(prev => ({ ...prev, [sectionKey]: { ...section, categories } }));
   };
 
-  const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | 'impresorasSection' | 'filamentosSection', catIndex: number, subIndex: number) => {
+const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | 'impresorasSection' | 'filamentosSection', catIndex: number, subIndex: number) => {
     const section = sections[sectionKey];
     const categories = [...(section?.categories || [])];
-    categories[catIndex].subCategories = categories[catIndex].subCategories.filter((_: any, i: number) => i !== subIndex);
-    setSections(prev => ({ ...prev, [sectionKey]: { ...section, categories } }));
+    const targetCategory = categories[catIndex];
+    if (targetCategory && targetCategory.subCategories) {
+      categories[catIndex] = {
+        ...targetCategory,
+        subCategories: targetCategory.subCategories.filter((_: any, i: number) => i !== subIndex)
+      };
+      setSections(prev => ({ ...prev, [sectionKey]: { ...section, categories } }));
+    }
   };
 
   const addProductToSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | 'impresorasSection' | 'filamentosSection', catIndex: number, subIndex: number) => {
     const section = sections[sectionKey];
     const categories = [...(section?.categories || [])];
-    categories[catIndex].subCategories[subIndex].products = categories[catIndex].subCategories[subIndex].products || [];
-    categories[catIndex].subCategories[subIndex].products.push({
-      id: Date.now().toString(),
-      name: '',
-      price: 0,
-      imageUrl: '',
-      imageHover: '',
-      description: '',
-      videoUrl: '',
-      enabled: true
-    });
+    const targetCategory = categories[catIndex];
+    if (targetCategory?.subCategories?.[subIndex]) {
+      targetCategory.subCategories[subIndex].products = targetCategory.subCategories[subIndex].products || [];
+      targetCategory.subCategories[subIndex].products.push({
+        id: Date.now().toString(),
+        name: '',
+        price: 0,
+        imageUrl: '',
+        imageHover: '',
+        description: '',
+        videoUrl: '',
+        enabled: true
+      });
+    }
     setSections(prev => ({ ...prev, [sectionKey]: { ...section, categories } }));
   };
 
   const updateProductInSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | 'impresorasSection' | 'filamentosSection', catIndex: number, subIndex: number, prodIndex: number, field: string, value: any) => {
     const section = sections[sectionKey];
     const categories = [...(section?.categories || [])];
-    categories[catIndex].subCategories[subIndex].products[prodIndex] = {
-      ...categories[catIndex].subCategories[subIndex].products[prodIndex],
-      [field]: value
-    };
+    const targetCategory = categories[catIndex];
+    if (targetCategory?.subCategories?.[subIndex]?.products?.[prodIndex]) {
+      targetCategory.subCategories[subIndex].products[prodIndex] = {
+        ...targetCategory.subCategories[subIndex].products[prodIndex],
+        [field]: value
+      };
+    }
     setSections(prev => ({ ...prev, [sectionKey]: { ...section, categories } }));
   };
 
   const removeProductFromSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | 'impresorasSection' | 'filamentosSection', catIndex: number, subIndex: number, prodIndex: number) => {
     const section = sections[sectionKey];
     const categories = [...(section?.categories || [])];
-    categories[catIndex].subCategories[subIndex].products = categories[catIndex].subCategories[subIndex].products.filter((_: any, i: number) => i !== prodIndex);
+    const targetCategory = categories[catIndex];
+    if (targetCategory?.subCategories?.[subIndex]?.products) {
+      targetCategory.subCategories[subIndex].products = targetCategory.subCategories[subIndex].products.filter((_: any, i: number) => i !== prodIndex);
+    }
     setSections(prev => ({ ...prev, [sectionKey]: { ...section, categories } }));
   };
 
