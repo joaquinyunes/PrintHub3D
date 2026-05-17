@@ -81,16 +81,7 @@ export default function HomePage() {
     [],
   );
 
-  const fallbackProducts: Product[] = [
-    { _id: "1", name: "Soporte Celular Premium", price: 2500, imageUrl: "https://images.unsplash.com/photo-1616348436918-d227853a0d4c?w=400&h=400&fit=crop", description: "Soporte de aluminio para escritorio", category: "Accesorios" },
-    { _id: "2", name: "Organizador de Cables", price: 1800, imageUrl: "https://images.unsplash.com/photo-1625723044792-44b16c3f5a5d?w=400&h=400&fit=crop", description: "Organizador magnético", category: "Organizers" },
-    { _id: "3", name: "Soporte Auriculares", price: 2200, imageUrl: "https://images.unsplash.com/photo-1593113598332-cd2880eac669?w=400&h=400&fit=crop", description: "Soporte de Pared", category: "Accesorios" },
-    { _id: "4", name: "Clip Filamento", price: 800, imageUrl: "https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=400&h=400&fit=crop", description: "Pack de 10 clips", category: "Accesorios" },
-    { _id: "5", name: "Cajón Escondido", price: 3500, imageUrl: "https://images.unsplash.com/photo-1558618666-fda70efd1e81?w=400&h=400&fit=crop", description: "Cajón secreto para escritorio", category: "Storage" },
-    { _id: "6", name: "Soporte Cuello", price: 2800, imageUrl: "https://images.unsplash.com/photo-1616348436918-d227853a0d4c?w=400&h=400&fit=crop", description: "Ergonómico para ver películas", category: "Accesorios" },
-  ];
-
-  const displayProducts = products.length > 0 ? products : fallbackProducts;
+  const displayProducts = products;
   
   const filteredProducts = displayProducts.filter(p => {
     const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -186,11 +177,11 @@ export default function HomePage() {
 
           <div className="hidden lg:flex items-center gap-1">
             {[
-              { href: "#rastreo", label: "📦 Rastreo" },
-              { href: "#producto-estrella", label: "⭐ Producto Estrella" },
-              { href: "#categorias", label: "Categorías" },
-              { href: "#productos", label: "Productos" },
-              { href: "#contacto", label: "Contacto" }
+              { href: "/rastreo", label: "📦 Rastreo" },
+              { href: "/productos", label: "🏆 Productos" },
+              { href: "/impresoras", label: "🖨️ Impresoras" },
+              { href: "/filamentos", label: "🧵 Filamentos" },
+              { href: "/contacto", label: "📞 Contacto" }
             ].map((item, i) => (
               <Link key={i} href={item.href} className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200 relative group">
                 {item.label}
@@ -219,11 +210,11 @@ export default function HomePage() {
 
         {menuOpen && (
           <div className="lg:hidden fixed top-16 left-0 right-0 bg-black border-b border-white/10 p-4 z-40">
-            <Link href="#rastreo" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>📦 Rastreo</Link>
-            <Link href="#producto-estrella" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>⭐ Producto Estrella</Link>
-            <Link href="#categorias" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>Categorías</Link>
-            <Link href="#productos" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>Productos</Link>
-            <Link href="#contacto" className="block py-3 text-gray-300 hover:text-white" onClick={() => setMenuOpen(false)}>Contacto</Link>
+            <Link href="/rastreo" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>📦 Rastreo</Link>
+            <Link href="/productos" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>🏆 Productos</Link>
+            <Link href="/impresoras" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>🖨️ Impresoras</Link>
+            <Link href="/filamentos" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>🧵 Filamentos</Link>
+            <Link href="/contacto" className="block py-3 text-gray-300 hover:text-white" onClick={() => setMenuOpen(false)}>📞 Contacto</Link>
           </div>
         )}
       </nav>
@@ -303,46 +294,25 @@ export default function HomePage() {
             <span className="text-blue-400 text-sm uppercase tracking-wider font-bold">Explorá</span>
             <h2 className="text-4xl md:text-5xl font-black text-white mt-2">Nuestras Categorías</h2>
             <p className="text-zinc-300 mt-3 text-sm md:text-base max-w-xl mx-auto font-medium">
-              Tocá una categoría para ver subcategorías y productos (configurables en Admin → Inicio web).
+              Elegí una sección para ver todos nuestros productos
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-            {showcaseCategoriesFromAdmin
-              ? showcaseCategoriesFromAdmin.map((cat: { id: string; name: string; icon?: string; subCategories?: { name?: string }[] }) => {
-                  const subs = Array.isArray(cat.subCategories) ? cat.subCategories : [];
-                  const preview =
-                    subs
-                      .map((s) => String(s?.name || "").trim())
-                      .filter(Boolean)
-                      .slice(0, 2)
-                      .join(" · ") || "Ver productos y videos";
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setOpenShowcaseCategory(cat as ShowcaseCategory)}
-                      className="group text-left relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/15 rounded-2xl p-6 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-500/40 transition-all shadow-lg shadow-black/40 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
-                    >
-                      <div className="text-4xl mb-3 drop-shadow-md">{cat.icon || "📦"}</div>
-                      <h3 className="font-black text-white text-base leading-tight">{cat.name}</h3>
-                      <p className="text-sm text-zinc-200 mt-2 font-semibold leading-snug">{preview}</p>
-                    </button>
-                  );
-                })
-              : FALLBACK_CATEGORY_CARDS.map((item, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() =>
-                      document.getElementById("productos")?.scrollIntoView({ behavior: "smooth", block: "start" })
-                    }
-                    className="group text-left relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/15 rounded-2xl p-6 hover:scale-[1.02] hover:-translate-y-1 hover:border-amber-500/35 transition-all shadow-lg shadow-black/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                  >
-                    <div className="text-4xl mb-3 drop-shadow-md">{item.icon}</div>
-                    <h3 className="font-black text-white text-base leading-tight">{item.name}</h3>
-                    <p className="text-sm text-zinc-200 mt-2 font-semibold leading-snug">{item.desc}</p>
-                  </button>
-                ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <Link href="/productos" className="group text-left relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/15 rounded-2xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-500/40 transition-all shadow-lg shadow-black/40 focus:outline-none focus:ring-2 focus:ring-blue-500/60">
+              <div className="text-5xl mb-4 drop-shadow-md">🏆</div>
+              <h3 className="font-black text-white text-xl leading-tight">Productos Personalizados</h3>
+              <p className="text-sm text-zinc-200 mt-3 font-semibold leading-snug">Vasos, trofeos, llaveros y más</p>
+            </Link>
+            <Link href="/impresoras" className="group text-left relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/15 rounded-2xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-500/40 transition-all shadow-lg shadow-black/40 focus:outline-none focus:ring-2 focus:ring-blue-500/60">
+              <div className="text-5xl mb-4 drop-shadow-md">🖨️</div>
+              <h3 className="font-black text-white text-xl leading-tight">Impresoras 3D</h3>
+              <p className="text-sm text-zinc-200 mt-3 font-semibold leading-snug">Bambu Lab y más modelos</p>
+            </Link>
+            <Link href="/filamentos" className="group text-left relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/15 rounded-2xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-500/40 transition-all shadow-lg shadow-black/40 focus:outline-none focus:ring-2 focus:ring-blue-500/60">
+              <div className="text-5xl mb-4 drop-shadow-md">🧵</div>
+              <h3 className="font-black text-white text-xl leading-tight">Filamentos</h3>
+              <p className="text-sm text-zinc-200 mt-3 font-semibold leading-snug">PLA, PETG, ABS y materiales</p>
+            </Link>
           </div>
         </div>
       </section>
@@ -439,14 +409,14 @@ export default function HomePage() {
       )}
 
       {/* 6. 🛒 CATÁLOGO DE PRODUCTOS */}
-      <section id="productos" className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <span className="inline-block px-4 py-1.5 bg-blue-500/10 text-blue-400 text-xs font-bold rounded-full mb-4">🛒 PRODUCTOS</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-white">Todos los Productos</h2>
-          </div>
-          
-          {displayProducts.length > 0 && (
+      {filteredProducts.length > 0 && (
+        <section id="productos" className="py-16 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-10">
+              <span className="inline-block px-4 py-1.5 bg-blue-500/10 text-blue-400 text-xs font-bold rounded-full mb-4">🛒 PRODUCTOS</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-white">Todos los Productos</h2>
+            </div>
+            
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
@@ -459,40 +429,15 @@ export default function HomePage() {
                 {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
             </div>
-          )}
-          
-          {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-gray-900/60 border border-gray-800 rounded-2xl overflow-hidden">
-                  <div className="aspect-square bg-gray-800/50 animate-pulse" />
-                  <div className="p-4 space-y-2">
-                    <div className="h-4 bg-gray-800/50 rounded animate-pulse w-3/4" />
-                    <div className="h-3 bg-gray-800/50 rounded animate-pulse w-1/2" />
-                    <div className="h-5 bg-gray-800/50 rounded animate-pulse w-1/3" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : productsError ? (
-            <div className="text-center py-10 border border-dashed border-gray-800 rounded-xl">
-              <p className="text-red-400 mb-4">{productsError}</p>
-              <button onClick={() => window.location.reload()} className="text-blue-400">Reintentar</button>
-            </div>
-          ) : filteredProducts.length > 0 ? (
+            
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {filteredProducts.map((product, idx) => (
                 <ProductCard key={product._id} product={product} handleWhatsAppBuy={handleWhatsAppBuy} idx={idx} />
               ))}
             </div>
-          ) : (
-            <div className="text-center py-10 border border-dashed border-gray-800 rounded-xl">
-              <p className="text-gray-500">No hay productos disponibles.</p>
-              <a href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola! Quiero pedir un producto`} target="_blank" className="text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block">Consultanos disponibilidad</a>
-            </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {/* 7. 🖨️ VIDEO 2: IMPRESORAS (Scroll Animation) */}
       {homeSections?.impresoraAnimation?.enabled !== false && (

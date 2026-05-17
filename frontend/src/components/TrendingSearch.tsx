@@ -42,7 +42,7 @@ export default function TrendingSearch({ onAddProduct }: TrendingSearchProps) {
         🚀 Buscar Tendencias
       </h3>
       <p className="text-gray-400 text-sm mb-4">
-        Buscá ideas de productos populares (ej: "soporte celular", "lampara 3d")
+        Buscá ideas de productos populares (ej: &quot;soporte celular&quot;, &quot;lampara 3d&quot;)
       </p>
       
       <div className="flex gap-2 mb-4">

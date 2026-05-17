@@ -90,9 +90,8 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
     // 1. INTENTAR BUSCAR EXISTENTE (Por SKU o Por Nombre)
-    let product = await productRepository.findBySkuOrName(tenantId, sku, name);
+    let product: any = await productRepository.findBySkuOrName(tenantId, sku, name);
 
-    // 🔄 CASO A: EL PRODUCTO YA EXISTE -> ACTUALIZAR Y SUMAR STOCK
     if (product) {
       product.stock += numbers.stock;
       product.price = numbers.price;
@@ -140,7 +139,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
     const tenantId = (req as any).user?.tenantId;
     const { id } = req.params;
 
-    const deleted = await productRepository.delete(id, tenantId);
+    const deleted = await productRepository.delete(id, tenantId as string);
     
     if (!deleted) {
       return res.status(404).json({ message: "Producto no encontrado" });
@@ -196,7 +195,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Stock mínimo inválido" });
     }
 
-    const updatedProduct = await productRepository.update(id, updates, tenantId);
+    const updatedProduct = await productRepository.update(id, updates, tenantId as string);
 
     if (!updatedProduct) {
       return res.status(404).json({ message: "Producto no encontrado" });

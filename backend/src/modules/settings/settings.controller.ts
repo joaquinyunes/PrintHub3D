@@ -32,60 +32,94 @@ export const uploadHomeImage = [
     }
 ];
 
-const DEFAULT_COPA_ANIMATION = {
-  enabled: true,
-  title: 'Copa de la Liga',
-  subtitle: 'Diseño 3D de alta calidad con detalles premium',
-  badge: '🏆 TROFEO PREMIUM',
-  price: '$12.500',
-  accentColor: '#f59e0b',
-  framesDir: '/frames-copakling/',
-  totalFrames: 73
-};
-
-const DEFAULT_PRINTER_ANIMATION = {
-  enabled: true,
-  title: 'Impresora 3D Bambu Lab X1C',
-  subtitle: 'La nueva generación de precisión y velocidad',
-  badge: '🖨️ PROFESIONAL',
-  price: '$469.000',
-  accentColor: '#3b82f6',
-  framesDir: '/frames-mp/',
-  totalFrames: 192
-};
-
 const DEFAULT_HOMEPAGE_SECTIONS = {
-  heroTitle: 'Global 3D',
-  heroSubtitle: 'Transformamos tus ideas en objetos reales.',
-  heroDescription: 'Impresión 3D de alta calidad en Corrientes',
-  heroBadge: 'Envíos gratis en pedidos mayores a $50.000',
-  heroStats: { reviews: 4.9, reviewsCount: '200+ reseñas', orders: '500+', delivery: '24-72h' },
-  heroFeatures: ['Impresión rápida', 'Calidad premium', 'Envío rápido', 'Soporte 24/7'],
-  printersTitle: 'Impresoras 3D',
-  printersSubtitle: 'Vendemos impresoras Bambu Lab y accesorios',
-  printers: [],
-  scrollVideo: { videoSrc: '/copakling-optimized.mp4', title: 'Impresora 3D Bambu Lab', price: '469000' },
-  customCodes: [],
-  productCategories: [],
-  contactInfo: {
-    whatsapp: '',
-    whatsappDisplay: '',
-    instagram: '',
-    instagramUrl: '',
-    location: 'Corrientes, Argentina',
-    email: '',
-  },
+    heroTitle: 'Global 3D',
+    heroSubtitle: 'Transformamos tus ideas en objetos reales.',
+    heroDescription: 'Impresión 3D de alta calidad en Corrientes',
+    heroBadge: 'Envíos gratis en pedidos mayores a $50.000',
+    heroStats: { reviews: '4.9', reviewsCount: '200+ reseñas', orders: '500+', delivery: '24-72h' },
+    heroFeatures: ['Impresión rápida', 'Calidad premium', 'Envío rápido', 'Soporte 24/7'],
+    productStar: {
+        enabled: true,
+        title: 'Vaso Personalizado River Plate',
+        subtitle: 'Impresión 3D de alta calidad con el escudo de tu equipo favorito.',
+        badge: '🔥 #1 MÁS VENDIDO',
+        price: '$3.500',
+        originalPrice: '$4.500',
+        teams: ['Boca', 'Racing', 'Independiente', 'Huracán']
+    },
+    copaAnimation: {
+        enabled: true,
+        title: 'Copa de la Liga',
+        subtitle: 'Diseño 3D de alta calidad con detalles premium',
+        badge: '🏆 TROFEO PREMIUM',
+        price: '$12.500',
+        accentColor: '#f59e0b',
+        framesDir: '/frames-copakling/',
+        totalFrames: 73
+    },
 };
 
-function mergeWithDefaults(settings: any) {
-  if (!settings) return { ...DEFAULT_HOMEPAGE_SECTIONS };
-  return {
-    ...DEFAULT_HOMEPAGE_SECTIONS,
-    ...settings,
-    copaAnimation: { ...DEFAULT_COPA_ANIMATION, ...(settings.copaAnimation || {}) },
-    impresoraAnimation: { ...DEFAULT_PRINTER_ANIMATION, ...(settings.impresoraAnimation || {}) },
-    contactInfo: { ...DEFAULT_HOMEPAGE_SECTIONS.contactInfo, ...(settings.contactInfo || {}) },
-  };
+function mergeSettings(settings: any) {
+    return {
+        rastreoSection: {
+            enabled: true,
+            title: 'Rastreá tu Pedido',
+            subtitle: 'Ingresá tu código y seguí tu pedido en tiempo real',
+            badge: '📦 RASTREO',
+            categories: [],
+            customVideos: [],
+            ...(settings?.rastreoSection || {})
+        },
+        productosSection: {
+            enabled: true,
+            title: 'Productos Personalizados',
+            subtitle: 'Vasos, llaveros, trofeos y más - Personalizados a tu gusto',
+            categories: [],
+            allProductsSearch: { enabled: true, placeholder: 'Buscar productos...' },
+            ...(settings?.productosSection || {})
+        },
+        impresorasSection: {
+            enabled: true,
+            title: 'Impresoras 3D',
+            subtitle: 'Bambu Lab y más - Precisión y velocidad',
+            animation: {
+                enabled: true,
+                title: 'Impresora 3D Bambu Lab X1C',
+                subtitle: 'La nueva generación de precisión y velocidad',
+                badge: '🖨️ PROFESIONAL',
+                price: '$469.000',
+                accentColor: '#3b82f6',
+                framesDir: '/frames-mp/',
+                totalFrames: 192,
+                ...(settings?.impresorasSection?.animation || {})
+            },
+            categories: [],
+            ...(settings?.impresorasSection || {})
+        },
+        filamentosSection: {
+            enabled: true,
+            title: 'Filamentos y Materiales',
+            subtitle: 'PLA, PETG, ABS y más - Todos los colores',
+            categories: [],
+            ...(settings?.filamentosSection || {})
+        },
+        contactInfo: {
+            whatsapp: '',
+            whatsappDisplay: '',
+            instagram: '',
+            instagramUrl: '',
+            facebook: '',
+            facebookUrl: '',
+            location: 'Corrientes, Argentina',
+            email: '',
+            ...(settings?.contactInfo || {})
+        },
+        homepageSections: {
+            ...DEFAULT_HOMEPAGE_SECTIONS,
+            ...(settings?.homepageSections || {}),
+        }
+    };
 }
 
 export const getSettings = async (req: Request, res: Response) => {
@@ -100,7 +134,7 @@ export const getSettings = async (req: Request, res: Response) => {
         }
 
         res.setHeader('Cache-Control', 'no-store');
-        res.json({ ...settings, homepageSections: mergeWithDefaults(settings.homepageSections) });
+        res.json({ ...settings, ...mergeSettings(settings) });
     } catch (error) {
         res.status(500).json({ message: 'Error obteniendo configuración' });
     }
@@ -117,7 +151,7 @@ export const getPublicSettings = async (req: Request, res: Response) => {
         }
 
         res.setHeader('Cache-Control', 'no-store');
-        res.json({ ...settings, homepageSections: mergeWithDefaults(settings.homepageSections) });
+        res.json({ ...settings, ...mergeSettings(settings) });
     } catch (error) {
         res.status(500).json({ message: 'Error obteniendo configuración' });
     }
@@ -137,35 +171,47 @@ export const updateSettings = async (req: Request, res: Response) => {
             customerMessageTemplates,
             homepageSections,
             monthlyGoal,
+            rastreoSection,
+            productosSection,
+            impresorasSection,
+            filamentosSection,
+            contactInfo,
         } = req.body;
 
-        const current = await Settings.findOne({ tenantId }).lean();
-        const currentSections = current?.homepageSections || {};
-        const mergedSections = mergeWithDefaults({
-          ...currentSections,
-          ...(homepageSections || {})
-        });
+        const updateData: any = {
+            businessName,
+            adminPhone,
+            currencySymbol,
+            welcomeMessage,
+            filamentCostAverage,
+            trackingBaseUrl,
+            customerMessageTemplates,
+            monthlyGoal,
+            rastreoSection,
+            productosSection,
+            impresorasSection,
+            filamentosSection,
+            contactInfo,
+        };
+
+        if (homepageSections) {
+            const current = await Settings.findOne({ tenantId }).lean();
+            const currentHome = current?.homepageSections || {};
+            updateData.homepageSections = {
+                ...DEFAULT_HOMEPAGE_SECTIONS,
+                ...currentHome,
+                ...homepageSections,
+            };
+        }
 
         const settings = await Settings.findOneAndUpdate(
             { tenantId },
-            {
-                $set: {
-                    businessName,
-                    adminPhone,
-                    currencySymbol,
-                    welcomeMessage,
-                    filamentCostAverage,
-                    trackingBaseUrl,
-                    customerMessageTemplates,
-                    homepageSections: mergedSections,
-                    monthlyGoal,
-                }
-            },
+            { $set: updateData },
             { returnDocument: 'after', upsert: true }
         );
 
         res.setHeader('Cache-Control', 'no-store');
-        res.json({ ...settings.toObject(), homepageSections: mergedSections });
+        res.json({ ...settings.toObject(), ...mergeSettings(settings.toObject()) });
     } catch (error) {
         res.status(500).json({ message: 'Error actualizando configuración' });
     }

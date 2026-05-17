@@ -8,7 +8,8 @@ import {
   BarChart3, 
   LogOut, 
   Settings,
-  Store
+  Store,
+  Layers
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -72,6 +73,17 @@ export default function Sidebar() {
         
         {/* SEPARADOR */}
         <div className="my-4 h-px bg-white/5 mx-2" />
+
+        {/* SECCIONES PÚBLICAS */}
+        <Link 
+          href="/admin/sections" 
+          className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all ${isActive('/admin/sections') ? 'bg-green-600/10 text-green-400 font-bold' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+        >
+          <div className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${isActive('/admin/sections') ? 'bg-green-500 text-white' : 'bg-white/5 group-hover:bg-white/10'}`}>
+             <Layers className="h-4 w-4" />
+          </div>
+          <span className="font-medium">Secciones</span>
+        </Link>
 
         {/* OTROS LINKS (Ejemplo) */}
         <Link 

@@ -8,9 +8,10 @@ import { appConfig } from '../../config';
 import Settings from '../settings/settings.model';
 import { findCustomVideoUrl } from '../../utils/customCodeVideoMatch';
 
-const getTenantId = (req: any) => {
+const getTenantId = (req: any): string => {
   const tid = req.tenantId || req.user?.tenantId;
-  return Array.isArray(tid) ? tid[0] : tid;
+  if (!tid) return '';
+  return Array.isArray(tid) ? (tid[0] || '') : (tid as string);
 };
 
 const orderRepository = new OrderRepository();
@@ -44,7 +45,7 @@ const buildTrackingUrl = (baseUrl: string, trackingCode: string) => {
 // ==========================================
 export const getOrders = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req);
+        const tenantId = getTenantId(req) as string;
         if (!tenantId) {
             return res.status(401).json({ message: 'No autorizado' });
         }
@@ -84,7 +85,7 @@ export const getOrders = async (req: Request, res: Response) => {
 // ==========================================
 export const createOrder = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req);
+        const tenantId = getTenantId(req) as string;
         if (!tenantId) {
             return res.status(401).json({ message: 'No autorizado' });
         }
@@ -175,7 +176,7 @@ export const createPublicOrder = async (req: Request, res: Response) => {
 export const updateOrder = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const tenantId = getTenantId(req);
+        const tenantId = getTenantId(req) as string;
         const { items } = req.body;
         
         let updateData = { ...req.body };
@@ -187,7 +188,7 @@ export const updateOrder = async (req: Request, res: Response) => {
             updateData.total = newTotal;
         }
 
-        const updatedOrder = await orderRepository.update(id, updateData as any, tenantId);
+        const updatedOrder = await orderRepository.update(id, updateData as any, String(tenantId));
 
         if (!updatedOrder) return res.status(404).json({ message: "Pedido no encontrado" });
         res.json(updatedOrder);
@@ -202,13 +203,13 @@ export const updateOrder = async (req: Request, res: Response) => {
 // ==========================================
 export const updateOrderStatus = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req);
+        const tenantId = getTenantId(req) as string;
         const { status, printTimeMinutes, printerId } = req.body;
         if (!status || !Object.keys(statusCopy).includes(String(status))) {
             return res.status(400).json({ message: 'Estado inválido' });
         }
 
-        const existingOrder = await orderRepository.findById(req.params.id, tenantId);
+        const existingOrder: any = await orderRepository.findById(req.params.id, String(tenantId));
         if (!existingOrder) {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
@@ -228,7 +229,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                     updateData.finishedAt = new Date();
                     await Printer.updateMany({ currentOrderId: req.params.id }, { status: 'idle', $unset: { currentOrderId: "" } });
 
-                    const currentOrder = await orderRepository.findById(req.params.id, tenantId);
+                    const currentOrder: any = await orderRepository.findById(req.params.id, String(tenantId));
                     if (currentOrder && !(currentOrder as any).adminNotified) {
                         const itemNames = (currentOrder as any).items.map((i: any) => i.productName).join(', ');
                         const msg = `✅ *IMPRESIÓN FINALIZADA*\n👤 ${currentOrder.clientName}\n📦 ${itemNames}\n🚀 Máquina liberada.`;
@@ -241,7 +242,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             console.error("Printer/Notification Warning:", printerError);
         }
 
-        const order = await orderRepository.update(req.params.id, updateData, tenantId);
+        const order = await orderRepository.update(req.params.id, updateData, String(tenantId));
 
         if (order?.customerContact && typeof sendCustomerNotification === 'function') {
             const Settings = require('../settings/settings.model').default;
@@ -276,7 +277,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 // ==========================================
 export const markOrderItemPrinted = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req);
+        const tenantId = getTenantId(req) as string;
         const { id } = req.params;
         const { itemIndex } = req.body as { itemIndex: number };
 
@@ -287,7 +288,7 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'itemIndex requerido' });
         }
 
-        const order = await orderRepository.findById(id, tenantId);
+        const order = await orderRepository.findById(id, String(tenantId));
         if (!order) {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
@@ -356,7 +357,7 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
 // ==========================================
 export const registerOrderSale = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req);
+        const tenantId = getTenantId(req) as string;
         const { id } = req.params;
         const { finalCost } = req.body;
 
@@ -486,10 +487,10 @@ export const submitOrderFeedback = async (req: Request, res: Response) => {
 // ==========================================
 export const resendTrackingToCustomer = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req);
+        const tenantId = getTenantId(req) as string;
         const { id } = req.params;
 
-        const order = await orderRepository.findById(id, tenantId);
+        const order = await orderRepository.findById(id, String(tenantId));
         if (!order) return res.status(404).json({ message: 'Pedido no encontrado' });
 
         if (!(order as any).customerContact) {
@@ -527,7 +528,7 @@ export const resendTrackingToCustomer = async (req: Request, res: Response) => {
 // ==========================================
 export const getOrdersSummary = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req);
+        const tenantId = getTenantId(req) as string;
         const summary = await orderRepository.getOrdersSummary(tenantId);
         return res.json(summary);
     } catch (error) {
@@ -541,10 +542,10 @@ export const getOrdersSummary = async (req: Request, res: Response) => {
 // ==========================================
 export const getOrderTimeline = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req);
+        const tenantId = getTenantId(req) as string;
         const { id } = req.params;
 
-        const order = await orderRepository.findById(id, tenantId);
+        const order = await orderRepository.findById(id, String(tenantId));
         if (!order) {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
@@ -574,7 +575,7 @@ export const getOrderTimeline = async (req: Request, res: Response) => {
 // ==========================================
 export const fixOrdersData = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req);
+        const tenantId = getTenantId(req) as string;
         const Order = require('./order.model').default;
         await Order.collection.updateMany({ tenantId }, { $rename: { "customerName": "clientName" } });
         res.json({ message: "✅ ¡Base de datos reparada!" });
@@ -582,3 +583,4 @@ export const fixOrdersData = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Error reparando datos" });
     }
 };
+
