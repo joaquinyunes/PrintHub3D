@@ -377,14 +377,14 @@ export default function SectionsPage() {
               section={activeSection}
               categories={data[`${activeSection}Section` as keyof SectionData] as any}
               onAddCategory={() => addCategory(activeSection)}
-              onUpdateCategory={(catIndex, field, value) => updateCategory(activeSection, catIndex, field, value)}
-              onRemoveCategory={(catIndex) => removeCategory(activeSection, catIndex)}
-              onAddSubCategory={(catIndex) => addSubCategory(activeSection, catIndex)}
-              onUpdateSubCategory={(catIndex, subIndex, name) => updateSubCategory(activeSection, catIndex, subIndex, name)}
-              onRemoveSubCategory={(catIndex, subIndex) => removeSubCategory(activeSection, catIndex, subIndex)}
-              onAddProduct={(catIndex, subIndex) => addProduct(activeSection, catIndex, subIndex)}
-              onUpdateProduct={(catIndex, subIndex, prodIndex, field, value) => updateProduct(activeSection, catIndex, subIndex, prodIndex, field, value)}
-              onRemoveProduct={(catIndex, subIndex, prodIndex) => removeProduct(activeSection, catIndex, subIndex, prodIndex)}
+              onUpdateCategory={(catIndex: number, field: string, value: any) => updateCategory(activeSection, catIndex, field, value)}
+              onRemoveCategory={(catIndex: number) => removeCategory(activeSection, catIndex)}
+              onAddSubCategory={(catIndex: number) => addSubCategory(activeSection, catIndex)}
+              onUpdateSubCategory={(catIndex: number, subIndex: number, name: string) => updateSubCategory(activeSection, catIndex, subIndex, name)}
+              onRemoveSubCategory={(catIndex: number, subIndex: number) => removeSubCategory(activeSection, catIndex, subIndex)}
+              onAddProduct={(catIndex: number, subIndex: number) => addProduct(activeSection, catIndex, subIndex)}
+              onUpdateProduct={(catIndex: number, subIndex: number, prodIndex: number, field: string, value: any) => updateProduct(activeSection, catIndex, subIndex, prodIndex, field, value)}
+              onRemoveProduct={(catIndex: number, subIndex: number, prodIndex: number) => removeProduct(activeSection, catIndex, subIndex, prodIndex)}
             />
           )}
         </main>
