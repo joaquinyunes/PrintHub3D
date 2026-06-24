@@ -1,9 +1,9 @@
 import express, { Request, Response } from "express";
-import { protect } from "../middleware/auth";
+import { protect, adminOnly } from "../modules/auth/auth.middleware";
 
 const router = express.Router();
 
-router.post("/generate-image", protect(["admin"]), async (req: Request, res: Response) => {
+router.post("/generate-image", protect, adminOnly, async (req: Request, res: Response) => {
   try {
     const { prompt, size = "medium" } = req.body;
     

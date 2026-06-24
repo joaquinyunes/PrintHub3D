@@ -150,7 +150,7 @@ export default function HeroSection({
               initial={{ opacity: 0, y: 30, rotateX: -20 }}
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
               transition={{ duration: 0.6, delay: 1.2 + i * 0.1, type: "spring" }}
-              whileHover={{ y: -8, scale: 1.05, rotate: [-1, 1, 0] }}
+              whileHover={{ y: -8, scale: 1.05, rotate: [-1, 1] }}
               className="group flex flex-col items-center gap-3 px-5 py-6 bg-zinc-900/50 border border-white/5 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-white/20 hover:bg-zinc-800/50 shadow-lg hover:shadow-[0_0_25px_rgba(59,130,246,0.15)]"
             >
               <motion.div 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 interface ScrollAnimationProps {
   totalFrames?: number;
@@ -36,7 +36,7 @@ export default function ScrollAnimation({
   const framesRef = useRef<HTMLImageElement[]>([]);
   const rafRef = useRef<number>(0);
   const [hasScrolled, setHasScrolled] = useState(false);
-  
+  const [inView, setInView] = useState(false);
   const pad = (n: number) => String(n).padStart(4, '0');
 
   useEffect(() => {
@@ -46,6 +46,18 @@ export default function ScrollAnimation({
   }, []);
 
   useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!inView) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -53,23 +65,30 @@ export default function ScrollAnimation({
       const frames: HTMLImageElement[] = [];
       let loadedCount = 0;
 
-      for (let i = 1; i <= totalFrames; i++) {
+      const loadOne = (i: number): Promise<void> => new Promise((resolve) => {
         const img = new Image();
         img.src = `${framesDir}frame_${pad(i)}.jpg`;
-        
-        await new Promise<void>((resolve) => {
-          img.onload = () => {
-            loadedCount++;
-            setLoadProgress(Math.round((loadedCount / totalFrames) * 100));
-            frames[i - 1] = img;
-            resolve();
-          };
-          img.onerror = () => {
-            loadedCount++;
-            setLoadProgress(Math.round((loadedCount / totalFrames) * 100));
-            resolve();
-          };
-        });
+        img.onload = () => {
+          loadedCount++;
+          setLoadProgress(Math.round((loadedCount / totalFrames) * 100));
+          frames[i - 1] = img;
+          resolve();
+        };
+        img.onerror = () => {
+          loadedCount++;
+          setLoadProgress(Math.round((loadedCount / totalFrames) * 100));
+          resolve();
+        };
+      });
+
+      const promises: Promise<void>[] = [];
+      const batchSize = 8;
+      for (let i = 1; i <= totalFrames; i += batchSize) {
+        const batch = [];
+        for (let j = i; j < i + batchSize && j <= totalFrames; j++) {
+          batch.push(loadOne(j));
+        }
+        await Promise.all(batch);
       }
 
       framesRef.current = frames;
@@ -78,7 +97,7 @@ export default function ScrollAnimation({
     };
 
     loadFrames();
-  }, [totalFrames, framesDir]);
+  }, [totalFrames, framesDir, inView]);
 
   useEffect(() => {
     if (!loaded || !hasScrolled) return;

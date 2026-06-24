@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingCart, Search, ArrowRight, Package, Instagram, MapPin, LogOut, Menu, X, Box, Phone } from "lucide-react";
+import { ShoppingCart, Search, ArrowRight, Package, Instagram, MapPin, LogOut, Menu, X, Box, Phone, Mail } from "lucide-react";
 import CartIcon from "@/components/CartIcon";
 import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from "@/lib/config";
 import { apiUrl } from "@/lib/api";
@@ -458,26 +458,38 @@ export default function HomePage() {
       <section id="contacto" className="py-20 px-4 bg-white/[0.02]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
+            <span className="inline-block px-4 py-1.5 bg-blue-500/10 text-blue-400 text-xs font-bold rounded-full mb-4">📞 CONTACTO</span>
             <h2 className="text-4xl md:text-5xl font-black text-white mb-3">Contacto</h2>
+            <p className="text-gray-500">Respondemos en el día</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            <a href={`https://wa.me/${homeSections?.contactInfo?.whatsapp || WHATSAPP_PHONE}`} target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-green-600 hover:scale-105 transition-all group">
-              <Phone className="w-10 h-10 text-green-500 mx-auto mb-4 group-hover:scale-110 transition-all" />
-              <h3 className="font-bold text-white text-lg mb-2">WhatsApp</h3>
-              <p className="text-gray-500">{homeSections?.contactInfo?.whatsappDisplay || WHATSAPP_DISPLAY}</p>
-            </a>
-            <a href={homeSections?.contactInfo?.instagramUrl || 'https://instagram.com/global3dcorrientes'} target="_blank" className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-pink-600 hover:scale-105 transition-all group">
-              <Instagram className="w-10 h-10 text-pink-500 mx-auto mb-4 group-hover:scale-110 transition-all" />
-              <h3 className="font-bold text-white text-lg mb-2">Instagram</h3>
-              <p className="text-gray-500">@{homeSections?.contactInfo?.instagram || 'global3dcorrientes'}</p>
-            </a>
-            <div className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center">
-              <MapPin className="w-10 h-10 text-blue-500 mx-auto mb-4" />
-              <h3 className="font-bold text-white text-lg mb-2">Ubicación</h3>
-              <p className="text-gray-500">{homeSections?.contactInfo?.location || 'Corrientes, Argentina'}</p>
+          <div className="flex flex-col gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
+              <a href={`https://wa.me/${homeSections?.contactInfo?.whatsapp || WHATSAPP_PHONE}`} target="_blank" className="contact-card bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-green-600 hover:scale-105 transition-all group" style={{animationDelay: '0.1s'}}>
+                <div className="w-14 h-14 bg-green-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-500/20 group-hover:scale-110 transition-all">
+                  <Phone className="w-7 h-7 text-green-500" />
+                </div>
+                <h3 className="font-bold text-white text-lg mb-2">WhatsApp</h3>
+                <p className="text-gray-500">{homeSections?.contactInfo?.whatsappDisplay || WHATSAPP_DISPLAY}</p>
+              </a>
+              <a href={homeSections?.contactInfo?.instagramUrl || 'https://instagram.com/global3dcorrientes'} target="_blank" className="contact-card bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-pink-600 hover:scale-105 transition-all group" style={{animationDelay: '0.2s'}}>
+                <div className="w-14 h-14 bg-pink-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-pink-500/20 group-hover:scale-110 transition-all">
+                  <Instagram className="w-7 h-7 text-pink-500" />
+                </div>
+                <h3 className="font-bold text-white text-lg mb-2">Instagram</h3>
+                <p className="text-gray-500">@{homeSections?.contactInfo?.instagram || 'global3dcorrientes'}</p>
+              </a>
+              <div className="contact-card bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center" style={{animationDelay: '0.3s'}}>
+                <div className="w-14 h-14 bg-blue-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <MapPin className="w-7 h-7 text-blue-500" />
+                </div>
+                <h3 className="font-bold text-white text-lg mb-2">Ubicación</h3>
+                <p className="text-gray-500">{homeSections?.contactInfo?.location || 'Corrientes, Argentina'}</p>
+              </div>
             </div>
-            <a href={`mailto:${homeSections?.contactInfo?.email || 'contacto@global3d.com'}`} className="bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-blue-600 hover:scale-105 transition-all group">
-              <Phone className="w-10 h-10 text-blue-500 mx-auto mb-4 group-hover:scale-110 transition-all" />
+            <a href={`mailto:${homeSections?.contactInfo?.email || 'contacto@global3d.com'}`} className="contact-card bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-blue-600 hover:scale-105 transition-all group max-w-md mx-auto w-full" style={{animationDelay: '0.4s'}}>
+              <div className="w-14 h-14 bg-blue-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-500/20 group-hover:scale-110 transition-all">
+                <Mail className="w-7 h-7 text-blue-500" />
+              </div>
               <h3 className="font-bold text-white text-lg mb-2">Email</h3>
               <p className="text-gray-500">{homeSections?.contactInfo?.email || 'contacto@global3d.com'}</p>
             </a>

@@ -53,6 +53,7 @@ app.use(cors({
 
 app.use(limiter);
 app.use(express.json());
+app.use(mongoSanitize());
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
   setHeaders: (res) => {
