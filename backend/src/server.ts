@@ -40,6 +40,8 @@ import aiRoutes from './routes/ai.routes';
 const app = express();
 const httpServer = createServer(app);
 
+app.set('trust proxy', 1);
+
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: 'cross-origin' }
