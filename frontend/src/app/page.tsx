@@ -155,37 +155,37 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans">
+    <div className="min-h-screen bg-tone-darker text-white font-mono">
       {/* Background effects */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-500/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-purple-500/10 blur-[120px] rounded-full" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-tone-red/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-tone-amber/10 blur-[120px] rounded-full" />
       </div>
 
       {/* NAVBAR */}
-      <nav className="fixed top-0 w-full z-50 bg-black/90 backdrop-blur-2xl border-b border-white/10">
+      <nav className="fixed top-0 w-full z-50 bg-tone-darker/90 backdrop-blur-2xl border-b border-white/5">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all shadow-lg shadow-blue-500/30">
+            <div className="w-12 h-12 bg-gradient-to-br from-tone-red via-tone-pink to-tone-amber rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all shadow-lg shadow-tone-red/30">
               <Box className="w-6 h-6 text-white" />
             </div>
             <div>
-              <span className="text-xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">{homeSections?.heroTitle || "Global 3D"}</span>
-              <p className="text-[10px] text-gray-500 tracking-[0.3em] uppercase -mt-1">Corrientes</p>
+              <span className="text-xl font-black bg-gradient-to-r from-tone-red via-tone-pink to-tone-amber bg-clip-text text-transparent">{homeSections?.heroTitle || "Global 3D"}</span>
+              <p className="text-[10px] text-gray-600 tracking-[0.3em] uppercase -mt-1">Corrientes</p>
             </div>
           </Link>
 
           <div className="hidden lg:flex items-center gap-1">
             {[
-              { href: "/rastreo", label: "📦 Rastreo" },
-              { href: "/productos", label: "🏆 Productos" },
-              { href: "/impresoras", label: "🖨️ Impresoras" },
-              { href: "/filamentos", label: "🧵 Filamentos" },
-              { href: "/contacto", label: "📞 Contacto" }
+              { href: "/rastreo", label: "Rastreo" },
+              { href: "/productos", label: "Productos" },
+              { href: "/impresoras", label: "Impresoras" },
+              { href: "/filamentos", label: "Filamentos" },
+              { href: "/contacto", label: "Contacto" }
             ].map((item, i) => (
-              <Link key={i} href={item.href} className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200 relative group">
+              <Link key={i} href={item.href} className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200 relative group">
                 {item.label}
-                <span className="absolute -bottom-1 left-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full group-hover:w-full group-hover:left-0 transition-all duration-300" />
+                <span className="absolute -bottom-1 left-1/2 w-0 h-0.5 bg-tone-red rounded-full group-hover:w-full group-hover:left-0 transition-all duration-300" />
               </Link>
             ))}
           </div>
@@ -194,13 +194,13 @@ export default function HomePage() {
             <CartIcon />
             {user?.role === "admin" ? (
               <div className="flex items-center gap-2">
-                <Link href="/admin" className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all">Admin</Link>
-                <button onClick={handleLogout} className="p-2.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
+                <Link href="/admin" className="px-5 py-2.5 bg-tone-red hover:bg-tone-red/90 text-white rounded-xl text-sm font-bold transition-all">Admin</Link>
+                <button onClick={handleLogout} className="p-2.5 text-gray-600 hover:text-tone-red hover:bg-tone-red/10 rounded-xl transition-all">
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <Link href="/admin/login" className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl border border-white/10 transition-all">Ingresar</Link>
+              <Link href="/admin/login" className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl border border-white/5 transition-all">Ingresar</Link>
             )}
             <button className="lg:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -209,12 +209,12 @@ export default function HomePage() {
         </div>
 
         {menuOpen && (
-          <div className="lg:hidden fixed top-16 left-0 right-0 bg-black border-b border-white/10 p-4 z-40">
-            <Link href="/rastreo" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>📦 Rastreo</Link>
-            <Link href="/productos" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>🏆 Productos</Link>
-            <Link href="/impresoras" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>🖨️ Impresoras</Link>
-            <Link href="/filamentos" className="block py-3 text-gray-300 hover:text-white border-b border-white/10" onClick={() => setMenuOpen(false)}>🧵 Filamentos</Link>
-            <Link href="/contacto" className="block py-3 text-gray-300 hover:text-white" onClick={() => setMenuOpen(false)}>📞 Contacto</Link>
+          <div className="lg:hidden fixed top-16 left-0 right-0 bg-tone-darker border-b border-white/5 p-4 z-40">
+            <Link href="/rastreo" className="block py-3 text-gray-400 hover:text-white border-b border-white/5" onClick={() => setMenuOpen(false)}>Rastreo</Link>
+            <Link href="/productos" className="block py-3 text-gray-400 hover:text-white border-b border-white/5" onClick={() => setMenuOpen(false)}>Productos</Link>
+            <Link href="/impresoras" className="block py-3 text-gray-400 hover:text-white border-b border-white/5" onClick={() => setMenuOpen(false)}>Impresoras</Link>
+            <Link href="/filamentos" className="block py-3 text-gray-400 hover:text-white border-b border-white/5" onClick={() => setMenuOpen(false)}>Filamentos</Link>
+            <Link href="/contacto" className="block py-3 text-gray-400 hover:text-white" onClick={() => setMenuOpen(false)}>Contacto</Link>
           </div>
         )}
       </nav>
@@ -222,20 +222,20 @@ export default function HomePage() {
       {/* 1. 📦 RASTREO */}
       <section id="rastreo" className="pt-28 pb-12 px-4">
         <div className="max-w-xl mx-auto">
-          <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-6 md:p-8">
+          <div className="bg-tone-dark/60 border border-white/5 rounded-xl p-6 md:p-8">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Package className="h-7 w-7 text-blue-400" />
+              <Package className="h-7 w-7 text-tone-red" />
               <h2 className="text-xl md:text-2xl font-bold text-white">Rastrear Mi Pedido</h2>
             </div>
-            <p className="text-gray-400 text-center mb-6 text-sm">Ingresá el código para ver el estado de producción</p>
+            <p className="text-gray-600 text-center mb-6 text-sm">Ingresá el código para ver el estado de producción</p>
             <form onSubmit={handleTrackOrder} className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-700" />
                 <input type="text" value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} placeholder="Ej: joaquin-vasoboca-17032026"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500" />
+                  className="w-full bg-tone-darker/80 border border-white/5 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40" />
               </div>
               <button type="submit" disabled={!trackingCode.trim()}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-900 disabled:text-gray-500 text-white px-6 py-3 rounded-xl font-medium transition flex items-center justify-center gap-2">
+                className="bg-tone-red hover:bg-tone-red/90 disabled:bg-gray-800 disabled:text-gray-600 text-white px-6 py-3 rounded-xl font-medium transition flex items-center justify-center gap-2">
                 Rastrear <ArrowRight className="h-4 w-4" />
               </button>
             </form>
@@ -275,10 +275,7 @@ export default function HomePage() {
       {/* 4. 🏆 VIDEO 1: COPA KLING (Scroll Animation) */}
       {homeSections?.copaAnimation?.enabled !== false && (
         <ScrollAnimation 
-          totalFrames={homeSections?.copaAnimation?.totalFrames || 73}
-          nativeWidth={744}
-          nativeHeight={1232}
-          framesDir={homeSections?.copaAnimation?.framesDir || '/frames-copakling/'}
+          videoSrc="/copakling-optimized.mp4"
           title={homeSections?.copaAnimation?.title || 'Copa de la Liga'}
           subtitle={homeSections?.copaAnimation?.subtitle || 'Diseño 3D de alta calidad con detalles premium'}
           badge={homeSections?.copaAnimation?.badge || 'TROFEO PREMIUM'}
@@ -291,27 +288,25 @@ export default function HomePage() {
       <section id="categorias" className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <span className="text-blue-400 text-sm uppercase tracking-wider font-bold">Explorá</span>
+            <span className="inline-block px-4 py-1.5 rounded-full border border-tone-red/30 bg-tone-red/10 text-tone-red text-xs tracking-[0.15em] uppercase mb-4">Explorá</span>
             <h2 className="text-4xl md:text-5xl font-black text-white mt-2">Nuestras Categorías</h2>
-            <p className="text-zinc-300 mt-3 text-sm md:text-base max-w-xl mx-auto font-medium">
-              Elegí una sección para ver todos nuestros productos
-            </p>
+            <p className="text-gray-600 mt-3 text-sm max-w-xl mx-auto">Elegí una sección para ver todos nuestros productos</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <Link href="/productos" className="group text-left relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/15 rounded-2xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-500/40 transition-all shadow-lg shadow-black/40 focus:outline-none focus:ring-2 focus:ring-blue-500/60">
-              <div className="text-5xl mb-4 drop-shadow-md">🏆</div>
-              <h3 className="font-black text-white text-xl leading-tight">Productos Personalizados</h3>
-              <p className="text-sm text-zinc-200 mt-3 font-semibold leading-snug">Vasos, trofeos, llaveros y más</p>
+            <Link href="/productos" className="group text-left relative bg-tone-dark/60 border border-white/5 rounded-xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-tone-red/40 transition-all shadow-lg">
+              <div className="text-5xl mb-4">🏆</div>
+              <h3 className="font-bold text-white text-xl leading-tight">Productos Personalizados</h3>
+              <p className="text-sm text-gray-500 mt-3">Vasos, trofeos, llaveros y más</p>
             </Link>
-            <Link href="/impresoras" className="group text-left relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/15 rounded-2xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-500/40 transition-all shadow-lg shadow-black/40 focus:outline-none focus:ring-2 focus:ring-blue-500/60">
-              <div className="text-5xl mb-4 drop-shadow-md">🖨️</div>
-              <h3 className="font-black text-white text-xl leading-tight">Impresoras 3D</h3>
-              <p className="text-sm text-zinc-200 mt-3 font-semibold leading-snug">Bambu Lab y más modelos</p>
+            <Link href="/impresoras" className="group text-left relative bg-tone-dark/60 border border-white/5 rounded-xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-tone-red/40 transition-all shadow-lg">
+              <div className="text-5xl mb-4">🖨️</div>
+              <h3 className="font-bold text-white text-xl leading-tight">Impresoras 3D</h3>
+              <p className="text-sm text-gray-500 mt-3">Bambu Lab y más modelos</p>
             </Link>
-            <Link href="/filamentos" className="group text-left relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/15 rounded-2xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-500/40 transition-all shadow-lg shadow-black/40 focus:outline-none focus:ring-2 focus:ring-blue-500/60">
-              <div className="text-5xl mb-4 drop-shadow-md">🧵</div>
-              <h3 className="font-black text-white text-xl leading-tight">Filamentos</h3>
-              <p className="text-sm text-zinc-200 mt-3 font-semibold leading-snug">PLA, PETG, ABS y materiales</p>
+            <Link href="/filamentos" className="group text-left relative bg-tone-dark/60 border border-white/5 rounded-xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-tone-red/40 transition-all shadow-lg">
+              <div className="text-5xl mb-4">🧵</div>
+              <h3 className="font-bold text-white text-xl leading-tight">Filamentos</h3>
+              <p className="text-sm text-gray-500 mt-3">PLA, PETG, ABS y materiales</p>
             </Link>
           </div>
         </div>
@@ -413,7 +408,7 @@ export default function HomePage() {
         <section id="productos" className="py-16 px-4">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-10">
-              <span className="inline-block px-4 py-1.5 bg-blue-500/10 text-blue-400 text-xs font-bold rounded-full mb-4">🛒 PRODUCTOS</span>
+              <span className="inline-block px-4 py-1.5 rounded-full border border-tone-red/30 bg-tone-red/10 text-tone-red text-xs tracking-[0.15em] uppercase mb-4">Productos</span>
               <h2 className="text-3xl md:text-4xl font-bold text-white">Todos los Productos</h2>
             </div>
             
@@ -421,10 +416,10 @@ export default function HomePage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
                 <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar productos..."
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500" />
+                  className="w-full bg-tone-darker/80 border border-white/5 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40" />
               </div>
               <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
-                className="bg-gray-900 border border-gray-800 rounded-xl py-3 px-4 text-white font-medium focus:outline-none focus:border-blue-500 [&>option]:bg-gray-900 [&>option]:text-white">
+                className="bg-tone-darker/80 border border-white/5 rounded-xl py-3 px-4 text-white font-medium focus:outline-none focus:border-tone-red/40 [&>option]:bg-tone-darker [&>option]:text-white">
                 <option value="all">Todas las categorías</option>
                 {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
@@ -442,10 +437,7 @@ export default function HomePage() {
       {/* 7. 🖨️ VIDEO 2: IMPRESORAS (Scroll Animation) */}
       {homeSections?.impresoraAnimation?.enabled !== false && (
         <ScrollAnimationImpresora 
-          totalFrames={homeSections?.impresoraAnimation?.totalFrames || 192}
-          nativeWidth={1280}
-          nativeHeight={720}
-          framesDir={homeSections?.impresoraAnimation?.framesDir || '/frames-mp/'}
+          videoSrc="/mp_.mp4"
           title={homeSections?.impresoraAnimation?.title || 'Impresora 3D Bambu Lab X1C'}
           subtitle={homeSections?.impresoraAnimation?.subtitle || 'La nueva generación de precisión y velocidad'}
           badge={homeSections?.impresoraAnimation?.badge || '🖨️ PROFESIONAL'}
@@ -458,37 +450,37 @@ export default function HomePage() {
       <section id="contacto" className="py-20 px-4 bg-white/[0.02]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1.5 bg-blue-500/10 text-blue-400 text-xs font-bold rounded-full mb-4">📞 CONTACTO</span>
+            <span className="inline-block px-4 py-1.5 rounded-full border border-tone-red/30 bg-tone-red/10 text-tone-red text-xs tracking-[0.15em] uppercase mb-4">Contacto</span>
             <h2 className="text-4xl md:text-5xl font-black text-white mb-3">Contacto</h2>
-            <p className="text-gray-500">Respondemos en el día</p>
+            <p className="text-gray-600">Respondemos en el día</p>
           </div>
           <div className="flex flex-col gap-6">
             <div className="grid md:grid-cols-3 gap-6">
-              <a href={`https://wa.me/${homeSections?.contactInfo?.whatsapp || WHATSAPP_PHONE}`} target="_blank" className="contact-card bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-green-600 hover:scale-105 transition-all group" style={{animationDelay: '0.1s'}}>
-                <div className="w-14 h-14 bg-green-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-500/20 group-hover:scale-110 transition-all">
-                  <Phone className="w-7 h-7 text-green-500" />
+              <a href={`https://wa.me/${homeSections?.contactInfo?.whatsapp || WHATSAPP_PHONE}`} target="_blank" className="contact-card bg-tone-dark/60 border border-white/5 rounded-xl p-8 text-center hover:border-tone-red/30 hover:scale-105 transition-all group" style={{animationDelay: '0.1s'}}>
+                <div className="w-14 h-14 bg-tone-red/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-tone-red/20 group-hover:scale-110 transition-all">
+                  <Phone className="w-7 h-7 text-tone-red" />
                 </div>
                 <h3 className="font-bold text-white text-lg mb-2">WhatsApp</h3>
                 <p className="text-gray-500">{homeSections?.contactInfo?.whatsappDisplay || WHATSAPP_DISPLAY}</p>
               </a>
-              <a href={homeSections?.contactInfo?.instagramUrl || 'https://instagram.com/global3dcorrientes'} target="_blank" className="contact-card bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-pink-600 hover:scale-105 transition-all group" style={{animationDelay: '0.2s'}}>
-                <div className="w-14 h-14 bg-pink-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-pink-500/20 group-hover:scale-110 transition-all">
-                  <Instagram className="w-7 h-7 text-pink-500" />
+              <a href={homeSections?.contactInfo?.instagramUrl || 'https://instagram.com/global3dcorrientes'} target="_blank" className="contact-card bg-tone-dark/60 border border-white/5 rounded-xl p-8 text-center hover:border-tone-amber/30 hover:scale-105 transition-all group" style={{animationDelay: '0.2s'}}>
+                <div className="w-14 h-14 bg-tone-amber/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-tone-amber/20 group-hover:scale-110 transition-all">
+                  <Instagram className="w-7 h-7 text-tone-amber" />
                 </div>
                 <h3 className="font-bold text-white text-lg mb-2">Instagram</h3>
                 <p className="text-gray-500">@{homeSections?.contactInfo?.instagram || 'global3dcorrientes'}</p>
               </a>
-              <div className="contact-card bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center" style={{animationDelay: '0.3s'}}>
-                <div className="w-14 h-14 bg-blue-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <MapPin className="w-7 h-7 text-blue-500" />
+              <div className="contact-card bg-tone-dark/60 border border-white/5 rounded-xl p-8 text-center" style={{animationDelay: '0.3s'}}>
+                <div className="w-14 h-14 bg-tone-red/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <MapPin className="w-7 h-7 text-tone-red" />
                 </div>
                 <h3 className="font-bold text-white text-lg mb-2">Ubicación</h3>
                 <p className="text-gray-500">{homeSections?.contactInfo?.location || 'Corrientes, Argentina'}</p>
               </div>
             </div>
-            <a href={`mailto:${homeSections?.contactInfo?.email || 'contacto@global3d.com'}`} className="contact-card bg-gray-900 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 text-center hover:border-blue-600 hover:scale-105 transition-all group max-w-md mx-auto w-full" style={{animationDelay: '0.4s'}}>
-              <div className="w-14 h-14 bg-blue-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-500/20 group-hover:scale-110 transition-all">
-                <Mail className="w-7 h-7 text-blue-500" />
+            <a href={`mailto:${homeSections?.contactInfo?.email || 'contacto@global3d.com'}`} className="contact-card bg-tone-dark/60 border border-white/5 rounded-xl p-8 text-center hover:border-tone-amber/30 hover:scale-105 transition-all group max-w-md mx-auto w-full" style={{animationDelay: '0.4s'}}>
+              <div className="w-14 h-14 bg-tone-amber/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-tone-amber/20 group-hover:scale-110 transition-all">
+                <Mail className="w-7 h-7 text-tone-amber" />
               </div>
               <h3 className="font-bold text-white text-lg mb-2">Email</h3>
               <p className="text-gray-500">{homeSections?.contactInfo?.email || 'contacto@global3d.com'}</p>
@@ -498,21 +490,21 @@ export default function HomePage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="py-10 px-4 border-t border-white/10">
+      <footer className="py-10 px-4 border-t border-white/5">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-tone-red to-tone-amber rounded-lg flex items-center justify-center">
               <Box className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent text-lg">{homeSections?.heroTitle || "Global 3D"}</span>
+            <span className="font-bold bg-gradient-to-r from-tone-red to-tone-amber bg-clip-text text-transparent text-lg">{homeSections?.heroTitle || "Global 3D"}</span>
           </div>
-          <p className="text-gray-600 text-sm">© 2024 Global 3D Corrientes. Todos los derechos reservados.</p>
+          <p className="text-gray-700 text-sm">© 2024 Global 3D Corrientes. Todos los derechos reservados.</p>
         </div>
       </footer>
 
       {/* WhatsApp FAB */}
       <a href={`https://wa.me/${WHATSAPP_PHONE}`} target="_blank"
-        className="fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 p-4 rounded-full shadow-lg shadow-green-600/30 z-50 transition hover:scale-110" title="Chatear por WhatsApp">
+        className="fixed bottom-6 right-6 bg-tone-red hover:bg-tone-red/90 p-4 rounded-full shadow-lg shadow-tone-red/30 z-50 transition hover:scale-110" title="Chatear por WhatsApp">
         <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.964-.94 1.162-.173.199-.347.223-.644.075-.197-.103-1.379-1.437-2.612-3.078-.297-.199-.496-.297-.673.15-.176.297-.697.872-1.075.994-.379.123-.646.148-1.143.049-.496-.099-2.425-1.588-3.868-3.012-.298-.298-.497-.447-.696-.447-.02 0-.04 0-.06 0-.2 0-.485.099-.698.298l-1.095 2.697c-.099.297-.022.595.099.793.149.198.397.396.793.495.396.099.793.099 1.141.099.348 0 .695-.099 1.041-.298.349-.198.768-.595.924-.994.099-.299.099-.596.049-.793-.099-.198-.448-1.591-.616-2.137-.149-.546-.298-1.193-.546-1.193z"/>
         </svg>

@@ -43,8 +43,6 @@ interface AnimationData {
   badge: string;
   price: string;
   accentColor: string;
-  framesDir: string;
-  totalFrames: number;
 }
 
 interface SectionData {
@@ -186,13 +184,10 @@ export default function ImpresorasPage() {
       {sectionData?.animation?.enabled && (
         <div className="pt-16">
           <ScrollAnimationImpresora
-            totalFrames={sectionData.animation.totalFrames || 192}
-            nativeWidth={1280}
-            nativeHeight={720}
-            framesDir={sectionData.animation.framesDir || '/frames-mp/'}
+            videoSrc="/mp_.mp4"
             title={sectionData.animation.title || 'Impresora 3D Bambu Lab X1C'}
             subtitle={sectionData.animation.subtitle || 'La nueva generación de precisión y velocidad'}
-            badge={sectionData.animation.badge || '🖨️ PROFESIONAL'}
+            badge={sectionData.animation.badge || 'PROFESIONAL'}
             price={sectionData.animation.price || '$469.000'}
             accentColor={sectionData.animation.accentColor || '#3b82f6'}
           />

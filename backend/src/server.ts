@@ -1,5 +1,4 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
@@ -8,6 +7,7 @@ import path from 'path';
 import { appConfig } from './config';
 
 import logger from './config/logger';
+import { connectDB } from './config/db';
 import { errorHandler } from './middleware/errorHandler';
 import limiter from './middlewares/rateLimiter';
 import { swaggerSpec } from './config/swagger';
@@ -63,13 +63,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
   }
 }));
 
-mongoose
-    .connect(appConfig.mongoUri)
-    .then(() => logger.info('✅ Base de datos conectada'))
-    .catch((err) => {
-        logger.error('❌ Error MongoDB:', err);
-        process.exit(1);
-    });
+connectDB().then(() => logger.info('✅ Base de datos conectada'));
 
 app.use('/api/tasks', taskRoutes);
 app.use('/api/auth', authRoutes);

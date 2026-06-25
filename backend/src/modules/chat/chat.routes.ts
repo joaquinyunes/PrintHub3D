@@ -130,7 +130,7 @@ router.post('/send', protect, withTenant, adminOnly, async (req, res) => {
 
     } catch (error: any) {
         console.error(error);
-        res.status(500).json({ message: 'Error enviando mensaje', error: error.message });
+        res.status(500).json({ message: 'Error enviando mensaje' });
     }
 });
 

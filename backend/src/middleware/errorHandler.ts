@@ -32,7 +32,6 @@ export const errorHandler = (err: CustomError | ZodError, req: Request, res: Res
     stack: err.stack,
     path: req.path,
     method: req.method,
-    body: req.body,
   });
 
   res.status(statusCode).json({

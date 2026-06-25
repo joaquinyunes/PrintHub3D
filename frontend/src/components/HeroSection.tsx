@@ -87,17 +87,17 @@ export default function HeroSection({
 
   return (
     <header className="relative pt-28 pb-24 px-4 w-full overflow-hidden selection:bg-blue-500/30">
-      <div className="absolute inset-0 bg-gradient-to-b from-blue-950/20 via-purple-900/10 to-black pointer-events-none -z-20" />
+      <div className="absolute inset-0 bg-gradient-to-b from-tone-red/5 via-tone-amber/5 to-tone-darker pointer-events-none -z-20" />
       
       <motion.div 
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }} 
+        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }} 
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-20 left-1/4 w-80 h-80 bg-blue-600/20 rounded-full blur-[100px] -z-10 pointer-events-none" 
+        className="absolute top-20 left-1/4 w-80 h-80 bg-tone-red/10 rounded-full blur-[100px] -z-10 pointer-events-none" 
       />
       <motion.div 
         animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }} 
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute top-40 right-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] -z-10 pointer-events-none" 
+        className="absolute top-40 right-1/4 w-96 h-96 bg-tone-amber/10 rounded-full blur-[120px] -z-10 pointer-events-none" 
       />
 
       <div className="relative z-10 max-w-5xl mx-auto text-center">
@@ -108,25 +108,25 @@ export default function HeroSection({
           transition={{ duration: 0.6, type: "spring", bounce: 0.5 }}
           className="mb-8"
         >
-          <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white/5 border border-white/10 rounded-full backdrop-blur-xl hover:bg-white/10 transition-all cursor-default shadow-[0_0_20px_rgba(234,179,8,0.15)]">
-            <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
+          <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white/5 border border-white/5 rounded-full backdrop-blur-xl hover:bg-white/10 transition-all cursor-default">
+            <Sparkles className="w-5 h-5 text-tone-amber animate-pulse" />
             <span className="text-sm font-semibold text-gray-200 tracking-wide">{badge}</span>
           </div>
         </motion.div>
 
         <div className="relative inline-block mb-6">
-          <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/30 via-purple-500/30 to-cyan-500/30 blur-2xl rounded-full" />
+          <div className="absolute -inset-4 bg-gradient-to-r from-tone-red/20 via-tone-amber/20 to-tone-pink/20 blur-2xl rounded-full" />
           
           <AnimatedLetters 
             text={title} 
-            className="relative text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-400 to-cyan-300 drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" 
+            className="relative text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-tone-red via-tone-amber to-tone-pink drop-shadow-[0_0_15px_rgba(250,130,130,0.3)]" 
           />
           
           <motion.div 
             initial={{ scaleX: 0, opacity: 0 }}
             animate={{ scaleX: 1, opacity: 1 }}
             transition={{ duration: 1, delay: 0.8, ease: "easeOut" }}
-            className="mt-4 h-1.5 w-48 md:w-64 mx-auto bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.6)]" 
+            className="mt-4 h-1.5 w-48 md:w-64 mx-auto bg-gradient-to-r from-tone-red via-tone-amber to-tone-pink rounded-full shadow-[0_0_15px_rgba(250,130,130,0.4)]" 
           />
         </div>
 
@@ -138,7 +138,7 @@ export default function HeroSection({
           <div className="mt-4">
             <AnimatedLetters 
               text={description}
-              className="text-blue-200/80 text-lg md:text-xl font-medium tracking-wide"
+              className="text-gray-500 text-lg md:text-xl font-medium tracking-wide"
             />
           </div>
         </div>
@@ -150,8 +150,8 @@ export default function HeroSection({
               initial={{ opacity: 0, y: 30, rotateX: -20 }}
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
               transition={{ duration: 0.6, delay: 1.2 + i * 0.1, type: "spring" }}
-              whileHover={{ y: -8, scale: 1.05, rotate: [-1, 1] }}
-              className="group flex flex-col items-center gap-3 px-5 py-6 bg-zinc-900/50 border border-white/5 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-white/20 hover:bg-zinc-800/50 shadow-lg hover:shadow-[0_0_25px_rgba(59,130,246,0.15)]"
+              whileHover={{ y: -8, scale: 1.05 }}
+              className="group flex flex-col items-center gap-3 px-5 py-6 bg-tone-dark/50 border border-white/5 rounded-xl backdrop-blur-md transition-all duration-300 hover:border-white/10 hover:bg-tone-dark/80 shadow-lg"
             >
               <motion.div 
                 whileHover={{ rotate: 360 }}
@@ -169,10 +169,10 @@ export default function HeroSection({
           initial={{ opacity: 0, scale: 0.9, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 1.6, type: "spring" }}
-          className="flex flex-col md:flex-row items-center justify-center gap-10 mt-16 p-8 bg-zinc-900/40 border border-white/10 rounded-3xl backdrop-blur-xl shadow-2xl"
+          className="flex flex-col md:flex-row items-center justify-center gap-10 mt-16 p-8 bg-tone-dark/40 border border-white/5 rounded-xl backdrop-blur-xl shadow-2xl"
         >
           <div className="text-center group cursor-default">
-            <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-md">{stats.reviews}</span>
+              <span className="text-5xl font-black text-tone-amber">{stats.reviews}</span>
             <div className="flex justify-center mt-2 gap-1 group-hover:scale-110 transition-transform">
               {[1,2,3,4,5].map((s, i) => (
                 <motion.div 
@@ -181,7 +181,7 @@ export default function HeroSection({
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 1.8 + i * 0.1 }}
                 >
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]" />
+                  <Star className="w-5 h-5 text-tone-amber fill-tone-amber" />
                 </motion.div>
               ))}
             </div>
@@ -217,9 +217,9 @@ export default function HeroSection({
         >
           <a 
             href="#productos" 
-            className="group relative w-full sm:w-auto px-8 py-4 rounded-2xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-3 overflow-hidden bg-white/5 border border-white/10 shadow-lg hover:shadow-[0_0_25px_rgba(59,130,246,0.4)]"
+            className="group relative w-full sm:w-auto px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-3 overflow-hidden bg-white/5 border border-white/5 shadow-lg"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-r from-tone-red to-tone-amber opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative z-10 flex items-center gap-3 text-white">
               <Package className="w-6 h-6 group-hover:animate-bounce" />
               <span className="text-lg tracking-wide">Ver Catálogo</span>
@@ -230,7 +230,7 @@ export default function HeroSection({
           <a 
             href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent("Hola! Quiero info sobre impresiones 3D")}`} 
             target="_blank"
-            className="group relative w-full sm:w-auto px-8 py-4 rounded-2xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-3 overflow-hidden bg-gradient-to-r from-green-500 to-emerald-600 shadow-[0_0_20px_rgba(34,197,94,0.4)] hover:shadow-[0_0_35px_rgba(34,197,94,0.6)]"
+            className="group relative w-full sm:w-auto px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-3 overflow-hidden bg-gradient-to-r from-tone-red to-tone-pink shadow-[0_0_20px_rgba(250,130,130,0.3)] hover:shadow-[0_0_35px_rgba(250,130,130,0.5)]"
           >
             <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative z-10 flex items-center gap-3 text-white">
@@ -252,7 +252,7 @@ export default function HeroSection({
           transition={{ duration: 0.5, delay: 2.2, type: "spring" }}
           className="mt-14 flex justify-center"
         >
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-zinc-900/50 border border-white/5 rounded-full backdrop-blur-md hover:bg-zinc-800/50 hover:border-white/20 transition-all cursor-default">
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-tone-dark/50 border border-white/5 rounded-full backdrop-blur-md transition-all cursor-default">
             <span className="text-xl">📍</span>
             <span className="text-sm font-semibold text-gray-300 tracking-wider">Corrientes, Argentina</span>
             <span className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]" />

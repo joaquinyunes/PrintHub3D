@@ -19,7 +19,7 @@ services:
       - mongodb
     environment:
       - MONGO_URI=mongodb://mongodb:27017/global3d
-      - JWT_SECRET=super_secret_jwt_key_for_prod
+      - JWT_SECRET=${JWT_SECRET}
       - NODE_ENV=production
       - CLIENT_URL=http://localhost:3000
     volumes:
