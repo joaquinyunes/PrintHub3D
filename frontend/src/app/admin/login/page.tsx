@@ -70,61 +70,61 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black relative overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center bg-tone-darker font-mono relative overflow-hidden">
       {/* Fondos decorativos */}
       <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]" />
-      <div className="absolute h-96 w-96 bg-blue-500/10 rounded-full blur-[128px] -top-20 -left-20" />
-      <div className="absolute h-96 w-96 bg-purple-500/10 rounded-full blur-[128px] -bottom-20 -right-20" />
+      <div className="absolute h-96 w-96 bg-tone-red/10 rounded-full blur-[128px] -top-20 -left-20" />
+      <div className="absolute h-96 w-96 bg-tone-amber/10 rounded-full blur-[128px] -bottom-20 -right-20" />
 
       {/* Card */}
-      <div className="relative z-10 w-full max-w-md p-8 bg-black/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
+      <div className="relative z-10 w-full max-w-md p-8 bg-tone-dark/60 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl">
         <div className="flex flex-col items-center mb-8">
-          <div className="h-12 w-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-4">
+          <div className="h-12 w-12 bg-white/5 border border-white/5 rounded-xl flex items-center justify-center mb-4">
             <Box className="text-white h-6 w-6" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">
             Acceso Privado
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-gray-600 text-sm">
             Global 3D Corrientes OS
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-200 text-sm text-center">
+          <div className="mb-4 p-3 rounded-lg bg-tone-red/10 border border-tone-red/20 text-tone-red text-sm text-center">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
-            <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
+            <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-600" />
             <input
               name="email"
               type="email"
               placeholder="admin@global3d.com"
               required
               onChange={handleChange}
-              className="w-full bg-black/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/30"
+              className="w-full bg-tone-darker/80 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-white placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40 transition-all"
             />
           </div>
 
           <div className="relative">
-            <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
+            <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-600" />
             <input
               name="password"
               type="password"
               placeholder="Contraseña Maestra"
               required
               onChange={handleChange}
-              className="w-full bg-black/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/30"
+              className="w-full bg-tone-darker/80 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-white placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40 transition-all"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-gray-200 transition flex items-center justify-center gap-2"
+            className="w-full bg-tone-red hover:bg-tone-red/90 text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2"
           >
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -138,10 +138,10 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center space-y-2">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-gray-600">
             Acceso restringido únicamente a personal autorizado.
           </p>
-          <a href="/register" className="text-xs text-blue-400 hover:text-blue-300">
+          <a href="/register" className="text-xs text-tone-amber hover:text-tone-amber/80">
             ¿Eres cliente? Crea tu cuenta aquí
           </a>
         </div>

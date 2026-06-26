@@ -46,12 +46,11 @@ interface CollectionPageProps {
   searchOptions?: SearchOptions;
 }
 
-function Badge({ children, color = "blue" }: { children: React.ReactNode; color?: "blue" | "green" | "amber" | "red" }) {
+function Badge({ children, color = "red" }: { children: React.ReactNode; color?: "red" | "amber" | "green" }) {
   const colors = {
-    blue: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    red: "bg-tone-red/10 text-tone-red border-tone-red/20",
+    amber: "bg-tone-amber/10 text-tone-amber border-tone-amber/20",
     green: "bg-green-500/10 text-green-400 border-green-500/20",
-    amber: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    red: "bg-red-500/10 text-red-400 border-red-500/20",
   };
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${colors[color]}`}>
@@ -76,7 +75,7 @@ function ProductCard({ product, category, onSelect }: { product: ProductItem; ca
       onClick={() => onSelect(product)}
     >
       <div 
-        className="relative overflow-hidden rounded-2xl bg-gray-900 aspect-[4/5] mb-3"
+        className="relative overflow-hidden rounded-2xl bg-tone-dark/60 aspect-[4/5] mb-3"
         style={{ boxShadow: hovered ? "0 20px 60px rgba(0,0,0,0.5)" : "0 4px 20px rgba(0,0,0,0.2)", transition: "box-shadow 0.4s ease" }}
       >
         {product.imageUrl ? (
@@ -115,7 +114,7 @@ function ProductCard({ product, category, onSelect }: { product: ProductItem; ca
             href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola! Quiero info sobre: ${product.name}`}
             target="_blank"
             onClick={(e) => e.stopPropagation()}
-            className="block w-full py-2.5 bg-white text-black text-sm font-bold rounded-xl text-center hover:bg-gray-100 transition"
+            className="block w-full py-2.5 bg-tone-red text-white text-sm font-bold rounded-xl text-center hover:bg-tone-red/90 transition"
           >
             Consultar por WhatsApp
           </a>
@@ -123,12 +122,12 @@ function ProductCard({ product, category, onSelect }: { product: ProductItem; ca
 
         {!product.enabled && (
           <div className="absolute top-3 left-3">
-            <span className="bg-gray-900/90 text-gray-300 text-xs px-2.5 py-1 rounded-full font-medium">Oculto</span>
+            <span className="bg-tone-dark/90 text-gray-400 text-xs px-2.5 py-1 rounded-full font-medium">Oculto</span>
           </div>
         )}
         {product.stock === 0 && (
           <div className="absolute top-3 left-3">
-            <span className="bg-red-500/90 text-white text-xs px-2.5 py-1 rounded-full font-medium">Sin stock</span>
+            <span className="bg-tone-red/90 text-white text-xs px-2.5 py-1 rounded-full font-medium">Sin stock</span>
           </div>
         )}
       </div>
@@ -139,7 +138,7 @@ function ProductCard({ product, category, onSelect }: { product: ProductItem; ca
             {category && (
               <p className="text-gray-500 text-xs mb-0.5">{category.icon} {category.name}</p>
             )}
-            <h3 className="font-bold text-white text-sm leading-snug group-hover:text-blue-300 transition-colors duration-300">{product.name}</h3>
+            <h3 className="font-bold text-white text-sm leading-snug group-hover:text-tone-red transition-colors duration-300">{product.name}</h3>
           </div>
           <span className="text-white font-black text-sm whitespace-nowrap">${product.price?.toLocaleString()}</span>
         </div>
@@ -165,7 +164,7 @@ function ProductModal({ product, category, onClose }: { product: ProductItem; ca
         animate={{ y: 0, opacity: 1 }} 
         exit={{ y: 60, opacity: 0 }}
         transition={{ type: "spring", damping: 25 }}
-        className="bg-gray-900 border border-gray-800 rounded-3xl max-w-lg w-full overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="bg-tone-dark border border-white/5 rounded-3xl max-w-lg w-full overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative aspect-[4/3] bg-gray-800">
@@ -189,14 +188,14 @@ function ProductModal({ product, category, onClose }: { product: ProductItem; ca
           <h2 className="text-2xl font-black text-white mt-3 mb-2">{product.name}</h2>
           {product.description && <p className="text-gray-400 mb-4">{product.description}</p>}
           {product.effects && (
-            <div className="mb-3 p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl">
-              <span className="text-purple-400 text-sm font-bold">✨ Efectos: </span>
+            <div className="mb-3 p-3 bg-tone-amber/10 border border-tone-amber/20 rounded-xl">
+              <span className="text-tone-amber text-sm font-bold">✨ Efectos: </span>
               <span className="text-gray-300 text-sm">{product.effects}</span>
             </div>
           )}
           {product.animations && (
-            <div className="mb-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-              <span className="text-blue-400 text-sm font-bold">🎬 Animaciones: </span>
+            <div className="mb-3 p-3 bg-tone-red/10 border border-tone-red/20 rounded-xl">
+              <span className="text-tone-red text-sm font-bold">🎬 Animaciones: </span>
               <span className="text-gray-300 text-sm">{product.animations}</span>
             </div>
           )}
@@ -208,7 +207,7 @@ function ProductModal({ product, category, onClose }: { product: ProductItem; ca
           <a 
             href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola! Me interesa: ${product.name} ($${product.price?.toLocaleString()})`}
             target="_blank"
-            className="block w-full py-4 bg-green-600 hover:bg-green-500 rounded-2xl font-black text-center text-lg transition"
+            className="block w-full py-4 bg-tone-red hover:bg-tone-red/90 rounded-2xl font-black text-center text-lg transition"
           >
             💬 Consultar por WhatsApp
           </a>
@@ -266,7 +265,7 @@ export default function CollectionPage({ title, subtitle, badge, categories, pro
   const getCategoryById = (id?: string) => id ? categories.find(c => c.id === id) : undefined;
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-tone-darker text-white font-mono">
       {/* HERO SECTION CON IMAGEN DE FONDO Y PARALLAX */}
       <div 
         ref={heroRef}
@@ -289,7 +288,7 @@ export default function CollectionPage({ title, subtitle, badge, categories, pro
           <div 
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(135deg, ${accentColor}20 0%, #1a1a2e 50%, #16213e 100%)`
+              background: `linear-gradient(135deg, #7f1d1d40 0%, #1a1a2e 50%, #0a0a0a 100%)`
             }}
           />
         )}
@@ -305,10 +304,7 @@ export default function CollectionPage({ title, subtitle, badge, categories, pro
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <span 
-              className="inline-block px-4 py-1.5 text-xs font-bold rounded-full border mb-5"
-              style={{ backgroundColor: `${accentColor}20`, color: accentColor, borderColor: `${accentColor}40` }}
-            >
+            <span className="inline-block px-4 py-1.5 rounded-full border border-tone-red/30 bg-tone-red/10 text-tone-red text-xs tracking-[0.15em] uppercase mb-5">
               {badge}
             </span>
             <h1 className="text-5xl md:text-7xl font-black text-white mb-5 leading-[0.9] tracking-tight">
@@ -347,13 +343,13 @@ export default function CollectionPage({ title, subtitle, badge, categories, pro
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={searchOptions?.placeholder || "Buscar..."}
-                className="w-full bg-gray-900 border border-gray-800 rounded-2xl py-3.5 pl-11 pr-4 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-blue-500 transition"
+                className="w-full bg-tone-darker/80 border border-white/5 rounded-2xl py-3.5 pl-11 pr-4 text-white text-sm placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40 transition"
               />
             </div>
             <select 
               value={sort} 
               onChange={(e) => setSort(e.target.value)}
-              className="bg-gray-900 border border-gray-800 rounded-2xl py-3.5 px-4 text-white text-sm focus:outline-none focus:border-blue-500 transition [&>option]:bg-gray-900 appearance-none cursor-pointer"
+              className="bg-tone-darker/80 border border-white/5 rounded-2xl py-3.5 px-4 text-white text-sm focus:outline-none focus:border-tone-red/40 transition [&>option]:bg-tone-darker appearance-none cursor-pointer"
             >
               {sortOpts.includes('name_asc') && <option value="name_asc">Nombre A–Z</option>}
               {sortOpts.includes('name_desc') && <option value="name_desc">Nombre Z–A</option>}
@@ -369,7 +365,7 @@ export default function CollectionPage({ title, subtitle, badge, categories, pro
             <div className="mt-4 flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
               <button 
                 onClick={() => setSelectedCat("all")}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${selectedCat === "all" ? "bg-white text-black" : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"}`}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${selectedCat === "all" ? "bg-tone-red text-white" : "bg-white/5 text-gray-400 hover:bg-tone-red/10 hover:text-tone-red"}`}
               >
                 Todos
               </button>
@@ -377,7 +373,7 @@ export default function CollectionPage({ title, subtitle, badge, categories, pro
                 <button 
                   key={c.id} 
                   onClick={() => setSelectedCat(c.id)}
-                  className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${selectedCat === c.id ? "bg-white text-black" : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"}`}
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${selectedCat === c.id ? "bg-tone-red text-white" : "bg-white/5 text-gray-400 hover:bg-tone-red/10 hover:text-tone-red"}`}
                 >
                   <span>{c.icon}</span> {c.name}
                 </button>
@@ -396,7 +392,7 @@ export default function CollectionPage({ title, subtitle, badge, categories, pro
             <p className="text-gray-500">Probá con otra búsqueda o categoría.</p>
             <button 
               onClick={() => { setSearch(""); setSelectedCat("all"); }} 
-              className="mt-6 px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl font-semibold text-sm transition"
+              className="mt-6 px-6 py-3 bg-tone-dark hover:bg-tone-darker rounded-xl font-semibold text-sm transition"
             >
               Ver todos los productos
             </button>
@@ -418,12 +414,12 @@ export default function CollectionPage({ title, subtitle, badge, categories, pro
       </main>
 
       {/* FOOTER CTA */}
-      <section className="border-t border-gray-900 py-16 px-6 text-center">
+      <section className="border-t border-white/5 py-16 px-6 text-center">
         <p className="text-gray-500 text-sm mb-3">¿No encontrás lo que buscás?</p>
         <a 
           href={`https://wa.me/${WHATSAPP_PHONE}?text=Hola! Quiero información sobre productos`} 
           target="_blank"
-          className="inline-flex items-center gap-2 px-8 py-4 bg-green-600 hover:bg-green-500 rounded-2xl font-black text-lg transition"
+          className="inline-flex items-center gap-2 px-8 py-4 bg-tone-red hover:bg-tone-red/90 rounded-2xl font-black text-lg transition"
         >
           💬 Consultanos por WhatsApp
         </a>

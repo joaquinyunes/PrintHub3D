@@ -70,14 +70,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // --- 2. RENDERIZADO ---
   if (pathname === "/admin/login") {
-    return <main className="min-h-screen bg-black">{children}</main>;
+    return <main className="min-h-screen bg-tone-darker">{children}</main>;
   }
 
   if (!isAuthorized) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-black text-white">
+      <div className="flex h-screen w-full items-center justify-center bg-tone-darker text-white">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-tone-red border-t-transparent" />
           <p className="text-sm text-gray-400 animate-pulse">Verificando credenciales...</p>
         </div>
       </div>
@@ -86,11 +86,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // --- 3. PANEL DE ADMINISTRACIÓN ---
   return (
-    <div className="flex min-h-screen bg-[#0a0a0a] text-white font-sans">
+    <div className="flex min-h-screen bg-tone-darker text-white font-mono">
       
       {/* SIDEBAR */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#111] border-r border-white/10 transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-tone-dark border-r border-white/10 transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:relative lg:translate-x-0 flex flex-col`}
       >
@@ -113,7 +113,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="text-base font-black tracking-tight text-white leading-tight">
                 GLOBAL 3D
               </span>
-              <span className="text-[10px] font-bold tracking-widest text-blue-400 uppercase">
+              <span className="text-[10px] font-bold tracking-widest text-tone-red uppercase">
                 Corrientes
               </span>
             </div>
@@ -190,11 +190,11 @@ function NavItem({ href, icon, label, active }: { href: string; icon: React.Reac
       href={href}
       className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
         active
-          ? "bg-gradient-to-r from-blue-600/20 to-blue-600/10 text-blue-400 shadow-sm border border-blue-500/10"
+          ? "bg-gradient-to-r from-tone-red/20 to-tone-red/10 text-tone-red shadow-sm border border-tone-red/10"
           : "text-gray-400 hover:bg-white/5 hover:text-white"
       }`}
     >
-      <div className={`${active ? "text-blue-400" : "text-gray-500 group-hover:text-white transition-colors"}`}>
+      <div className={`${active ? "text-tone-red" : "text-gray-500 group-hover:text-white transition-colors"}`}>
         {icon}
       </div>
       <span>{label}</span>
