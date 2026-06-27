@@ -17,7 +17,10 @@ import {
   BarChart3,
   DollarSign,
   Home,
-  Store
+  Store,
+  Spool,
+  ClipboardList,
+  Wallet
 } from "lucide-react";
 
 interface StoredUser {
@@ -132,7 +135,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavItem href="/admin/products" icon={<Package size={20} />} label="Inventario" active={pathname.includes("/products")} />
           <NavItem href="/admin/orders" icon={<ShoppingCart size={20} />} label="Pedidos" active={pathname.includes("/orders")} />
           <NavItem href="/admin/production" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/production")} />
-          <NavItem href="/admin/expenses" icon={<DollarSign size={20} />} label="Gastos" active={pathname.includes("/expenses")} />
+          <NavItem href="/admin/pedidos" icon={<ClipboardList size={20} />} label="Pedidos" active={pathname.includes("/pedidos")} />
+          <NavItem href="/admin/ventas" icon={<DollarSign size={20} />} label="Ventas" active={pathname.includes("/ventas")} />
+          <NavItem href="/admin/filamento" icon={<Spool size={20} />} label="Filamento" active={pathname.includes("/filamento")} />
+          <NavItem href="/admin/gastos" icon={<Wallet size={20} />} label="Gastos" active={pathname.includes("/gastos")} />
+          <NavItem href="/admin/expenses" icon={<BarChart3 size={20} />} label="Gastos (v2)" active={pathname.includes("/expenses")} />
           <NavItem href="/admin/analytics" icon={<BarChart3 size={20} />} label="Reportes" active={pathname.includes("/analytics")} />
           
           <div className="my-4 h-px bg-white/5 mx-2" />

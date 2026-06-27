@@ -9,9 +9,11 @@ import {
   X, Boxes, Bot,
   ListTodo, CheckSquare, Square, Trash2,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  ShoppingCart, TrendingUp, Wallet
 } from "lucide-react";
 import { apiUrl } from "@/lib/api";
+import { getKPIs } from "@/lib/dataService";
 
 // --- COMPONENTE: TARJETA KPI ---
 function StatCard({ title, value, subtext, icon: Icon, color, trend }: any) {
@@ -135,6 +137,12 @@ export default function DashboardPage() {
   const [isFilamentModalOpen, setIsFilamentModalOpen] = useState(false);
   const [bulkText, setBulkText] = useState("");
   const [parsedItems, setParsedItems] = useState<{name: string, quantity: number}[]>([]); 
+
+  const [localKPIs, setLocalKPIs] = useState({ pedidosTotal: 0, pedidosPendientes: 0, ventasTotal: 0, ventasMonto: 0, gastosMonto: 0, filamentosStock: 0 });
+
+  useEffect(() => {
+    try { setLocalKPIs(getKPIs()); } catch {}
+  }, []);
 
   const fetchData = async () => {
       try {
@@ -283,6 +291,34 @@ export default function DashboardPage() {
             <StatCard title="En Cola" value={stats.pending} subtext="Esperando Impresión" icon={Clock} color={{ text: 'text-orange-400', bg: 'bg-orange-500' }} />
             <StatCard title="Produciendo" value={stats.printing} subtext="En Máquinas Ahora" icon={Activity} color={{ text: 'text-blue-400', bg: 'bg-blue-500' }} />
             <StatCard title="Listos" value={stats.ready} subtext="Para Entregar" icon={Package} color={{ text: 'text-purple-400', bg: 'bg-purple-500' }} />
+        </div>
+
+        {/* 1b. Local KPIs */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="bg-[#0f0f0f] border border-white/5 p-4 rounded-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-tone-red mb-1">Pedidos Totales</p>
+            <p className="text-2xl font-black text-white">{localKPIs.pedidosTotal}</p>
+          </div>
+          <div className="bg-[#0f0f0f] border border-white/5 p-4 rounded-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-tone-amber mb-1">Pendientes</p>
+            <p className="text-2xl font-black text-white">{localKPIs.pedidosPendientes}</p>
+          </div>
+          <div className="bg-[#0f0f0f] border border-white/5 p-4 rounded-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-green-400 mb-1">Ventas</p>
+            <p className="text-2xl font-black text-white">{localKPIs.ventasTotal}</p>
+          </div>
+          <div className="bg-[#0f0f0f] border border-white/5 p-4 rounded-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-tone-red mb-1">Facturado</p>
+            <p className="text-2xl font-black text-white">${localKPIs.ventasMonto.toLocaleString()}</p>
+          </div>
+          <div className="bg-[#0f0f0f] border border-white/5 p-4 rounded-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-tone-amber mb-1">Gastos Mes</p>
+            <p className="text-2xl font-black text-white">${localKPIs.gastosMonto.toLocaleString()}</p>
+          </div>
+          <div className="bg-[#0f0f0f] border border-white/5 p-4 rounded-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-tone-red mb-1">Filamento kg</p>
+            <p className="text-2xl font-black text-white">{localKPIs.filamentosStock}</p>
+          </div>
         </div>
 
         {/* 2. CENTRAL */}
