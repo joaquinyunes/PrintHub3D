@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DollarSign, Search, Plus, X, CheckCircle } from "lucide-react";
+import { DollarSign, Search, Plus, X, CheckCircle, Download } from "lucide-react";
 import { getVentas, addVenta, Venta } from "@/lib/dataService";
+import { exportToExcel } from "@/lib/excelService";
 
 export default function AdminVentas() {
   const [ventas, setVentas] = useState<Venta[]>([]);
@@ -62,13 +63,15 @@ export default function AdminVentas() {
             <p className="text-xs text-gray-600">${totalMonto.toLocaleString()} total · {filtered.length} registros</p>
           </div>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-tone-red hover:bg-tone-red/90 text-white text-sm font-bold rounded-xl transition"
-        >
-          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          {showForm ? "Cerrar" : "Nueva Venta"}
-        </button>
+        <div className="flex gap-2">
+          <button onClick={exportToExcel} className="flex items-center gap-2 px-4 py-2.5 bg-tone-red hover:bg-tone-red/90 text-white text-sm font-bold rounded-xl transition">
+            <Download className="w-4 h-4" /> Exportar
+          </button>
+          <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-4 py-2.5 bg-tone-red hover:bg-tone-red/90 text-white text-sm font-bold rounded-xl transition">
+            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            {showForm ? "Cerrar" : "Nueva Venta"}
+          </button>
+        </div>
       </div>
 
       {/* Add form */}

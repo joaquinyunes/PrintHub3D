@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Spool, Search } from "lucide-react";
+import { Spool, Search, Download } from "lucide-react";
 import { getFilamentos, Filamento } from "@/lib/dataService";
+import { exportToExcel } from "@/lib/excelService";
 
 export default function AdminFilamento() {
   const [filamentos, setFilamentos] = useState<Filamento[]>([]);
@@ -27,14 +28,19 @@ export default function AdminFilamento() {
 
   return (
     <div className="p-4 md:p-8">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-tone-red/10 rounded-xl">
-          <Spool className="w-6 h-6 text-tone-red" />
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-tone-red/10 rounded-xl">
+            <Spool className="w-6 h-6 text-tone-red" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-white">Filamento</h1>
+            <p className="text-xs text-gray-600">{totalStock} kg en stock · {filamentos.length} variedades</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-black text-white">Filamento</h1>
-          <p className="text-xs text-gray-600">{totalStock} kg en stock · {filamentos.length} variedades</p>
-        </div>
+        <button onClick={exportToExcel} className="flex items-center gap-2 px-4 py-2.5 bg-tone-red hover:bg-tone-red/90 text-white text-sm font-bold rounded-xl transition">
+          <Download className="w-4 h-4" /> Exportar
+        </button>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">

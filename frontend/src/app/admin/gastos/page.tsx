@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DollarSign, Plus, X, CheckCircle } from "lucide-react";
+import { DollarSign, Plus, X, CheckCircle, Download } from "lucide-react";
 import { getGastos, addGasto, Gasto } from "@/lib/dataService";
+import { exportToExcel } from "@/lib/excelService";
 
 export default function AdminGastos() {
   const [gastos, setGastos] = useState<Gasto[]>([]);
@@ -46,13 +47,15 @@ export default function AdminGastos() {
             <p className="text-xs text-gray-600">${totalMes.toLocaleString()} este mes</p>
           </div>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-tone-red hover:bg-tone-red/90 text-white text-sm font-bold rounded-xl transition"
-        >
-          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          {showForm ? "Cerrar" : "Nuevo Gasto"}
-        </button>
+        <div className="flex gap-2">
+          <button onClick={exportToExcel} className="flex items-center gap-2 px-4 py-2.5 bg-tone-red hover:bg-tone-red/90 text-white text-sm font-bold rounded-xl transition">
+            <Download className="w-4 h-4" /> Exportar
+          </button>
+          <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-4 py-2.5 bg-tone-red hover:bg-tone-red/90 text-white text-sm font-bold rounded-xl transition">
+            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            {showForm ? "Cerrar" : "Nuevo Gasto"}
+          </button>
+        </div>
       </div>
 
       {showForm && (

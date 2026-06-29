@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import mongoSanitize from 'express-mongo-sanitize';
 import { createServer } from 'http';
 import path from 'path';
 import { appConfig } from './config';
@@ -55,7 +54,24 @@ app.use(cors({
 
 app.use(limiter);
 app.use(express.json());
-app.use(mongoSanitize());
+// Sanitize input to prevent NoSQL injection (replaces express-mongo-sanitize)
+app.use((req, _res, next) => {
+  const sanitize = (obj: any): any => {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(sanitize);
+    return Object.keys(obj).reduce((acc, key) => {
+      if (key.startsWith('$') || key.includes('.')) {
+        acc['__' + key] = sanitize(obj[key]);
+      } else {
+        acc[key] = sanitize(obj[key]);
+      }
+      return acc;
+    }, {} as any);
+  };
+  if (req.body) req.body = sanitize(req.body);
+  if (req.params) req.params = sanitize(req.params);
+  next();
+});
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
   setHeaders: (res) => {

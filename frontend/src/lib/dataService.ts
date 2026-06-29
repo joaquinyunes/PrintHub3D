@@ -1,12 +1,30 @@
 "use client";
 
-import seed from "@/data/seed.json";
-
 // ─── Types ───
+export interface Parte {
+  id: number;
+  nombre: string;
+}
+
+export interface ProductoCatalogo {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  partes: Parte[];
+}
+
+export interface PedidoItem {
+  productoId: number;
+  productoNombre: string;
+  cantidad: number;
+  precio: number;
+}
+
 export interface Pedido {
   id: number;
   cliente: string;
-  producto: string;
+  telefono: string;
   descripcion: string;
   fechaEntrega: string;
   total: number;
@@ -14,6 +32,7 @@ export interface Pedido {
   saldo: number;
   canal: string;
   estado: string;
+  items?: PedidoItem[];
   createdAt: string;
 }
 
@@ -39,6 +58,16 @@ export interface Filamento {
   precio: number;
 }
 
+export interface Impresora {
+  id: number;
+  nombre: string;
+  modelo: string;
+  tipo: string;
+  mejorPara: string;
+  notas: string;
+  activa: boolean;
+}
+
 export interface Gasto {
   id: number;
   categoria: string;
@@ -53,7 +82,8 @@ const KEYS = {
   ventas: "ph_ventas",
   filamentos: "ph_filamentos",
   gastos: "ph_gastos",
-  seeded: "ph_seeded",
+  productos: "ph_productos",
+  impresoras: "ph_impresoras",
 } as const;
 
 function get<T>(key: string, fallback: T[]): T[] {
@@ -71,25 +101,42 @@ function set<T>(key: string, data: T[]) {
   localStorage.setItem(key, JSON.stringify(data));
 }
 
-// ─── Seed initial data ───
-function ensureSeeded() {
-  if (typeof window === "undefined") return;
-  if (localStorage.getItem(KEYS.seeded)) return;
-  set(KEYS.pedidos, seed.pedidos.map((p) => ({ ...p, createdAt: p.fechaEntrega || new Date().toISOString().slice(0, 10) })));
-  set(KEYS.ventas, seed.ventas.map((v) => ({ ...v, createdAt: v.fecha || new Date().toISOString().slice(0, 10) })));
-  set(KEYS.filamentos, seed.filamentos as Filamento[]);
-  set(KEYS.gastos, seed.gastos.map((g) => ({ ...g, id: Date.now() + Math.random(), mes: "2026-07" })));
-  localStorage.setItem(KEYS.seeded, "true");
-}
-
 // ─── Next ID helper ───
 function nextId(items: { id: number }[]): number {
   return items.length > 0 ? Math.max(...items.map((i) => i.id)) + 1 : 1;
 }
 
+// ─── Bulk import ───
+export function importPedidos(items: Omit<Pedido, "id" | "createdAt">[]) {
+  const existing = get<Pedido>(KEYS.pedidos, []);
+  const now = new Date().toISOString().slice(0, 10);
+  const newItems = items.map((p, i) => ({ ...p, id: nextId(existing) + i, createdAt: now } as Pedido));
+  set(KEYS.pedidos, [...existing, ...newItems]);
+}
+
+export function importVentas(items: Omit<Venta, "id" | "createdAt">[]) {
+  const existing = get<Venta>(KEYS.ventas, []);
+  const now = new Date().toISOString().slice(0, 10);
+  const newItems = items.map((v, i) => ({ ...v, id: nextId(existing) + i, createdAt: now } as Venta));
+  set(KEYS.ventas, [...existing, ...newItems]);
+}
+
+export function importFilamentos(items: Omit<Filamento, "id">[]) {
+  const existing = get<Filamento>(KEYS.filamentos, []);
+  const maxId = existing.length > 0 ? Math.max(...existing.map((f) => f.id)) : 0;
+  const newItems = items.map((f, i) => ({ ...f, id: maxId + i + 1 } as Filamento));
+  set(KEYS.filamentos, [...existing, ...newItems]);
+}
+
+export function importGastos(items: Omit<Gasto, "id">[]) {
+  const existing = get<Gasto>(KEYS.gastos, []);
+  const maxId = existing.length > 0 ? Math.max(...existing.map((g) => g.id)) : 0;
+  const newItems = items.map((g, i) => ({ ...g, id: maxId + i + 1 } as Gasto));
+  set(KEYS.gastos, [...existing, ...newItems]);
+}
+
 // ─── Public API ───
 export function getPedidos(): Pedido[] {
-  ensureSeeded();
   return get<Pedido>(KEYS.pedidos, []);
 }
 
@@ -111,16 +158,16 @@ export function updatePedidoStatus(id: number, estado: string): Pedido | null {
   if (estado === "Entregado") {
     addVentaFromPedido(p);
   }
-
   return p;
 }
 
 function addVentaFromPedido(pedido: Pedido) {
   const ventas = getVentas();
+  const prodNames = (pedido.items || []).map((i) => i.productoNombre).join(", ");
   ventas.push({
     id: nextId(ventas),
     fecha: new Date().toISOString().slice(0, 10),
-    producto: pedido.producto,
+    producto: prodNames || "Pedido #" + pedido.id,
     cantidad: 1,
     cliente: pedido.cliente,
     formaPago: "Efectivo",
@@ -133,7 +180,6 @@ function addVentaFromPedido(pedido: Pedido) {
 }
 
 export function getVentas(): Venta[] {
-  ensureSeeded();
   return get<Venta>(KEYS.ventas, []);
 }
 
@@ -144,20 +190,10 @@ export function addVenta(v: Omit<Venta, "id" | "createdAt">) {
 }
 
 export function getFilamentos(): Filamento[] {
-  ensureSeeded();
   return get<Filamento>(KEYS.filamentos, []);
 }
 
-export function updateFilamentoStock(id: number, delta: number) {
-  const items = getFilamentos();
-  const f = items.find((i) => i.id === id);
-  if (!f) return;
-  f.stock = Math.max(0, f.stock + delta);
-  set(KEYS.filamentos, items);
-}
-
 export function getGastos(): Gasto[] {
-  ensureSeeded();
   return get<Gasto>(KEYS.gastos, []);
 }
 
@@ -167,19 +203,130 @@ export function addGasto(g: Omit<Gasto, "id">) {
   set(KEYS.gastos, items);
 }
 
+// ─── ProductoCatalogo CRUD ───
+export function getProductos(): ProductoCatalogo[] {
+  return get<ProductoCatalogo>(KEYS.productos, []);
+}
+
+export function saveProducto(p: ProductoCatalogo) {
+  const items = getProductos();
+  const idx = items.findIndex((i) => i.id === p.id);
+  if (idx >= 0) items[idx] = p;
+  else items.push(p);
+  set(KEYS.productos, items);
+}
+
+export function deleteProducto(id: number) {
+  set(KEYS.productos, getProductos().filter((p) => p.id !== id));
+}
+
+export function getNextProductoId(): number {
+  return nextId(getProductos());
+}
+
+// ─── Impresora CRUD ───
+export function getImpresoras(): Impresora[] {
+  return get<Impresora>(KEYS.impresoras, []);
+}
+
+export function saveImpresora(p: Impresora) {
+  const items = getImpresoras();
+  const idx = items.findIndex((i) => i.id === p.id);
+  if (idx >= 0) items[idx] = p;
+  else items.push(p);
+  set(KEYS.impresoras, items);
+}
+
+export function deleteImpresora(id: number) {
+  set(KEYS.impresoras, getImpresoras().filter((p) => p.id !== id));
+}
+
+export function getNextImpresoraId(): number {
+  return nextId(getImpresoras());
+}
+
+export function importImpresoras(items: Omit<Impresora, "id">[]) {
+  const existing = getImpresoras();
+  let next = nextId(existing);
+  const newItems: Impresora[] = items.map((item) => ({ id: next++, ...item }));
+  set(KEYS.impresoras, [...existing, ...newItems]);
+}
+
+// ─── Production helpers ───
+export function getProductionQueue() {
+  const pedidos = getPedidos().filter((p) => !["Entregado", "Cancelado"].includes(p.estado));
+  const queue: { pedidoId: number; cliente: string; producto: string; parte: string; cantidad: number; estado: string }[] = [];
+
+  for (const pedido of pedidos) {
+    const items = pedido.items || [];
+    if (items.length === 0) {
+      // Legacy pedido without items — skip or add placeholder
+      queue.push({
+        pedidoId: pedido.id,
+        cliente: pedido.cliente,
+        producto: "Pedido #" + pedido.id,
+        parte: "Completo",
+        cantidad: 1,
+        estado: pedido.estado,
+      });
+    }
+    for (const item of items) {
+      const producto = getProductos().find((p) => p.id === item.productoId);
+      if (producto && producto.partes.length > 0) {
+        for (const parte of producto.partes) {
+          queue.push({
+            pedidoId: pedido.id,
+            cliente: pedido.cliente,
+            producto: producto.nombre,
+            parte: parte.nombre,
+            cantidad: item.cantidad,
+            estado: pedido.estado,
+          });
+        }
+      } else {
+        queue.push({
+          pedidoId: pedido.id,
+          cliente: pedido.cliente,
+          producto: item.productoNombre,
+          parte: "Completo",
+          cantidad: item.cantidad,
+          estado: pedido.estado,
+        });
+      }
+    }
+  }
+
+  return queue;
+}
+
 export function getKPIs() {
   const pedidos = getPedidos();
   const ventas = getVentas();
   const filamentos = getFilamentos();
   const gastos = getGastos();
+  const productos = getProductos();
+  const impresoras = getImpresoras();
+  const queue = getProductionQueue();
 
   return {
     pedidosTotal: pedidos.length,
     pedidosEntregados: pedidos.filter((p) => p.estado === "Entregado").length,
-    pedidosPendientes: pedidos.filter((p) => p.estado === "Pendiente" || p.estado === "Imprimiendo" || p.estado === "Post-procesado" || p.estado === "Listo").length,
+    pedidosPendientes: pedidos.filter((p) => ["Pendiente", "Imprimiendo", "Post-procesado", "Listo"].includes(p.estado)).length,
     ventasTotal: ventas.length,
     ventasMonto: ventas.reduce((s, v) => s + v.total, 0),
     gastosMonto: gastos.reduce((s, g) => s + g.monto, 0),
     filamentosStock: filamentos.reduce((s, f) => s + f.stock, 0),
+    productosTotal: productos.length,
+    impresorasTotal: impresoras.length,
+    impresorasActivas: impresoras.filter((i) => i.activa).length,
+    productionItems: queue.length,
   };
+}
+
+export function getNextPedidoId(): number {
+  return nextId(getPedidos());
+}
+
+export function clearAllData() {
+  Object.values(KEYS).forEach((key) => localStorage.removeItem(key));
 }

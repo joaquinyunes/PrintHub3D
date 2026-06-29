@@ -13,7 +13,7 @@ import {
   ShoppingCart, TrendingUp, Wallet
 } from "lucide-react";
 import { apiUrl } from "@/lib/api";
-import { getKPIs } from "@/lib/dataService";
+import { getKPIs, getProductionQueue } from "@/lib/dataService";
 
 // --- COMPONENTE: TARJETA KPI ---
 function StatCard({ title, value, subtext, icon: Icon, color, trend }: any) {
@@ -138,10 +138,14 @@ export default function DashboardPage() {
   const [bulkText, setBulkText] = useState("");
   const [parsedItems, setParsedItems] = useState<{name: string, quantity: number}[]>([]); 
 
-  const [localKPIs, setLocalKPIs] = useState({ pedidosTotal: 0, pedidosPendientes: 0, ventasTotal: 0, ventasMonto: 0, gastosMonto: 0, filamentosStock: 0 });
+  const [localKPIs, setLocalKPIs] = useState({ pedidosTotal: 0, pedidosPendientes: 0, ventasTotal: 0, ventasMonto: 0, gastosMonto: 0, filamentosStock: 0, impresorasTotal: 0, impresorasActivas: 0, productionItems: 0 });
+  const [productionQueue, setProductionQueue] = useState<any[]>([]);
 
   useEffect(() => {
-    try { setLocalKPIs(getKPIs()); } catch {}
+    try {
+      setLocalKPIs(getKPIs());
+      setProductionQueue(getProductionQueue());
+    } catch {}
   }, []);
 
   const fetchData = async () => {
@@ -319,6 +323,46 @@ export default function DashboardPage() {
             <p className="text-[10px] font-bold uppercase tracking-widest text-tone-red mb-1">Filamento kg</p>
             <p className="text-2xl font-black text-white">{localKPIs.filamentosStock}</p>
           </div>
+        </div>
+
+        {/* 1c. Production Queue */}
+        <div className="bg-[#0f0f0f] border border-white/5 rounded-3xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+              <Printer size={16} className="text-tone-red" /> Cola de Producción
+              <span className="text-[10px] font-bold text-gray-500 uppercase px-2 py-1 bg-[#111] rounded border border-white/5">{productionQueue.length} items</span>
+            </h3>
+            <div className="flex gap-3">
+              <span className="text-[10px] font-bold text-tone-red uppercase">{localKPIs.impresorasActivas}/{localKPIs.impresorasTotal} activas</span>
+              {localKPIs.impresorasTotal === 0 && <span className="text-[10px] text-tone-amber animate-pulse">Sin impresoras</span>}
+            </div>
+          </div>
+          {productionQueue.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+              {productionQueue.map((item, i) => (
+                <div key={i} className="bg-[#1a1a1a] border border-white/5 rounded-xl p-4 hover:border-tone-red/20 transition">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-600 font-mono">#{item.pedidoId}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.estado === "Listo" ? "bg-green-500/10 text-green-400" : item.estado === "Imprimiendo" ? "bg-tone-red/10 text-tone-red" : "bg-tone-amber/10 text-tone-amber"}`}>
+                      {item.estado}
+                    </span>
+                  </div>
+                  <p className="text-white font-bold text-sm truncate">{item.producto}</p>
+                  <p className="text-tone-red text-xs font-semibold">{item.parte}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-gray-500">{item.cliente}</span>
+                    <span className="text-xs text-white font-bold">x{item.cantidad}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-6 text-center">
+              <Printer className="w-8 h-8 text-gray-700 mx-auto mb-2" />
+              <p className="text-xs text-gray-600">No hay items en producción</p>
+              <a href="/admin/produccion" className="inline-block mt-3 text-[10px] text-tone-red hover:underline font-bold uppercase">Gestionar impresoras →</a>
+            </div>
+          )}
         </div>
 
         {/* 2. CENTRAL */}
