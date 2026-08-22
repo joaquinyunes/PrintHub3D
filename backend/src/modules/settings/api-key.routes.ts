@@ -40,7 +40,7 @@ router.post('/', protect, adminOnly, async (req: any, res) => {
 
     // Devolver la key recién creada (solo se muestra una vez)
     const plainKey = apiKey.key;
-    apiKey.key = undefined; // No guardar en plaintext
+    apiKey.set('key', undefined); // No guardar en plaintext
     await apiKey.save();
 
     res.status(201).json({

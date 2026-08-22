@@ -7,6 +7,7 @@ import { OrderService } from './order.service';
 import { appConfig } from '../../config';
 import Settings from '../settings/settings.model';
 import { findCustomVideoUrl } from '../../utils/customCodeVideoMatch';
+import { reqParam } from '../../utils/reqParam';
 
 const getTenantId = (req: any): string => {
   const tid = req.tenantId || req.user?.tenantId;
@@ -175,7 +176,7 @@ export const createPublicOrder = async (req: Request, res: Response) => {
 // ==========================================
 export const updateOrder = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = reqParam(req, 'id');
         const tenantId = getTenantId(req) as string;
         const { items } = req.body;
         
@@ -204,12 +205,13 @@ export const updateOrder = async (req: Request, res: Response) => {
 export const updateOrderStatus = async (req: Request, res: Response) => {
     try {
         const tenantId = getTenantId(req) as string;
+        const id = reqParam(req, 'id');
         const { status, printTimeMinutes, printerId } = req.body;
         if (!status || !Object.keys(statusCopy).includes(String(status))) {
             return res.status(400).json({ message: 'Estado inválido' });
         }
 
-        const existingOrder: any = await orderRepository.findById(req.params.id, String(tenantId));
+        const existingOrder: any = await orderRepository.findById(id, String(tenantId));
         if (!existingOrder) {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
@@ -222,14 +224,14 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 if (status === 'in_progress' && printerId) {
                     updateData.startedAt = new Date();
                     if (printTimeMinutes) updateData.printTimeMinutes = printTimeMinutes;
-                    await Printer.findByIdAndUpdate(printerId, { status: 'printing', currentOrderId: req.params.id });
+                    await Printer.findByIdAndUpdate(printerId, { status: 'printing', currentOrderId: id });
                 }
 
                 if ((status === 'completed' || status === 'terminado')) {
                     updateData.finishedAt = new Date();
-                    await Printer.updateMany({ currentOrderId: req.params.id }, { status: 'idle', $unset: { currentOrderId: "" } });
+                    await Printer.updateMany({ currentOrderId: id }, { status: 'idle', $unset: { currentOrderId: "" } });
 
-                    const currentOrder: any = await orderRepository.findById(req.params.id, String(tenantId));
+                    const currentOrder: any = await orderRepository.findById(id, String(tenantId));
                     if (currentOrder && !(currentOrder as any).adminNotified) {
                         const itemNames = (currentOrder as any).items.map((i: any) => i.productName).join(', ');
                         const msg = `✅ *IMPRESIÓN FINALIZADA*\n👤 ${currentOrder.clientName}\n📦 ${itemNames}\n🚀 Máquina liberada.`;
@@ -242,7 +244,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             console.error("Printer/Notification Warning:", printerError);
         }
 
-        const order = await orderRepository.update(req.params.id, updateData, String(tenantId));
+        const order = await orderRepository.update(id, updateData, String(tenantId));
 
         if (order?.customerContact && typeof sendCustomerNotification === 'function') {
             const Settings = require('../settings/settings.model').default;
@@ -278,7 +280,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 export const markOrderItemPrinted = async (req: Request, res: Response) => {
     try {
         const tenantId = getTenantId(req) as string;
-        const { id } = req.params;
+        const id = reqParam(req, 'id');
         const { itemIndex } = req.body as { itemIndex: number };
 
         if (!tenantId) {
@@ -358,7 +360,7 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
 export const registerOrderSale = async (req: Request, res: Response) => {
     try {
         const tenantId = getTenantId(req) as string;
-        const { id } = req.params;
+        const id = reqParam(req, 'id');
         const { finalCost } = req.body;
 
         if (!tenantId) {
@@ -488,7 +490,7 @@ export const submitOrderFeedback = async (req: Request, res: Response) => {
 export const resendTrackingToCustomer = async (req: Request, res: Response) => {
     try {
         const tenantId = getTenantId(req) as string;
-        const { id } = req.params;
+        const id = reqParam(req, 'id');
 
         const order = await orderRepository.findById(id, String(tenantId));
         if (!order) return res.status(404).json({ message: 'Pedido no encontrado' });
@@ -543,7 +545,7 @@ export const getOrdersSummary = async (req: Request, res: Response) => {
 export const getOrderTimeline = async (req: Request, res: Response) => {
     try {
         const tenantId = getTenantId(req) as string;
-        const { id } = req.params;
+        const id = reqParam(req, 'id');
 
         const order = await orderRepository.findById(id, String(tenantId));
         if (!order) {

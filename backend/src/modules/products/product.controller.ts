@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { ProductRepository } from '../../repositories/product.repository';
+import { reqParam } from '../../utils/reqParam';
 import Sale from "../sales/sale.model";
 import { InventoryService } from "./inventory.service";
 
@@ -137,7 +138,7 @@ export const createProduct = async (req: Request, res: Response) => {
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
     const tenantId = (req as any).user?.tenantId;
-    const { id } = req.params;
+    const id = reqParam(req, 'id');
 
     const deleted = await productRepository.delete(id, tenantId as string);
     
@@ -157,7 +158,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response) => {
   try {
     const tenantId = (req as any).user?.tenantId;
-    const { id } = req.params;
+    const id = reqParam(req, 'id');
 
     const allowedFields = [
       "name",
@@ -221,7 +222,7 @@ export const quickSell = async (req: Request, res: Response) => {
         try {
             const { product, sale } = await InventoryService.quickSell(
                 tenantId,
-                req.params.id,
+                reqParam(req, 'id'),
                 user?.id,
                 user?.name,
             );

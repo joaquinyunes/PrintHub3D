@@ -39,6 +39,18 @@ const getCorsOrigins = (): string[] => {
   return origins.split(',').map(o => o.trim());
 };
 
+const getClientUrl = (): string => {
+  return (process.env.CLIENT_URL || 'http://localhost:3000').split(',')[0].trim();
+};
+
+const getApiPublicUrl = (): string => {
+  return (
+    process.env.API_PUBLIC_URL?.trim() ||
+    process.env.API_URL?.trim() ||
+    `http://localhost:${Number(process.env.PORT || 5000)}`
+  );
+};
+
 const getDefaultTenantId = (): string => {
   return process.env.DEFAULT_TENANT_ID?.trim() || 'global3d_hq';
 };
@@ -46,11 +58,14 @@ const getDefaultTenantId = (): string => {
 export const appConfig = {
   nodeEnv: NODE_ENV,
   isProduction,
+  requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION === 'true',
   port: Number(process.env.PORT || 5000),
   mongoUri: getMongoUri(),
   jwtSecret: getJwtSecret(),
   defaultTenantId: getDefaultTenantId(),
   corsOrigins: getCorsOrigins(),
+  clientUrl: getClientUrl(),
+  apiPublicUrl: getApiPublicUrl(),
   logLevel: process.env.LOG_LEVEL || 'info',
   redisUrl: process.env.REDIS_URL?.trim(),
   google: {

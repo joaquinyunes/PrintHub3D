@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image"; // 👈 AGREGADO: Importamos Image de Next.js
+import { apiUrl } from "@/lib/api";
 import { 
   LayoutDashboard, 
   Package, 
@@ -39,32 +40,54 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // --- 1. SEGURIDAD ---
+  // El rol se valida SIEMPRE contra el backend: localStorage solo cachea el token.
   useEffect(() => {
-    // ... tu código de seguridad se mantiene igual ...
     if (pathname === "/admin/login") {
       setIsAuthorized(true);
       return;
     }
 
     const stored = localStorage.getItem("user");
-
     if (!stored) {
       router.replace("/admin/login");
       return;
     }
 
+    let token = "";
     try {
       const session: StoredUser = JSON.parse(stored);
-      if (!session.token || session.user?.role !== "admin") {
-        localStorage.clear();
-        router.replace("/admin/login");
-        return;
-      }
-      setIsAuthorized(true);
+      token = session.token;
     } catch {
-      localStorage.clear();
+      localStorage.removeItem("user");
       router.replace("/admin/login");
+      return;
     }
+
+    if (!token) {
+      localStorage.removeItem("user");
+      router.replace("/admin/login");
+      return;
+    }
+
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(apiUrl("/api/auth/me"), {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error("unauthorized");
+        const data = await res.json();
+        if (data?.user?.role !== "admin") throw new Error("forbidden");
+        setIsAuthorized(true);
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+        localStorage.removeItem("user");
+        router.replace("/admin/login");
+      }
+    })();
+
+    return () => controller.abort();
   }, [pathname, router]);
 
   const handleLogout = () => {

@@ -30,7 +30,7 @@ export const sendVerificationEmail = async (email: string, token: string, name: 
   const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
   
   const mailOptions = {
-    from: process.env.SMTP_FROM || '"PrintHub3D" <noreply@printhub3d.com>',
+    from: process.env.SMTP_FROM || process.env.EMAIL_FROM || '"PrintHub3D" <noreply@printhub3d.com>',
     to: email,
     subject: 'Verifica tu cuenta - PrintHub3D',
     html: `
@@ -58,12 +58,33 @@ export const sendVerificationEmail = async (email: string, token: string, name: 
   }
 };
 
+export const sendMagicCodeEmail = async (email: string, code: string): Promise<void> => {
+  if (!process.env.SMTP_HOST) {
+    throw new Error('SMTP no configurado');
+  }
+  const transporter = createTransporter();
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || process.env.EMAIL_FROM || '"PrintHub3D" <noreply@printhub3d.com>',
+    to: email,
+    subject: `Tu código de acceso: ${code}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color:#333;">Código de acceso</h2>
+        <p>Usá este código para ingresar. Vence en 15 minutos.</p>
+        <p style="font-size:32px; font-weight:bold; letter-spacing:6px; color:#111;">${code}</p>
+        <p style="color:#999; font-size:12px;">Si no lo pediste, ignorá este correo.</p>
+      </div>
+    `,
+  });
+  logger.info(`Código de acceso enviado por email a ${email}`);
+};
+
 export const sendPasswordResetEmail = async (email: string, token: string, name: string): Promise<void> => {
   const transporter = createTransporter();
   const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
   
   const mailOptions = {
-    from: process.env.SMTP_FROM || '"PrintHub3D" <noreply@printhub3d.com>',
+    from: process.env.SMTP_FROM || process.env.EMAIL_FROM || '"PrintHub3D" <noreply@printhub3d.com>',
     to: email,
     subject: 'Recuperar contraseña - PrintHub3D',
     html: `

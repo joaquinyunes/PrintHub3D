@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X, Image, Video, Trash2, Upload, CheckCircle2, Loader2, Search } from "lucide-react";
 import { apiUrl, resolveMediaUrl } from "@/lib/api";
+import { getAuthHeaders } from "@/lib/auth";
 
 interface ProductMedia {
   _id: string;
@@ -125,13 +126,18 @@ export default function MediaPage() {
     } else if (file.type.startsWith('video/')) {
       try {
         setSaving(true);
-        const response = await fetch(`/api/upload?filename=${file.name}`, {
+        const fd = new FormData();
+        fd.append('file', file);
+        const response = await fetch('/api/upload', {
           method: 'POST',
-          body: file,
+          headers: getAuthHeaders(),
+          body: fd,
         });
         const blob = await response.json();
         if (blob.url) {
           setForm({ ...form, videoUrl: blob.url });
+        } else {
+          throw new Error(blob.error || 'Error al subir');
         }
       } catch (error) {
         console.error('Error uploading video:', error);

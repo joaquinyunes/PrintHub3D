@@ -41,7 +41,9 @@ export const requestMagicCode = async (req: Request, res: Response) => {
     await user.save();
 
     const userPhone = (user as any).phone as string | undefined;
-    
+    const userEmail = (user as any).email as string | undefined;
+    let delivered = false;
+
     if (userPhone) {
       try {
         const { sendCustomerNotification } = await import('../notifications/notification.service');
@@ -49,14 +51,28 @@ export const requestMagicCode = async (req: Request, res: Response) => {
           userPhone,
           `🔐 Tu código de acceso es: *${code}*. Expira en 15 minutos.`
         );
+        delivered = true;
       } catch (err) {
-        logger.error('Error enviando código:', err);
+        logger.error('Error enviando código por WhatsApp:', err);
+      }
+    } else if (userEmail) {
+      try {
+        const { sendMagicCodeEmail } = await import('../../config/email');
+        await sendMagicCodeEmail(userEmail, code);
+        delivered = true;
+      } catch (err) {
+        logger.error('Error enviando código por email:', err);
       }
     }
 
-    logger.info(`Magic code generado para ${identifier}: ${code}`);
-    
-    res.json({ 
+    if (!delivered && appConfig.isProduction) {
+      return res.status(502).json({ message: 'No se pudo enviar el código. Probá más tarde.' });
+    }
+    if (!delivered) {
+      logger.info(`[DEV] Magic code para ${identifier}: ${code}`);
+    }
+
+    res.json({
       message: 'Código enviado',
       sentTo: userPhone ? 'whatsapp' : 'email',
       expiresInMinutes: 15

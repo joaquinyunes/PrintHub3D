@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 // Limite general para API pública
 export const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minuto
-  max: 500, // 500 requests por ventana
+  max: Number(process.env.RATE_LIMIT_MAX || 150), // requests por ventana
   message: 'Demasiadas solicitudes desde esta IP, por favor intenta nuevamente más tarde.',
   standardHeaders: true,
   legacyHeaders: false,

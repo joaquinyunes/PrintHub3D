@@ -27,24 +27,36 @@ export const register = async (req: Request, res: Response) => {
             tenantId: appConfig.defaultTenantId
         });
 
-        // Generar token de verificación
-        newUser.verificationToken = crypto.randomBytes(20).toString('hex');
-        newUser.verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        newUser.verified = false;
-        await newUser.save();
+        if (appConfig.requireEmailVerification) {
+            newUser.verificationToken = crypto.randomBytes(20).toString('hex');
+            newUser.verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            newUser.verified = false;
+            await newUser.save();
 
-        // Enviar email de verificación
-        try {
-            await sendVerificationEmail(email, newUser.verificationToken, name);
-        } catch (emailError) {
-            logger.warn(`No se pudo enviar email de verificación a ${email}:`, emailError);
+            try {
+                await sendVerificationEmail(email, newUser.verificationToken, name);
+            } catch (emailError) {
+                logger.warn(`No se pudo enviar email de verificación a ${email}:`, emailError);
+            }
+
+            logger.info(`Nuevo usuario registrado (pendiente verificación): ${email}`);
+            return res.status(201).json({
+                message: 'Registro exitoso. Verificá tu email para activar tu cuenta.',
+                email,
+                needsVerification: true,
+            });
         }
 
-        logger.info(`Nuevo usuario registrado (pendiente verificación): ${email}`);
-        res.status(201).json({ 
-            message: 'Registro exitoso. Por favor, verifica tu email para activar tu cuenta.',
-            email: email
-        }); 
+        // Verificación de email desactivada: la cuenta queda activa al instante.
+        newUser.verified = true;
+        await newUser.save();
+
+        logger.info(`Nuevo usuario registrado: ${email}`);
+        res.status(201).json({
+            message: 'Registro exitoso. Ya podés iniciar sesión.',
+            email,
+            needsVerification: false,
+        });
 
     } catch (error: any) {
         logger.error('Error en registro:', error);
@@ -55,7 +67,6 @@ export const register = async (req: Request, res: Response) => {
 // --- LOGIN (Para Admin y Clientes) ---
 export const login = async (req: Request, res: Response) => {
     try {
-        console.log('🔐 Login attempt:', req.body.email);
         const { email, password } = req.body;
 
         const user = await User.findOne({ email }) as any;
@@ -94,9 +105,9 @@ export const login = async (req: Request, res: Response) => {
         user.lockUntil = undefined;
         await user.save();
 
-        // Verificar si el email está verificado (solo para clientes, no admins)
-        if (!user.verified && user.role !== 'admin') {
-            return res.status(403).json({ 
+        // Verificar si el email está verificado (solo si la verificación está activada, y solo para clientes)
+        if (appConfig.requireEmailVerification && !user.verified && user.role !== 'admin') {
+            return res.status(403).json({
                 message: 'Por favor, verifica tu email antes de iniciar sesión.',
                 needsVerification: true,
                 email: user.email

@@ -1,12 +1,22 @@
 node_modules
 .env
-dist
-.DS_Store
-node_modules
-.next
+.env.*
+!.env.example
 dist
 build
-.env
+.next
+.vercel
+.DS_Store
 .wwebjs_auth
 .wwebjs_cache
 repomix-output.xml
+
+# Logs y salidas de proceso
+*.log
+backend.err
+backend.out
+backend/server.log
+
+# Archivos subidos por usuarios (no versionar contenido de clientes)
+backend/uploads/
+datos/

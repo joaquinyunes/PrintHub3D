@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Trash2, Plus, Minus, ArrowLeft, ShoppingCart } from "lucide-react";
@@ -11,6 +11,23 @@ import { WHATSAPP_PHONE } from "@/lib/config";
 export default function CartPage() {
   const router = useRouter();
   const { items, removeFromCart, updateQuantity, clearCart, total, depositTotal, itemCount } = useCart();
+
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [formError, setFormError] = useState("");
+
+  const validate = () => {
+    if (name.trim().length < 2) {
+      setFormError("Ingresá tu nombre.");
+      return false;
+    }
+    if (phone.trim().replace(/\D/g, "").length < 6) {
+      setFormError("Ingresá un teléfono válido.");
+      return false;
+    }
+    setFormError("");
+    return true;
+  };
 
   if (itemCount === 0) {
     return (
@@ -32,7 +49,7 @@ export default function CartPage() {
       `• ${item.product.name} x${item.quantity} - $${(item.product.price * item.quantity).toLocaleString("es-AR")}`
     ).join("%0A");
 
-    const message = `*NUEVO PEDIDO - PrintHub3D*%0A%0A${itemsList}%0A%0A*Total:* $${total.toLocaleString("es-AR")}%0A*Seña (50%):* $${depositTotal.toLocaleString("es-AR")}%0A%0APor favor confirmar disponibilidad y datos para el envío.`;
+    const message = `*NUEVO PEDIDO - PrintHub3D*%0A%0A*Cliente:* ${encodeURIComponent(name.trim())}%0A*Tel:* ${encodeURIComponent(phone.trim())}%0A%0A${itemsList}%0A%0A*Total:* $${total.toLocaleString("es-AR")}%0A*Seña (50%):* $${depositTotal.toLocaleString("es-AR")}%0A%0APor favor confirmar disponibilidad y datos para el envío.`;
 
     window.open(`https://wa.me/${WHATSAPP_PHONE}?text=${message}`, "_blank");
   };
@@ -94,7 +111,30 @@ export default function CartPage() {
           <div className="bg-tone-dark/60 border border-white/5 rounded-xl p-6 h-fit">
             <h2 className="text-xl font-bold mb-4">Resumen</h2>
 
-            <div className="space-y-2 mb-4">
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Nombre y apellido</label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Tu nombre"
+                  className="w-full bg-tone-darker/80 border border-white/10 rounded-lg py-2 px-3 text-sm text-white placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">WhatsApp / Teléfono</label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Ej: 379 4123456"
+                  inputMode="tel"
+                  className="w-full bg-tone-darker/80 border border-white/10 rounded-lg py-2 px-3 text-sm text-white placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40"
+                />
+              </div>
+              {formError && <p className="text-xs text-red-400">{formError}</p>}
+            </div>
+
+            <div className="space-y-2 mb-4 border-t border-white/5 pt-4">
               <div className="flex justify-between text-gray-400">
                 <span>Productos ({itemCount})</span>
                 <span>${total.toLocaleString("es-AR")}</span>
@@ -116,6 +156,8 @@ export default function CartPage() {
               total={total}
               depositTotal={depositTotal}
               items={items}
+              customer={{ name, phone }}
+              validate={validate}
               onWhatsAppCheckout={handleWhatsAppCheckout}
               clearCart={clearCart}
             />

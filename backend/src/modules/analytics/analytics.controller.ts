@@ -15,8 +15,10 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
+        // Solo pedidos que todavia NO generaron un registro de venta (evita doble conteo:
+        // al entregarse/cobrarse un pedido se crea un Sale con el mismo importe).
         const orderStats = await Order.aggregate([
-            { $match: { tenantId, createdAt: { $gte: startOfMonth }, status: { $ne: 'cancelled' } } },
+            { $match: { tenantId, createdAt: { $gte: startOfMonth }, status: { $ne: 'cancelled' }, isSaleRegistered: { $ne: true } } },
             { $group: { _id: null, total: { $sum: "$total" } } }
         ]);
 
@@ -69,8 +71,10 @@ export const getReportsData = async (req: Request, res: Response) => {
             endDate = new Date(y, m + 1, 0, 23, 59, 59); // Último día del mes
         }
 
-        // 2. Buscar en las 3 colecciones filtrando por esas fechas
-        const orders = await Order.find({ tenantId, createdAt: { $gte: startDate, $lte: endDate }, status: { $ne: 'cancelled' } });
+        // 2. Buscar en las 3 colecciones filtrando por esas fechas.
+        // Los pedidos ya convertidos en venta (isSaleRegistered) se excluyen para no
+        // contarlos dos veces: su importe ya viaja en la coleccion Sale.
+        const orders = await Order.find({ tenantId, createdAt: { $gte: startDate, $lte: endDate }, status: { $ne: 'cancelled' }, isSaleRegistered: { $ne: true } });
         const sales = await Sale.find({ tenantId, createdAt: { $gte: startDate, $lte: endDate } });
         const expenses = await Expense.find({ tenantId, date: { $gte: startDate, $lte: endDate } });
 

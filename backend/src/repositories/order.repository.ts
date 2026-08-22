@@ -1,9 +1,5 @@
-import mongoose from 'mongoose';
 import { BaseRepository, FilterQuery } from './base.repository';
-
-const { Types } = mongoose;
-import Order from '../modules/orders/order.model';
-type IOrder = mongoose.Document;
+import Order, { IOrder } from '../modules/orders/order.model';
 
 export class OrderRepository extends BaseRepository<IOrder> {
   constructor() {
@@ -80,7 +76,7 @@ export class OrderRepository extends BaseRepository<IOrder> {
     averageSatisfaction: number;
   }> {
     const orders = await this.model.find({ tenantId } as FilterQuery<IOrder>)
-      .select('status total createdAt customerSatisfaction dueDate finishedAt');
+      .select('status total createdAt customerSatisfaction dueDate finishedAt isSaleRegistered');
 
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -107,7 +103,7 @@ export class OrderRepository extends BaseRepository<IOrder> {
       if (order.status === 'delivered') summary.delivered += 1;
       if (order.status === 'cancelled') summary.cancelled += 1;
 
-      if (order.createdAt >= monthStart && order.status !== 'cancelled') {
+      if (order.createdAt >= monthStart && order.status !== 'cancelled' && !order.isSaleRegistered) {
         summary.monthlyRevenue += Number(order.total || 0);
       }
 

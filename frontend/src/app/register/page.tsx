@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -51,6 +52,7 @@ export default function RegisterPage() {
         throw new Error(data.message || "Error al registrar");
       }
 
+      setNeedsVerification(!!data.needsVerification);
       setSuccess(true);
     } catch (err: any) {
       setError(err.message);
@@ -73,7 +75,9 @@ export default function RegisterPage() {
             <span className="inline-block text-xs text-tone-red tracking-[0.15em] uppercase mb-2">Éxito</span>
             <h2 className="text-2xl font-bold text-white mb-2 font-mono">Registro exitoso</h2>
             <p className="text-tone-amber mb-6 font-mono">
-              Tu cuenta ha sido creada. Te hemos enviado un email de verificación.
+              {needsVerification
+                ? "Tu cuenta fue creada. Te enviamos un email para verificarla."
+                : "Tu cuenta fue creada. Ya podés iniciar sesión."}
             </p>
             <Link
               href="/login"

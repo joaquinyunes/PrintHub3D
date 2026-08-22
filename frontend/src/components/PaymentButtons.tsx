@@ -10,41 +10,56 @@ interface PaymentButtonsProps {
   total: number;
   depositTotal: number;
   items: CartItem[];
+  customer: { name: string; phone: string };
+  validate: () => boolean;
   onWhatsAppCheckout: () => void;
   clearCart: () => void;
 }
 
-export default function PaymentButtons({ total, depositTotal, items, onWhatsAppCheckout, clearCart }: PaymentButtonsProps) {
+export default function PaymentButtons({
+  total,
+  depositTotal,
+  items,
+  customer,
+  validate,
+  onWhatsAppCheckout,
+}: PaymentButtonsProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleMercadoPago = async (payFull: boolean) => {
+    setError("");
+    if (!validate()) return;
+
     setLoading(true);
     try {
-      const itemsList = items.map(item => ({
-        title: item.product.name,
-        quantity: item.quantity,
-        unit_price: item.product.price,
-      }));
-
       const res = await fetch(apiUrl("/api/payments/create-preference"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: itemsList,
+          clientName: customer.name.trim(),
+          customerContact: customer.phone.trim(),
           deposit: !payFull,
-        })
+          items: items.map((item) => ({
+            productId: item.product._id,
+            productName: item.product.name,
+            quantity: item.quantity,
+            price: item.product.price,
+          })),
+        }),
       });
 
-      if (!res.ok) throw new Error("Error creando preferencia");
-
       const data = await res.json();
-      if (data.initPoint) {
-        clearCart();
-        window.location.href = data.initPoint;
-      }
-    } catch (err) {
+      if (!res.ok) throw new Error(data.message || "Error creando la preferencia de pago");
+
+      const url = data.initPoint || data.sandboxInitPoint;
+      if (!url) throw new Error("MercadoPago no devolvió un link de pago");
+
+      // El carrito se limpia en /checkout/resultado tras confirmar el pago.
+      window.location.href = url;
+    } catch (err: any) {
       console.error("MercadoPago error:", err);
-      alert("Error al procesar el pago. Intentá de nuevo.");
+      setError(err.message || "Error al procesar el pago. Intentá de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -53,7 +68,9 @@ export default function PaymentButtons({ total, depositTotal, items, onWhatsAppC
   return (
     <div className="space-y-3">
       <button
-        onClick={onWhatsAppCheckout}
+        onClick={() => {
+          if (validate()) onWhatsAppCheckout();
+        }}
         disabled={loading}
         className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition shadow-lg shadow-green-600/30"
       >
@@ -88,9 +105,20 @@ export default function PaymentButtons({ total, depositTotal, items, onWhatsAppC
         Pagar Total - ${total.toLocaleString("es-AR")}
       </button>
 
-      <div className="text-center text-xs text-gray-500 mt-2">
-        <p>Alias para transferencia: <span className="text-blue-400 font-mono">{MERCADO_PAGO_ALIAS}</span></p>
-      </div>
+      {error && (
+        <p className="text-center text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg py-2 px-3">
+          {error}
+        </p>
+      )}
+
+      {MERCADO_PAGO_ALIAS && MERCADO_PAGO_ALIAS !== "TU_ALIAS_AQUI" && (
+        <div className="text-center text-xs text-gray-500 mt-2">
+          <p>
+            Alias para transferencia:{" "}
+            <span className="text-blue-400 font-mono">{MERCADO_PAGO_ALIAS}</span>
+          </p>
+        </div>
+      )}
     </div>
   );
 }

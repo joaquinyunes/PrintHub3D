@@ -181,7 +181,8 @@ export default function DashboardPage() {
               });
 
               const now = new Date();
-              const revOrders = orders.filter((o:any) => new Date(o.createdAt).getMonth() === now.getMonth() && o.status !== 'cancelled')
+              // Excluye pedidos ya convertidos en venta para no sumar dos veces (el Sale ya cuenta ese importe).
+              const revOrders = orders.filter((o:any) => new Date(o.createdAt).getMonth() === now.getMonth() && o.status !== 'cancelled' && !o.isSaleRegistered)
                                      .reduce((acc: number, o:any) => acc + (Number(o.total) || 0), 0);
               const revSales = salesItems.filter((s:any) => new Date(s.createdAt).getMonth() === now.getMonth())
                                         .reduce((acc:number, s:any) => acc + (Number(s.price) || 0), 0);

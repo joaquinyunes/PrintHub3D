@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Upload, Image as ImageIcon, Video, X, Loader2 } from "lucide-react";
+import { getAuthHeaders } from "@/lib/auth";
 
 interface SimpleUploaderProps {
   value: string;
@@ -23,7 +24,7 @@ export default function SimpleUploader({ value, onChange, type, label }: SimpleU
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const res = await fetch('/api/upload', { method: 'POST', headers: getAuthHeaders(), body: formData });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Upload failed');

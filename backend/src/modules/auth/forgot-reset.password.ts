@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import User from './user.model';
 import { appConfig } from '../../config';
 import logger from '../../config/logger';
+import { sendPasswordResetEmail } from '../../config/email';
 
 // POST /api/auth/forgot-password
 export const forgotPassword = async (req: Request, res: Response) => {
@@ -22,12 +23,18 @@ export const forgotPassword = async (req: Request, res: Response) => {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     (user as any).passwordResetToken = hashedToken;
-    (user as any).passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+    (user as any).passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 min
     await user.save();
 
-    // En producción, enviarías un email aquí con el enlace:
-    // const resetURL = `${req.protocol}://${req.get('host')}/api/auth/reset-password/${token}`;
-    logger.info(`Password reset token for ${email}: ${token}`);
+    try {
+      await sendPasswordResetEmail(email, token, (user as any).name || '');
+    } catch (mailErr) {
+      logger.warn(`No se pudo enviar el email de recuperación a ${email}:`, mailErr);
+      if (!appConfig.isProduction) {
+        // Sin SMTP en desarrollo: dejamos el token en el log para poder probar.
+        logger.info(`[DEV] Token de recuperación para ${email}: ${token}`);
+      }
+    }
 
     res.json({ message: 'Si el email existe, recibirás instrucciones.' });
   } catch (error) {

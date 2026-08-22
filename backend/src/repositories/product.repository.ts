@@ -1,7 +1,5 @@
-import mongoose from 'mongoose';
 import { BaseRepository, FilterQuery } from './base.repository';
-import Product from '../modules/products/product.model';
-type IProduct = mongoose.Document;
+import Product, { IProduct } from '../modules/products/product.model';
 
 export class ProductRepository extends BaseRepository<IProduct> {
   constructor() {

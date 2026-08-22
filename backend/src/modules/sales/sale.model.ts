@@ -8,6 +8,7 @@ export interface ISale extends Document {
   quantity: number;
   profit: number;
   category: string; // 👈 Campo clave para tus gráficos
+  orderId?: mongoose.Types.ObjectId; // Si la venta viene de un pedido entregado/cobrado
   tenantId: string;
   createdAt: Date;
 }
@@ -21,6 +22,7 @@ const SaleSchema: Schema = new Schema(
     quantity: { type: Number, required: true, default: 1 },
     profit: { type: Number, required: true },
     category: { type: String, required: true, default: "General" }, // 👈 Guardamos la categoría
+    orderId: { type: Schema.Types.ObjectId, ref: "Order", index: true },
     tenantId: { type: String, required: true, index: true },
   },
   { timestamps: true }

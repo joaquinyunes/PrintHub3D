@@ -40,32 +40,6 @@ export default function LoginPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const enterLocalMode = () => {
-    setLoading(true);
-    setError("");
-
-    // Accept any non-empty email/password in local mode
-    if (!formData.email || !formData.password) {
-      setError("Completá email y contraseña");
-      setLoading(false);
-      return;
-    }
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        token: "local-token-" + Date.now(),
-        user: {
-          id: 1,
-          email: formData.email,
-          role: "admin",
-          name: "Admin Local",
-        },
-      })
-    );
-    router.push("/admin");
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -100,7 +74,7 @@ export default function LoginPage() {
     } catch (err: any) {
       if (err.message === "Failed to fetch" || err.name === "TypeError") {
         setOffline(true);
-        setError("Backend no disponible — usá el modo local");
+        setError("No se puede contactar al servidor. Reintentá en unos minutos.");
       } else {
         setError(err.message);
       }
@@ -144,7 +118,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={offline ? enterLocalMode : handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-600" />
             <input
@@ -176,20 +150,15 @@ export default function LoginPage() {
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
               <>
-                {offline ? "Ingresar (Modo Local)" : "Ingresar al Sistema"}
+                Ingresar al Sistema
                 <ArrowRight className="h-4 w-4" />
               </>
             )}
           </button>
         </form>
 
-        {offline && (
-          <button onClick={handleSubmit} className="mt-3 w-full py-2 text-xs text-gray-600 hover:text-gray-400 transition">
-            Intentar conectar al servidor
-          </button>
-        )}
-
         <div className="mt-6 text-center space-y-2">
+          <a href="/forgot-password" className="block text-xs text-gray-500 hover:text-white transition">¿Olvidaste tu contraseña?</a>
           <p className="text-xs text-gray-600">Acceso restringido únicamente a personal autorizado.</p>
           <a href="/register" className="text-xs text-tone-amber hover:text-tone-amber/80">¿Eres cliente? Crea tu cuenta aquí</a>
         </div>

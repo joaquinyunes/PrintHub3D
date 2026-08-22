@@ -263,6 +263,7 @@ export const OrderService = {
     const newSale = new Sale({
       productName: `Pedido: ${(order as any).clientName}`,
       productId: (order as any)._id,
+      orderId: (order as any)._id,
       quantity: 1,
       price: totalStats.price,
       cost: totalStats.cost,

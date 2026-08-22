@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Upload, X, Loader2, Image as ImageIcon, Video } from "lucide-react";
+import { getAuthHeaders } from "@/lib/auth";
 
 interface FileUploaderProps {
   value: string;
@@ -25,6 +26,7 @@ export default function FileUploader({ value, onChange, type = "image", label }:
 
       const res = await fetch('/api/upload', {
         method: 'POST',
+        headers: getAuthHeaders(),
         body: formData,
       });
 

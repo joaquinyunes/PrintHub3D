@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node --max-old-space-size=400 dist/server.js",
     "dev": "nodemon --exec \"ts-node --transpile-only src/server.ts\"",
-    "build": "tsc --noEmitOnError false || true",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "worker:whatsapp": "ts-node src/workers/whatsapp.worker.ts",
@@ -55,6 +56,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "@types/node": "^25.0.3",
