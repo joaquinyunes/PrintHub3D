@@ -78,6 +78,10 @@ export const appConfig = {
   },
   whatsapp: {
     orderApiBaseUrl: process.env.ORDER_API_BASE_URL?.trim() || 'http://localhost:5000/api',
+    twilioSid: process.env.TWILIO_ACCOUNT_SID?.trim() || '',
+    twilioToken: process.env.TWILIO_AUTH_TOKEN?.trim() || '',
+    twilioFrom: process.env.TWILIO_WHATSAPP_FROM?.trim() || '',
+    adminNumber: process.env.ADMIN_WHATSAPP?.trim() || '',
   },
 };
 
