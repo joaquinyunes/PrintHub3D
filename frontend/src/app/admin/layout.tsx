@@ -20,9 +20,7 @@ import {
   Home,
   Store,
   Spool,
-  ClipboardList,
-  Wallet,
-  FileSpreadsheet
+  Wallet
 } from "lucide-react";
 
 interface StoredUser {
@@ -155,21 +153,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Links de Navegación */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
           <NavItem href="/admin" icon={<LayoutDashboard size={20} />} label="Dashboard" active={pathname === "/admin"} />
-          <NavItem href="/admin/home" icon={<Home size={20} />} label="Inicio Web" active={pathname === "/admin/home"} />
-          <NavItem href="/admin/products" icon={<Package size={20} />} label="Inventario" active={pathname.includes("/products")} />
-          <NavItem href="/admin/orders" icon={<ShoppingCart size={20} />} label="Pedidos" active={pathname.includes("/orders")} />
-          <NavItem href="/admin/production" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/production")} />
-          <NavItem href="/admin/pedidos" icon={<ClipboardList size={20} />} label="Pedidos" active={pathname.includes("/pedidos")} />
-          <NavItem href="/admin/produccion" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/produccion")} />
-          <NavItem href="/admin/productos" icon={<Package size={20} />} label="Productos" active={pathname.includes("/productos")} />
-          <NavItem href="/admin/ventas" icon={<DollarSign size={20} />} label="Ventas" active={pathname.includes("/ventas")} />
+          <NavItem href="/admin/orders" icon={<ShoppingCart size={20} />} label="Pedidos" active={pathname.includes("/orders") || pathname.includes("/pedidos")} />
+          <NavItem href="/admin/production" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/production") || pathname.includes("/produccion")} />
+          <NavItem href="/admin/products" icon={<Package size={20} />} label="Inventario" active={pathname.includes("/products") || pathname.includes("/productos")} />
           <NavItem href="/admin/filamento" icon={<Spool size={20} />} label="Filamento" active={pathname.includes("/filamento")} />
-          <NavItem href="/admin/gastos" icon={<Wallet size={20} />} label="Gastos" active={pathname.includes("/gastos")} />
+          <NavItem href="/admin/ventas" icon={<DollarSign size={20} />} label="Ventas" active={pathname.includes("/ventas")} />
+          <NavItem href="/admin/expenses" icon={<Wallet size={20} />} label="Gastos" active={pathname.includes("/expenses") || pathname.includes("/gastos")} />
+          <NavItem href="/admin/clients" icon={<Users size={20} />} label="Clientes" active={pathname.includes("/clients")} />
           <NavItem href="/admin/analytics" icon={<BarChart3 size={20} />} label="Reportes" active={pathname.includes("/analytics")} />
-          <NavItem href="/admin/importar" icon={<FileSpreadsheet size={20} />} label="Importar Excel" active={pathname.includes("/importar")} />
-          
+
           <div className="my-4 h-px bg-white/5 mx-2" />
-          
+
+          <NavItem href="/admin/home" icon={<Home size={20} />} label="Inicio Web" active={pathname === "/admin/home"} />
           <NavItem href="/admin/settings" icon={<Settings size={20} />} label="Configuración" active={pathname.includes("/settings")} />
         </nav>
 

@@ -66,6 +66,30 @@ export const registerSale = async (req: Request, res: Response) => {
     const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
     const { productId, quantity = 1 } = req.body;
 
+    // --- Venta manual / libre (mostrador sin producto de inventario) ---
+    if (!productId) {
+      const { productName, price, cost = 0, category = 'Mostrador', paymentMethod, client, notes } = req.body;
+      if (!productName || !(Number(price) >= 0)) {
+        return res.status(400).json({ message: 'productName y price son obligatorios para una venta manual.' });
+      }
+      const qty = Math.max(1, Number(quantity) || 1);
+      const totalPrice = Number(price);
+      const totalCost = Number(cost) || 0;
+      const manualSale = await new Sale({
+        productName,
+        price: totalPrice,
+        cost: totalCost,
+        quantity: qty,
+        profit: totalPrice - totalCost,
+        category,
+        paymentMethod: paymentMethod || '',
+        client: client || '',
+        notes: notes || '',
+        tenantId,
+      }).save();
+      return res.status(201).json({ message: 'Venta registrada.', sale: manualSale });
+    }
+
     // 1. Validar Producto
     const product = await Product.findOne({ _id: productId, tenantId });
     if (!product) {
