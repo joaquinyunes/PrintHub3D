@@ -1,0 +1,84 @@
+# Despliegue de producción. Uso:
+#   cp .env.prod.example .env.prod   (y completar valores)
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+services:
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    command: ["--wiredTigerCacheSizeGB", "0.5"]
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    # Sin puertos publicados: solo accesible desde la red interna de compose.
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongodb:27017/global3d
+      JWT_SECRET: ${JWT_SECRET:?falta JWT_SECRET}
+      CLIENT_URL: ${CLIENT_URL:?falta CLIENT_URL}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:?falta API_PUBLIC_URL}
+      DEFAULT_TENANT_ID: ${DEFAULT_TENANT_ID:-global3d_hq}
+      REQUIRE_EMAIL_VERIFICATION: ${REQUIRE_EMAIL_VERIFICATION:-false}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-150}
+      REDIS_URL: ${REDIS_URL:-}
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-}
+      MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_WHATSAPP_FROM: ${TWILIO_WHATSAPP_FROM:-}
+      ADMIN_WHATSAPP: ${ADMIN_WHATSAPP:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+    volumes:
+      - uploads:/app/uploads
+    ports:
+      - "${BACKEND_PORT:-5000}:5000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?falta NEXT_PUBLIC_API_URL}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+
+  # Backup diario de Mongo a ./backups (retención 14 días)
+  mongo-backup:
+    image: mongo:7
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    entrypoint: >
+      sh -c 'while true; do
+        ts=$$(date +%Y%m%d-%H%M%S);
+        mongodump --uri="mongodb://mongodb:27017/global3d" --archive="/backups/global3d-$$ts.archive.gz" --gzip
+          && echo "backup ok: global3d-$$ts.archive.gz"
+          || echo "backup FALLÓ";
+        find /backups -name "global3d-*.archive.gz" -mtime +14 -delete;
+        sleep 86400;
+      done'
+    volumes:
+      - ./backups:/backups
+
+volumes:
+  mongo-data:
+  uploads:

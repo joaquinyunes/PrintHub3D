@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 
 const router = Router();
 
-router.get('/health', async (req, res) => {
+// Montado en /api/health  → responde en GET /api/health y GET /api/health/health
+router.get(['/', '/health'], async (req, res) => {
   try {
     const healthcheck = {
       uptime: process.uptime(),

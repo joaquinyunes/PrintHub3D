@@ -1,7 +1,7 @@
 node_modules
 .env
 .env.*
-!.env.example
+!.env*.example
 dist
 build
 .next
@@ -10,6 +10,7 @@ build
 .wwebjs_auth
 .wwebjs_cache
 repomix-output.xml
+/backups/
 
 # Logs y salidas de proceso
 *.log
