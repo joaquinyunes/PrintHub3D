@@ -13,6 +13,7 @@ export interface Product {
   imageUrl?: string;
   category: string;
   description?: string;
+  stock?: number;
 }
 
 export interface Idea {

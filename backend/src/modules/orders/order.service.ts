@@ -117,6 +117,18 @@ export const OrderService = {
     let calculatedTotal = 0;
     let calculatedCost = 0;
 
+    // Validar stock disponible para los ítems de inventario (no aplica a personalizados).
+    for (const item of items) {
+      if (item.productId && !item.isCustom) {
+        const product = await productRepository.findById(item.productId, tenantId).catch(() => null);
+        if (product && typeof product.stock === 'number' && product.stock < Number(item.quantity || 0)) {
+          throw new Error(
+            `Stock insuficiente de "${product.name}": disponible ${product.stock}, pedido ${item.quantity}`,
+          );
+        }
+      }
+    }
+
     const enrichedItems = await Promise.all(
       items.map(async (item) => {
         let productCost = 0;

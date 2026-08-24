@@ -112,7 +112,10 @@ export const createOrder = async (req: Request, res: Response) => {
         });
 
         res.status(201).json(savedOrder);
-    } catch (error) {
+    } catch (error: any) {
+        if (String(error?.message || '').startsWith('Stock insuficiente')) {
+            return res.status(409).json({ message: error.message });
+        }
         console.error("CRITICAL ERROR createOrder:", error);
         res.status(500).json({ message: 'Error interno al crear el pedido. Revisa la consola del servidor.' });
     }
@@ -165,7 +168,10 @@ export const createPublicOrder = async (req: Request, res: Response) => {
             whatsappUrl: `https://wa.me/${phone}?text=${waText}`,
             total
         });
-    } catch (error) {
+    } catch (error: any) {
+        if (String(error?.message || '').startsWith('Stock insuficiente')) {
+            return res.status(409).json({ message: error.message });
+        }
         console.error("CRITICAL ERROR createPublicOrder:", error);
         res.status(500).json({ message: 'Error al crear pedido' });
     }

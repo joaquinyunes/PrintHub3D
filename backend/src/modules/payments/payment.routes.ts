@@ -70,6 +70,9 @@ router.post('/create-preference', paymentLimiter, async (req: Request, res: Resp
       trackingCode: order.trackingCode,
     });
   } catch (error: any) {
+    if (String(error?.message || '').startsWith('Stock insuficiente')) {
+      return res.status(409).json({ message: error.message });
+    }
     logger.error('Error creando preferencia MP:', error);
     res.status(500).json({ message: 'Error al crear preferencia de pago' });
   }
