@@ -24,6 +24,7 @@ export default function MagicLoginPage() {
       const res = await fetch(apiUrl("/api/auth/magic/request"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ identifier }),
       });
 
@@ -51,6 +52,7 @@ export default function MagicLoginPage() {
       const res = await fetch(apiUrl("/api/auth/magic/verify"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ identifier, code }),
       });
 

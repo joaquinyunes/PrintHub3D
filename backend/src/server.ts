@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { createServer } from 'http';
 import path from 'path';
@@ -55,6 +56,7 @@ app.use(cors({
 
 app.use(limiter);
 app.use(express.json());
+app.use(cookieParser());
 // Sanitize input to prevent NoSQL injection (replaces express-mongo-sanitize)
 app.use((req, _res, next) => {
   const sanitize = (obj: any): any => {

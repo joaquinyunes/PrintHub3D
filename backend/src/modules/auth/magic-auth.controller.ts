@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User, { IUser } from './user.model';
 import { appConfig } from '../../config';
+import { setAuthCookies } from '../../utils/authCookies';
 import logger from '../../config/logger';
 
 export const requestMagicCode = async (req: Request, res: Response) => {
@@ -107,13 +108,14 @@ export const verifyMagicCode = async (req: Request, res: Response) => {
     (user as any).magicCodeExpires = undefined;
     await user.save();
 
-    const token = jwt.sign({ 
-      id: user._id, 
+    const token = jwt.sign({
+      id: user._id,
       role: (user as any).role,
-      tenantId: (user as any).tenantId 
-    }, appConfig.jwtSecret, { expiresIn: '30d' });
+      tenantId: (user as any).tenantId
+    }, appConfig.jwtSecret, { expiresIn: appConfig.jwtExpiresIn as any });
+    setAuthCookies(res, token);
 
-    res.json({ 
+    res.json({
       token, 
       user: { 
         id: user._id, 

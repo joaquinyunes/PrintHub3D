@@ -5,8 +5,12 @@ import User from './user.model';
 import RefreshToken from '../../models/refreshToken.model';
 import { appConfig } from '../../config';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../../config/email';
+import { setAuthCookies, clearAuthCookies } from '../../utils/authCookies';
 import crypto from 'crypto';
 import logger from '../../config/logger';
+
+const signAccessToken = (payload: object): string =>
+    jwt.sign(payload, appConfig.jwtSecret, { expiresIn: appConfig.jwtExpiresIn as any });
 
 // --- REGISTRO PÚBLICO (Solo crea CLIENTES) ---
 export const register = async (req: Request, res: Response) => {
@@ -114,12 +118,13 @@ export const login = async (req: Request, res: Response) => {
             });
         }
 
-        const token = jwt.sign({ id: user._id, role: user.role, tenantId: user.tenantId }, appConfig.jwtSecret, { expiresIn: '30d' });
+        const token = signAccessToken({ id: user._id, role: user.role, tenantId: user.tenantId });
         const refresh = await generateRefreshToken(user._id.toString());
+        setAuthCookies(res, token, refresh.token);
 
         logger.info(`Login exitoso: ${email}`);
-        res.json({ 
-            token, 
+        res.json({
+            token,
             refreshToken: refresh.token,
             user: { 
                 id: user._id, 
@@ -158,6 +163,21 @@ export const getMe = async (req: Request, res: Response) => {
     }
 };
 
+// --- LOGOUT (limpia cookies y revoca el refresh token) ---
+export const logout = async (req: Request, res: Response) => {
+    try {
+        const token = req.body?.refreshToken || (req as any).cookies?.refreshToken;
+        if (token) {
+            await RefreshToken.deleteOne({ token }).catch(() => undefined);
+        }
+        clearAuthCookies(res);
+        res.json({ message: 'Sesión cerrada' });
+    } catch {
+        clearAuthCookies(res);
+        res.json({ message: 'Sesión cerrada' });
+    }
+};
+
 // Helper: generar refresh token y guardarlo
 const generateRefreshToken = async (userId: string) => {
   const token = crypto.randomBytes(40).toString('hex');
@@ -170,7 +190,7 @@ const generateRefreshToken = async (userId: string) => {
 // Endpoint para refrescar tokens
 export const refreshToken = async (req: Request, res: Response) => {
   try {
-    const { token } = req.body;
+    const token = req.body?.token || (req as any).cookies?.refreshToken;
     if (!token) return res.status(400).json({ message: 'Refresh token requerido' });
     
     const rt = await RefreshToken.findOne({ token });
@@ -181,14 +201,15 @@ export const refreshToken = async (req: Request, res: Response) => {
     const user = await User.findById(rt.userId) as any;
     if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
 
-    const newToken = jwt.sign({ id: user._id, role: user.role, tenantId: user.tenantId }, appConfig.jwtSecret, { expiresIn: '30d' });
-    
+    const newToken = signAccessToken({ id: user._id, role: user.role, tenantId: user.tenantId });
+
     // Rotación de refresh token
     await rt.deleteOne();
     const newRt = await generateRefreshToken(user._id.toString());
-    
+    setAuthCookies(res, newToken, newRt.token);
+
     logger.info(`Token refrescado para usuario: ${user.email}`);
-    res.json({ 
+    res.json({
         token: newToken, 
         refreshToken: newRt.token, 
         user: { id: user._id, name: user.name, email: user.email, role: user.role, tenantId: user.tenantId } 
@@ -221,8 +242,9 @@ export const verifyEmail = async (req: Request, res: Response) => {
         await user.save();
 
         // Generar token JWT después de verificar
-        const jwtToken = jwt.sign({ id: user._id, role: user.role, tenantId: user.tenantId }, appConfig.jwtSecret, { expiresIn: '30d' });
+        const jwtToken = signAccessToken({ id: user._id, role: user.role, tenantId: user.tenantId });
         const refresh = await generateRefreshToken(user._id.toString());
+        setAuthCookies(res, jwtToken, refresh.token);
 
         logger.info(`Email verificado exitosamente: ${user.email}`);
         res.json({ 

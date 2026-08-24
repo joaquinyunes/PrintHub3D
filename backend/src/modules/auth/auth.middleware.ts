@@ -6,7 +6,9 @@ import { body, validationResult } from 'express-validator';
 
 // 1. Verificar que esté logueado (Cualquiera)
 export const protect = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    const token =
+        req.header('Authorization')?.replace('Bearer ', '') ||
+        (req as any).cookies?.token;
     if (!token) return res.status(401).json({ message: 'No autorizado' });
 
     try {

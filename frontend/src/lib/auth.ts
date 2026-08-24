@@ -1,4 +1,5 @@
 import { UserData } from "@/types";
+import { apiUrl } from "@/lib/api";
 
 export const getAuthHeaders = (): Record<string, string> => {
   const stored = localStorage.getItem("user");
@@ -32,5 +33,11 @@ export const saveAuth = (token: string, user: UserData, refreshToken?: string): 
 };
 
 export const clearAuth = (): void => {
+  // Revoca el refresh token y limpia las cookies httpOnly (best-effort).
+  try {
+    fetch(apiUrl("/api/auth/logout"), { method: "POST", credentials: "include" }).catch(() => {});
+  } catch {
+    /* noop */
+  }
   localStorage.removeItem("user");
 };

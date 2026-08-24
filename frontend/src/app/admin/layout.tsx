@@ -72,6 +72,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       try {
         const res = await fetch(apiUrl("/api/auth/me"), {
           headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
           signal: controller.signal,
         });
         if (!res.ok) throw new Error("unauthorized");
@@ -89,6 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [pathname, router]);
 
   const handleLogout = () => {
+    fetch(apiUrl("/api/auth/logout"), { method: "POST", credentials: "include" }).catch(() => {});
     localStorage.clear();
     router.replace("/admin/login");
   };
