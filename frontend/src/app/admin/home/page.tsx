@@ -672,7 +672,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white">Explorá - Nuestras Categorías</h2>
-                <p className="text-sm text-zinc-400">Categorías que aparecen en la sección "Explorá" del inicio</p>
+                <p className="text-sm text-zinc-400">Categorías que aparecen en la sección «Explorá» del inicio</p>
               </div>
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-gray-400">{sections.productCategories?.length || 0} categorías</span>
@@ -727,7 +727,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
               </div>
               <p className="text-gray-400 text-sm mb-4">
                 Agregá videos que se mostrarán cuando un cliente busque su pedido. 
-                El código se compara con el código de seguimiento (ej: "vasoriver"匹配"joaquin-vasoriver-2026").
+                El código se compara con el código de seguimiento (ej: «vasoriver» coincide con «joaquin-vasoriver-2026»).
               </p>
               
               <div className="space-y-4">

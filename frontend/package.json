@@ -10,6 +10,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css}\""
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
     "@studio-freight/lenis": "^1.0.42",
     "@vercel/blob": "^2.3.3",
     "date-fns": "^4.1.0",
@@ -19,7 +21,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-parallax-tilt": "^1.7.327",
-    "recharts": "^3.6.0"
+    "recharts": "^3.6.0",
+    "three": "^0.171.0"
   },
   "devDependencies": {
     "@types/node": "^20",

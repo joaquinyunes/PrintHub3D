@@ -307,7 +307,7 @@ export default function SectionsPage() {
                 </div>
                 <p className="text-gray-400 text-sm mb-4">
                   Agregá videos que se mostrarán cuando un cliente busque su pedido. 
-                  El código se compara con el código de seguimiento del pedido (ej: "vasoriver").
+                  El código se compara con el código de seguimiento del pedido (ej: «vasoriver»).
                 </p>
                 
                 <div className="space-y-4">

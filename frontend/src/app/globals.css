@@ -4,79 +4,131 @@
 
 @layer base {
   :root {
-    /* Modo Oscuro por defecto (Industrial Dark) */
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
+    /* shadcn tokens (usados por el panel admin) — Industrial Dark */
+    --background: 240 10% 4%;
+    --foreground: 40 16% 94%;
+    --card: 240 8% 6%;
+    --card-foreground: 40 16% 94%;
+    --popover: 240 8% 6%;
+    --popover-foreground: 40 16% 94%;
+    --primary: 18 100% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 6% 12%;
+    --secondary-foreground: 40 16% 94%;
+    --muted: 240 6% 12%;
+    --muted-foreground: 240 5% 64%;
+    --accent: 168 82% 48%;
+    --accent-foreground: 240 10% 4%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 14%;
+    --input: 240 6% 14%;
+    --ring: 18 100% 55%;
+    --radius: 0.75rem;
 
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
-
-    --popover: 224 71% 4%;
-    --popover-foreground: 213 31% 91%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --flame: #ff5c1a;
+    --flare: #ff2e88;
+    --resin: #14e0c8;
+    --ground: #0a0a0c;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+  }
+  /* Lenis controla el scroll suave; desactivamos el nativo cuando está activo */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: clip;
+  }
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-ground text-ink font-sans antialiased;
+    font-feature-settings: "ss01" 1, "cv01" 1, "calt" 1;
+    overflow-x: hidden;
+  }
+  ::selection {
+    background: var(--flame);
+    color: #0a0a0c;
   }
 }
 
-:root {
-  --bg-main: #0b0b0d;
-  --bg-card: #121214;
-  --bg-soft: #18181b;
-
-  --border-soft: rgba(255,255,255,0.06);
-
-  --text-main: #ffffff;
-  --text-muted: #9ca3af;
-
-  --accent: #0a84ff; /* Apple blue */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  .font-display {
+    font-family: var(--font-display), system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  /* Gradiente "filamento fundido": naranja → magenta */
+  .text-flux {
+    background: linear-gradient(100deg, var(--flame) 0%, var(--flare) 60%, var(--resin) 130%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .bg-flux {
+    background: linear-gradient(100deg, var(--flame), var(--flare));
+  }
+  .ring-flux {
+    box-shadow: 0 0 0 1px rgba(255, 92, 26, 0.4), 0 20px 60px -20px rgba(255, 46, 136, 0.35);
+  }
+  /* Líneas de capa (layer lines) como textura de fondo */
+  .layer-lines {
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.035) 0px,
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+  }
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    pointer-events: none;
+    opacity: 0.4;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    animation: grain-shift 8s steps(6) infinite;
+    mix-blend-mode: overlay;
+  }
 }
 
-body {
-  background: var(--bg-main);
-  color: var(--text-main);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
+/* Compat: animación heredada usada por algunas tarjetas de contacto */
 @keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-
 .contact-card {
   opacity: 0;
   animation: fadeSlideUp 0.6s ease forwards;
-}
-
-* {
-  transition: all 0.25s ease;
 }
