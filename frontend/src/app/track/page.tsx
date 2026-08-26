@@ -2,8 +2,10 @@
 
 import React, { Suspense, useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Package, CheckCircle, Clock, Zap, Box, Star } from "lucide-react";
+import { ArrowLeft, Package, CheckCircle, Clock, Zap, Box, Star, CreditCard, Loader2 } from "lucide-react";
 import { apiUrl, resolveMediaUrl } from "@/lib/api";
+
+const money = (n: number) => "$" + Math.round(n || 0).toLocaleString("es-AR");
 
 interface StatusStep {
   key: string;
@@ -54,8 +56,32 @@ function TrackContentInner() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [customVideo, setCustomVideo] = useState<string | null>(null);
-  
+  const [payLoading, setPayLoading] = useState(false);
+  const [payError, setPayError] = useState("");
+
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const payBalance = async () => {
+    if (!order) return;
+    setPayLoading(true);
+    setPayError("");
+    try {
+      const res = await fetch(apiUrl("/api/payments/create-preference"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackingCode: order.trackingCode, balance: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "No se pudo generar el pago");
+      const url = data.initPoint || data.sandboxInitPoint;
+      if (url) window.location.href = url;
+      else throw new Error("MercadoPago no devolvió un link");
+    } catch (e: any) {
+      setPayError(e.message);
+    } finally {
+      setPayLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!code) {
@@ -183,6 +209,49 @@ function TrackContentInner() {
             ))}
           </div>
         </div>
+
+        {/* Detalle + pago del saldo */}
+        {order.items && order.items.length > 0 && (
+          <div className="bg-tone-dark/60 border border-white/5 rounded-xl p-6">
+            <h3 className="text-xs font-black text-gray-600 uppercase tracking-[0.15em] mb-4">Tu pedido</h3>
+            <div className="space-y-2">
+              {order.items.map((it, i) => (
+                <div key={i} className="flex justify-between text-sm">
+                  <span className="text-gray-300">{it.productName} <span className="text-gray-600">× {it.quantity}</span></span>
+                  <span className="text-gray-400">{money(it.price * it.quantity)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 border-t border-white/5 pt-4 space-y-1.5 text-sm">
+              <div className="flex justify-between text-gray-400"><span>Total</span><span>{money(order.total)}</span></div>
+              <div className="flex justify-between text-gray-400"><span>Pagado</span><span>{money(order.deposit)}</span></div>
+              <div className="flex justify-between text-lg font-black text-white">
+                <span>Saldo</span>
+                <span className={order.total - order.deposit > 0 ? "text-tone-amber" : "text-green-400"}>
+                  {money(Math.max(0, order.total - order.deposit))}
+                </span>
+              </div>
+            </div>
+
+            {order.total - order.deposit > 0 ? (
+              <>
+                <button
+                  onClick={payBalance}
+                  disabled={payLoading}
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#009EE3] py-3 font-bold text-white transition hover:bg-[#008BD0] disabled:opacity-50"
+                >
+                  {payLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <CreditCard className="h-5 w-5" />}
+                  Pagar saldo con MercadoPago
+                </button>
+                {payError && <p className="mt-2 text-center text-xs text-tone-red">{payError}</p>}
+              </>
+            ) : (
+              <p className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-green-500/20 bg-green-500/10 py-2.5 text-sm text-green-400">
+                <CheckCircle className="h-4 w-4" /> Pedido saldado
+              </p>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );

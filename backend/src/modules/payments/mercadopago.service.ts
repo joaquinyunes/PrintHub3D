@@ -10,6 +10,9 @@ interface CreatePreferenceInput {
   tenantId: string;
   customerEmail?: string;
   deposit?: boolean;
+  /** Cobra un importe único fijo (ej: saldo pendiente) en vez de los ítems. */
+  fixedAmount?: number;
+  fixedTitle?: string;
 }
 
 const getClient = (): MercadoPagoConfig => {
@@ -27,13 +30,24 @@ export const MercadoPagoService = {
     const client = getClient();
     const factor = input.deposit ? 0.5 : 1;
 
-    const items = input.items.map((item, idx) => ({
-      id: `${input.orderId}-${idx}`,
-      title: input.deposit ? `${item.title} (Seña 50%)` : item.title,
-      quantity: item.quantity,
-      currency_id: 'ARS',
-      unit_price: Math.round(item.unitPrice * factor * 100) / 100,
-    }));
+    const items =
+      input.fixedAmount && input.fixedAmount > 0
+        ? [
+            {
+              id: `${input.orderId}-fixed`,
+              title: input.fixedTitle || `Pedido ${input.trackingCode}`,
+              quantity: 1,
+              currency_id: 'ARS',
+              unit_price: Math.round(input.fixedAmount * 100) / 100,
+            },
+          ]
+        : input.items.map((item, idx) => ({
+            id: `${input.orderId}-${idx}`,
+            title: input.deposit ? `${item.title} (Seña 50%)` : item.title,
+            quantity: item.quantity,
+            currency_id: 'ARS',
+            unit_price: Math.round(item.unitPrice * factor * 100) / 100,
+          }));
 
     const successUrl = `${appConfig.clientUrl}/checkout/resultado`;
 
@@ -41,7 +55,12 @@ export const MercadoPagoService = {
       body: {
         items,
         external_reference: input.orderId,
-        metadata: { tenantId: input.tenantId, trackingCode: input.trackingCode, deposit: !!input.deposit },
+        metadata: {
+          tenantId: input.tenantId,
+          trackingCode: input.trackingCode,
+          deposit: !!input.deposit,
+          balance: !!input.fixedAmount,
+        },
         payer: input.customerEmail ? { email: input.customerEmail } : undefined,
         back_urls: {
           success: successUrl,

@@ -434,6 +434,7 @@ export const getOrderByTrackingCode = async (req: Request, res: Response) => {
         }
 
         return res.json({
+            id: (order as any)._id,
             trackingCode: (order as any).trackingCode,
             clientName: order.clientName,
             status: (order as any).status,

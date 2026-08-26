@@ -7,6 +7,12 @@ export interface IPrinter extends Document {
     printerModel: string;
     status: 'idle' | 'printing' | 'maintenance';
     currentOrderId?: string; // Puede ser string o ObjectId
+    // Integración opcional para estado en vivo
+    integration?: {
+        type: 'none' | 'octoprint' | 'moonraker' | 'bambu';
+        url?: string;
+        apiKey?: string;
+    };
     tenantId: string;
 }
 
@@ -20,6 +26,11 @@ const PrinterSchema: Schema = new Schema({
         default: 'idle' 
     },
     currentOrderId: { type: Schema.Types.ObjectId, ref: 'Order' },
+    integration: {
+        type: { type: String, enum: ['none', 'octoprint', 'moonraker', 'bambu'], default: 'none' },
+        url: { type: String, default: '' },
+        apiKey: { type: String, default: '' },
+    },
     tenantId: { type: String, default: appConfig.defaultTenantId }
 }, { timestamps: true });
 

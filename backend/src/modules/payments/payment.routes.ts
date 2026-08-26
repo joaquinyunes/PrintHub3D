@@ -16,12 +16,14 @@ const isEmail = (v?: string) => !!v && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 // Acepta { orderId } (pedido ya creado) o { clientName, items, customerContact } (checkout web).
 router.post('/create-preference', paymentLimiter, async (req: Request, res: Response) => {
   try {
-    const { orderId, deposit, items, clientName, customerContact, notes } = req.body;
+    const { orderId, trackingCode, deposit, balance, items, clientName, customerContact, notes } = req.body;
 
     let order: any;
 
-    if (orderId) {
-      order = await Order.findOne({ _id: orderId });
+    if (orderId || trackingCode) {
+      order = orderId
+        ? await Order.findOne({ _id: orderId })
+        : await Order.findOne({ trackingCode: new RegExp(`^${String(trackingCode).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
       if (!order) return res.status(404).json({ message: 'Orden no encontrada' });
     } else {
       if (!clientName || !Array.isArray(items) || items.length === 0) {
@@ -53,6 +55,12 @@ router.post('/create-preference', paymentLimiter, async (req: Request, res: Resp
       unitPrice: item.price,
     }));
 
+    // Pago de saldo pendiente (total - seña ya abonada)
+    const remaining = Math.max(0, Number(order.total || 0) - Number(order.deposit || 0));
+    if (balance && remaining <= 0) {
+      return res.status(400).json({ message: 'Este pedido no tiene saldo pendiente' });
+    }
+
     const preference = await MercadoPagoService.createPreference({
       orderId: order._id.toString(),
       trackingCode: order.trackingCode,
@@ -60,6 +68,8 @@ router.post('/create-preference', paymentLimiter, async (req: Request, res: Resp
       tenantId: order.tenantId,
       customerEmail: isEmail(order.customerContact) ? order.customerContact : undefined,
       deposit,
+      fixedAmount: balance ? remaining : undefined,
+      fixedTitle: balance ? `Saldo pedido ${order.trackingCode}` : undefined,
     });
 
     res.json({
@@ -104,8 +114,13 @@ router.post('/webhook', async (req: Request, res: Response) => {
     }
 
     if (payment.status === 'approved') {
+      const amount = Number(payment.transaction_amount || 0);
+      const isBalance = payment.metadata?.balance === true || payment.metadata?.balance === 'true';
       order.paymentMethod = 'MercadoPago';
-      order.deposit = payment.transaction_amount || order.deposit;
+      // Saldo: acumula sobre lo ya pagado. Seña/total: fija el monto.
+      order.deposit = isBalance
+        ? Math.min(Number(order.total || 0), Number(order.deposit || 0) + amount)
+        : amount || order.deposit;
 
       if (!order.isSaleRegistered) {
         await new Sale({

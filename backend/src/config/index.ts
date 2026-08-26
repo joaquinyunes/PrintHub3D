@@ -78,6 +78,13 @@ export const appConfig = {
     accessToken: process.env.MP_ACCESS_TOKEN?.trim() || '',
     webhookSecret: process.env.MP_WEBHOOK_SECRET?.trim() || '',
   },
+  afip: {
+    cuit: process.env.AFIP_CUIT?.trim() || '',
+    cert: process.env.AFIP_CERT?.trim() || '',
+    key: process.env.AFIP_KEY?.trim() || '',
+    pointOfSale: Number(process.env.AFIP_POINT_OF_SALE || 1),
+    production: process.env.AFIP_ENV === 'production',
+  },
   whatsapp: {
     orderApiBaseUrl: process.env.ORDER_API_BASE_URL?.trim() || 'http://localhost:5000/api',
     twilioSid: process.env.TWILIO_ACCOUNT_SID?.trim() || '',
