@@ -1,13 +1,13 @@
 import { Router, Response } from 'express';
 import Filament from './filament.model';
-import { protect, adminOnly } from '../auth/auth.middleware';
+import { protect, staffOrAdmin } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
 import { reqParam } from '../../utils/reqParam';
 
 const router = Router();
 
 // Listar filamentos del tenant
-router.get('/', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.get('/', protect, withTenant, staffOrAdmin, async (req: any, res: Response) => {
   try {
     const items = await Filament.find({ tenantId: req.tenantId }).sort({ material: 1, color: 1 });
     res.json({ items });
@@ -17,7 +17,7 @@ router.get('/', protect, withTenant, adminOnly, async (req: any, res: Response) 
 });
 
 // Crear
-router.post('/', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.post('/', protect, withTenant, staffOrAdmin, async (req: any, res: Response) => {
   try {
     const { brand, material, color, costPerKg, gramsTotal, gramsRemaining, spools, lowThresholdGrams, notes } = req.body;
     if (!brand) return res.status(400).json({ message: 'La marca es obligatoria' });
@@ -42,7 +42,7 @@ router.post('/', protect, withTenant, adminOnly, async (req: any, res: Response)
 });
 
 // Actualizar
-router.put('/:id', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.put('/:id', protect, withTenant, staffOrAdmin, async (req: any, res: Response) => {
   try {
     const allowed = ['brand', 'material', 'color', 'costPerKg', 'gramsTotal', 'gramsRemaining', 'spools', 'lowThresholdGrams', 'notes'];
     const update: Record<string, unknown> = {};
@@ -61,7 +61,7 @@ router.put('/:id', protect, withTenant, adminOnly, async (req: any, res: Respons
 });
 
 // Consumir gramos (descuento por trabajo / ajuste manual)
-router.post('/:id/consume', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.post('/:id/consume', protect, withTenant, staffOrAdmin, async (req: any, res: Response) => {
   try {
     const grams = Number(req.body.grams);
     if (!Number.isFinite(grams) || grams <= 0) {
@@ -79,7 +79,7 @@ router.post('/:id/consume', protect, withTenant, adminOnly, async (req: any, res
 });
 
 // Recargar bobina (suma gramos y opcionalmente una bobina)
-router.post('/:id/refill', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.post('/:id/refill', protect, withTenant, staffOrAdmin, async (req: any, res: Response) => {
   try {
     const filament = await Filament.findOne({ _id: reqParam(req, 'id'), tenantId: req.tenantId });
     if (!filament) return res.status(404).json({ message: 'Filamento no encontrado' });
@@ -95,7 +95,7 @@ router.post('/:id/refill', protect, withTenant, adminOnly, async (req: any, res:
 });
 
 // Eliminar
-router.delete('/:id', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.delete('/:id', protect, withTenant, staffOrAdmin, async (req: any, res: Response) => {
   try {
     const deleted = await Filament.findOneAndDelete({ _id: reqParam(req, 'id'), tenantId: req.tenantId });
     if (!deleted) return res.status(404).json({ message: 'Filamento no encontrado' });

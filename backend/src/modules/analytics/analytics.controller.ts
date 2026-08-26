@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Order from '../orders/order.model';
+import logger from '../../config/logger';
 import Product from '../products/product.model';
 import Client from '../clients/client.model';
 import Expense from '../expense/expense.model';
@@ -143,7 +144,87 @@ export const getReportsData = async (req: Request, res: Response) => {
         });
 
     } catch (error) {
-        console.error("Error en getReportsData:", error);
+        logger.error("Error en getReportsData:", error);
         res.status(500).json({ message: 'Error en reportes detallados' });
+    }
+};
+// ==========================================
+// 4. RENTABILIDAD / P&L (Margen real con COGS)
+// ==========================================
+export const getProfitability = async (req: Request, res: Response) => {
+    try {
+        const tenantId = (req as any).tenantId || (req as any).user?.tenantId || appConfig.defaultTenantId;
+        const { year, month } = req.query as Record<string, string | undefined>;
+
+        const y = parseInt(year || '') || new Date().getFullYear();
+        let start: Date, end: Date;
+        if (!month || month === 'all') {
+            start = new Date(y, 0, 1);
+            end = new Date(y, 11, 31, 23, 59, 59, 999);
+        } else {
+            const m = parseInt(month);
+            start = new Date(y, m, 1);
+            end = new Date(y, m + 1, 0, 23, 59, 59, 999);
+        }
+
+        const [sales, expenses, openOrders] = await Promise.all([
+            Sale.find({ tenantId, createdAt: { $gte: start, $lte: end } }).lean(),
+            Expense.find({ tenantId, date: { $gte: start, $lte: end } }).lean(),
+            // Pedidos aún no convertidos en venta: su margen todavía no está "realizado"
+            Order.find({ tenantId, createdAt: { $gte: start, $lte: end }, status: { $ne: 'cancelled' }, isSaleRegistered: { $ne: true } }).lean(),
+        ]);
+
+        const revenue = sales.reduce((s, v: any) => s + Number(v.price || 0), 0);
+        const cogs = sales.reduce((s, v: any) => s + Number(v.cost || 0), 0);
+        const grossProfit = revenue - cogs;
+        const totalExpenses = expenses.reduce((s, e: any) => s + Number(e.amount || 0), 0);
+        const netProfit = grossProfit - totalExpenses;
+
+        const pipeline = openOrders.reduce((s, o: any) => s + Number(o.total || 0), 0);
+        const pipelineProfit = openOrders.reduce((s, o: any) => s + Number(o.profit || 0), 0);
+
+        // Margen por producto
+        const byProduct = new Map<string, { name: string; units: number; revenue: number; cost: number; profit: number }>();
+        for (const v of sales as any[]) {
+            const key = v.productName || 'Sin nombre';
+            const cur = byProduct.get(key) || { name: key, units: 0, revenue: 0, cost: 0, profit: 0 };
+            cur.units += Number(v.quantity || 1);
+            cur.revenue += Number(v.price || 0);
+            cur.cost += Number(v.cost || 0);
+            cur.profit += Number(v.profit ?? (Number(v.price || 0) - Number(v.cost || 0)));
+            byProduct.set(key, cur);
+        }
+        const products = Array.from(byProduct.values())
+            .map((p) => ({ ...p, margin: p.revenue > 0 ? Math.round((p.profit / p.revenue) * 100) : 0 }))
+            .sort((a, b) => b.profit - a.profit)
+            .slice(0, 20);
+
+        // Gastos por categoría
+        const byCategory = new Map<string, number>();
+        for (const e of expenses as any[]) {
+            byCategory.set(e.category || 'General', (byCategory.get(e.category || 'General') || 0) + Number(e.amount || 0));
+        }
+        const expensesByCategory = Array.from(byCategory.entries())
+            .map(([category, total]) => ({ category, total }))
+            .sort((a, b) => b.total - a.total);
+
+        res.json({
+            period: { year: y, month: month || 'all' },
+            totals: {
+                revenue,
+                cogs,
+                grossProfit,
+                grossMargin: revenue > 0 ? Math.round((grossProfit / revenue) * 100) : 0,
+                expenses: totalExpenses,
+                netProfit,
+                netMargin: revenue > 0 ? Math.round((netProfit / revenue) * 100) : 0,
+            },
+            pipeline: { value: pipeline, estimatedProfit: pipelineProfit, orders: openOrders.length },
+            products,
+            expensesByCategory,
+        });
+    } catch (error) {
+        logger.error('Error en getProfitability:', error);
+        res.status(500).json({ message: 'Error calculando rentabilidad' });
     }
 };

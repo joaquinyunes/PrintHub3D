@@ -30,6 +30,19 @@ export const adminOnly = (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
+// 3. Permitir uno de varios roles (ej: operarios además del admin)
+export const allowRoles = (...roles: string[]) => (req: Request, res: Response, next: NextFunction) => {
+    const role = (req as any).user?.role;
+    if (role && roles.includes(role)) {
+        next();
+    } else {
+        res.status(403).json({ message: 'Acceso denegado para tu rol.' });
+    }
+};
+
+// Operativo: admin o staff (operario). Los datos de caja/finanzas siguen siendo adminOnly.
+export const staffOrAdmin = allowRoles('admin', 'staff');
+
 // Validators para autenticación
 export const registerValidations = [
   body('name').isLength({ min: 2 }).withMessage('Nombre requerido (mín 2 caracteres)'),

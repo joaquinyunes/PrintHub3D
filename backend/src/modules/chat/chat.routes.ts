@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import Chat from './chat.model';
+import logger from '../../config/logger';
 import { sendWhatsAppMessage } from '../notifications/whatsapp.service';
 import { protect, adminOnly } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
@@ -109,10 +110,10 @@ router.post('/send', protect, withTenant, adminOnly, async (req, res) => {
             await sendWhatsAppMessage(to, message);
         } else if (platform === 'instagram') {
             // AQUÍ PONDREMOS LA LÓGICA DE INSTAGRAM LUEGO
-            console.log("⚠️ Pendiente: Conectar API Instagram");
+            logger.info("⚠️ Pendiente: Conectar API Instagram");
         } else if (platform === 'facebook') {
             // AQUÍ PONDREMOS LA LÓGICA DE FACEBOOK LUEGO
-            console.log("⚠️ Pendiente: Conectar API Facebook");
+            logger.info("⚠️ Pendiente: Conectar API Facebook");
         }
 
         // B. Guardar en Base de Datos (para que aparezca en tu chat)
@@ -129,7 +130,7 @@ router.post('/send', protect, withTenant, adminOnly, async (req, res) => {
         res.json(newMsg);
 
     } catch (error: any) {
-        console.error(error);
+        logger.error(error);
         res.status(500).json({ message: 'Error enviando mensaje' });
     }
 });

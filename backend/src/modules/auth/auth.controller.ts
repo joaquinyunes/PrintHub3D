@@ -75,6 +75,7 @@ export const login = async (req: Request, res: Response) => {
 
         const user = await User.findOne({ email }) as any;
         if (!user) return res.status(400).json({ message: 'Usuario no encontrado' });
+        if (user.active === false) return res.status(403).json({ message: 'Cuenta desactivada. Contactá al administrador.' });
 
         // Verificar si la cuenta está bloqueada
         if (user.lockUntil && user.lockUntil > new Date()) {
@@ -145,17 +146,22 @@ export const login = async (req: Request, res: Response) => {
 // --- GET ME (Obtener usuario actual desde token) ---
 export const getMe = async (req: Request, res: Response) => {
     try {
-        const user = (req as any).user;
-        if (!user) return res.status(401).json({ message: 'No autorizado' });
-        
-        res.json({ 
-            user: { 
-                id: user.id, 
-                name: user.name || 'Usuario', 
-                email: user.email || '', 
-                role: user.role,
-                tenantId: user.tenantId
-            } 
+        const payload = (req as any).user;
+        if (!payload) return res.status(401).json({ message: 'No autorizado' });
+
+        // Lookup fresco: refleja rol y estado actuales (una cuenta desactivada pierde acceso al panel).
+        const db = await User.findById(payload.id).select('name email role tenantId active').lean() as any;
+        if (!db) return res.status(401).json({ message: 'Usuario no encontrado' });
+        if (db.active === false) return res.status(403).json({ message: 'Cuenta desactivada' });
+
+        res.json({
+            user: {
+                id: db._id,
+                name: db.name || 'Usuario',
+                email: db.email || '',
+                role: db.role,
+                tenantId: db.tenantId,
+            },
         });
     } catch (error) {
         logger.error('Error obteniendo usuario:', error);

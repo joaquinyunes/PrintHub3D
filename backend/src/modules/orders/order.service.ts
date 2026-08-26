@@ -1,5 +1,6 @@
 import { OrderRepository } from '../../repositories/order.repository';
 import { ProductRepository } from '../../repositories/product.repository';
+import logger from '../../config/logger';
 import Sale from '../sales/sale.model';
 import Client from '../clients/client.model';
 import { InventoryService } from '../products/inventory.service';
@@ -137,7 +138,7 @@ export const OrderService = {
             const product = await productRepository.findById(item.productId, tenantId);
             if (product) productCost = product.cost ?? 0;
           } catch (err) {
-            console.error('Error buscando producto en OrderService:', err);
+            logger.error('Error buscando producto en OrderService:', err);
           }
         }
 
@@ -205,7 +206,7 @@ export const OrderService = {
             }).save();
           }
         } catch (invError) {
-          console.error('Error actualizando inventario:', invError);
+          logger.error('Error actualizando inventario:', invError);
         }
       }
     }
@@ -231,7 +232,7 @@ export const OrderService = {
         }
       }
     } catch (crmError) {
-      console.error(
+      logger.error(
         'CRM Warning: No se pudo actualizar el cliente, pero el pedido se guardó.',
         crmError,
       );

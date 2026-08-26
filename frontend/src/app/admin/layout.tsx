@@ -20,7 +20,9 @@ import {
   Home,
   Store,
   Spool,
-  Wallet
+  Wallet,
+  UserCog,
+  Percent
 } from "lucide-react";
 
 interface StoredUser {
@@ -35,7 +37,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [role, setRole] = useState<string>("admin");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const isAdmin = role === "admin";
+
+  // Rutas solo-admin: un operario que las tipee vuelve al dashboard (la API igual las bloquea).
+  const ADMIN_ONLY = ["/admin/ventas", "/admin/expenses", "/admin/gastos", "/admin/analytics", "/admin/rentabilidad", "/admin/reports", "/admin/settings", "/admin/home", "/admin/usuarios", "/admin/sections", "/admin/social"];
+  useEffect(() => {
+    if (isAuthorized && role === "staff" && ADMIN_ONLY.some((p) => pathname.startsWith(p))) {
+      router.replace("/admin");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthorized, role, pathname]);
 
   // --- 1. SEGURIDAD ---
   // El rol se valida SIEMPRE contra el backend: localStorage solo cachea el token.
@@ -77,7 +90,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         });
         if (!res.ok) throw new Error("unauthorized");
         const data = await res.json();
-        if (data?.user?.role !== "admin") throw new Error("forbidden");
+        const r = data?.user?.role;
+        if (r !== "admin" && r !== "staff") throw new Error("forbidden");
+        setRole(r);
+        try {
+          localStorage.setItem("ph_role", r);
+        } catch {
+          /* noop */
+        }
         setIsAuthorized(true);
       } catch (err: any) {
         if (err?.name === "AbortError") return;
@@ -159,15 +179,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavItem href="/admin/production" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/production") || pathname.includes("/produccion")} />
           <NavItem href="/admin/products" icon={<Package size={20} />} label="Inventario" active={pathname.includes("/products") || pathname.includes("/productos")} />
           <NavItem href="/admin/filamento" icon={<Spool size={20} />} label="Filamento" active={pathname.includes("/filamento")} />
-          <NavItem href="/admin/ventas" icon={<DollarSign size={20} />} label="Ventas" active={pathname.includes("/ventas")} />
-          <NavItem href="/admin/expenses" icon={<Wallet size={20} />} label="Gastos" active={pathname.includes("/expenses") || pathname.includes("/gastos")} />
           <NavItem href="/admin/clients" icon={<Users size={20} />} label="Clientes" active={pathname.includes("/clients")} />
-          <NavItem href="/admin/analytics" icon={<BarChart3 size={20} />} label="Reportes" active={pathname.includes("/analytics")} />
+          {isAdmin && (
+            <>
+              <NavItem href="/admin/ventas" icon={<DollarSign size={20} />} label="Ventas" active={pathname.includes("/ventas")} />
+              <NavItem href="/admin/expenses" icon={<Wallet size={20} />} label="Gastos" active={pathname.includes("/expenses") || pathname.includes("/gastos")} />
+              <NavItem href="/admin/analytics" icon={<BarChart3 size={20} />} label="Reportes" active={pathname.includes("/analytics")} />
+              <NavItem href="/admin/rentabilidad" icon={<Percent size={20} />} label="Rentabilidad" active={pathname.includes("/rentabilidad")} />
+            </>
+          )}
 
-          <div className="my-4 h-px bg-white/5 mx-2" />
-
-          <NavItem href="/admin/home" icon={<Home size={20} />} label="Inicio Web" active={pathname === "/admin/home"} />
-          <NavItem href="/admin/settings" icon={<Settings size={20} />} label="Configuración" active={pathname.includes("/settings")} />
+          {isAdmin && (
+            <>
+              <div className="my-4 h-px bg-white/5 mx-2" />
+              <NavItem href="/admin/usuarios" icon={<UserCog size={20} />} label="Usuarios" active={pathname.includes("/usuarios")} />
+              <NavItem href="/admin/home" icon={<Home size={20} />} label="Inicio Web" active={pathname === "/admin/home"} />
+              <NavItem href="/admin/settings" icon={<Settings size={20} />} label="Configuración" active={pathname.includes("/settings")} />
+            </>
+          )}
         </nav>
 
         {/* Footer Sidebar */}

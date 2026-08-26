@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { OrderRepository } from '../../repositories/order.repository';
+import logger from '../../config/logger';
 import { ProductRepository } from '../../repositories/product.repository';
 import Sale from '../sales/sale.model';
 import { sendAdminNotification, sendCustomerNotification } from '../notifications/notification.service';
@@ -76,7 +77,7 @@ export const getOrders = async (req: Request, res: Response) => {
             pageSize: parseInt(pageSize || '50', 10),
         });
     } catch (error) {
-        console.error("Error getOrders:", error);
+        logger.error("Error getOrders:", error);
         res.status(500).json({ message: 'Error al obtener pedidos' });
     }
 };
@@ -96,7 +97,7 @@ export const createOrder = async (req: Request, res: Response) => {
             notes, items, dueDate, files, customerContact 
         } = req.body;
 
-        console.log("Recibiendo pedido:", { clientName, dueDate, itemsLength: items?.length });
+        logger.info("Recibiendo pedido:", { clientName, dueDate, itemsLength: items?.length });
 
         const savedOrder = await OrderService.createOrder({
             tenantId,
@@ -116,7 +117,7 @@ export const createOrder = async (req: Request, res: Response) => {
         if (String(error?.message || '').startsWith('Stock insuficiente')) {
             return res.status(409).json({ message: error.message });
         }
-        console.error("CRITICAL ERROR createOrder:", error);
+        logger.error("CRITICAL ERROR createOrder:", error);
         res.status(500).json({ message: 'Error interno al crear el pedido. Revisa la consola del servidor.' });
     }
 };
@@ -172,7 +173,7 @@ export const createPublicOrder = async (req: Request, res: Response) => {
         if (String(error?.message || '').startsWith('Stock insuficiente')) {
             return res.status(409).json({ message: error.message });
         }
-        console.error("CRITICAL ERROR createPublicOrder:", error);
+        logger.error("CRITICAL ERROR createPublicOrder:", error);
         res.status(500).json({ message: 'Error al crear pedido' });
     }
 };
@@ -200,7 +201,7 @@ export const updateOrder = async (req: Request, res: Response) => {
         if (!updatedOrder) return res.status(404).json({ message: "Pedido no encontrado" });
         res.json(updatedOrder);
     } catch (error) {
-        console.error("Error updateOrder:", error);
+        logger.error("Error updateOrder:", error);
         res.status(500).json({ message: "Error al editar pedido" });
     }
 };
@@ -247,7 +248,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 }
             }
         } catch (printerError) {
-            console.error("Printer/Notification Warning:", printerError);
+            logger.error("Printer/Notification Warning:", printerError);
         }
 
         const order = await orderRepository.update(id, updateData, String(tenantId));
@@ -275,7 +276,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
         res.json(order);
     } catch (error) {
-        console.error("Error updateOrderStatus:", error);
+        logger.error("Error updateOrderStatus:", error);
         res.status(500).json({ message: 'Error actualizando estado' });
     }
 };
@@ -327,7 +328,7 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
                 );
             }
         } catch (printerError) {
-            console.error("Printer Warning:", printerError);
+            logger.error("Printer Warning:", printerError);
         }
 
         // 3️⃣ Recalcular estado global del pedido según items impresos
@@ -355,7 +356,7 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
 
         return res.json(order);
     } catch (error) {
-        console.error('Error markOrderItemPrinted:', error);
+        logger.error('Error markOrderItemPrinted:', error);
         return res.status(500).json({ message: 'Error marcando ítem impreso' });
     }
 };
@@ -392,7 +393,7 @@ export const registerOrderSale = async (req: Request, res: Response) => {
         }
 
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         return res.status(500).json({ message: "Error al registrar venta del pedido" });
     }
 };
@@ -429,7 +430,7 @@ export const getOrderByTrackingCode = async (req: Request, res: Response) => {
             const customCodes = Array.isArray(raw) ? raw : [];
             customVideoUrl = findCustomVideoUrl(String(trackingCode), customCodes);
         } catch (lookupErr) {
-            console.error('getOrderByTrackingCode customVideo lookup:', lookupErr);
+            logger.error('getOrderByTrackingCode customVideo lookup:', lookupErr);
         }
 
         return res.json({
@@ -452,7 +453,7 @@ export const getOrderByTrackingCode = async (req: Request, res: Response) => {
             customVideoUrl,
         });
     } catch (error) {
-        console.error('Error getOrderByTrackingCode:', error);
+        logger.error('Error getOrderByTrackingCode:', error);
         return res.status(500).json({ message: 'Error consultando tracking' });
     }
 };
@@ -485,7 +486,7 @@ export const submitOrderFeedback = async (req: Request, res: Response) => {
 
         return res.json({ message: 'Gracias por tu opinión', order });
     } catch (error) {
-        console.error('Error submitOrderFeedback:', error);
+        logger.error('Error submitOrderFeedback:', error);
         return res.status(500).json({ message: 'Error guardando feedback' });
     }
 };
@@ -526,7 +527,7 @@ export const resendTrackingToCustomer = async (req: Request, res: Response) => {
 
         return res.json({ message: 'Tracking reenviado al cliente' });
     } catch (error) {
-        console.error('Error resendTrackingToCustomer:', error);
+        logger.error('Error resendTrackingToCustomer:', error);
         return res.status(500).json({ message: 'Error reenviando tracking' });
     }
 };
@@ -540,7 +541,7 @@ export const getOrdersSummary = async (req: Request, res: Response) => {
         const summary = await orderRepository.getOrdersSummary(tenantId);
         return res.json(summary);
     } catch (error) {
-        console.error('Error getOrdersSummary:', error);
+        logger.error('Error getOrdersSummary:', error);
         return res.status(500).json({ message: 'Error obteniendo resumen de pedidos' });
     }
 };
@@ -573,7 +574,7 @@ export const getOrderTimeline = async (req: Request, res: Response) => {
             timeline,
         });
     } catch (error) {
-        console.error('Error getOrderTimeline:', error);
+        logger.error('Error getOrderTimeline:', error);
         return res.status(500).json({ message: 'Error obteniendo timeline del pedido' });
     }
 };

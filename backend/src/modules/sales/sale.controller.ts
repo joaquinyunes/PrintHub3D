@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Sale from "./sale.model";
+import logger from '../../config/logger';
 import Product from "../products/product.model";
 
 /* ==========================================================================
@@ -53,7 +54,7 @@ export const getSales = async (req: Request, res: Response) => {
       pageSize: limit,
     });
   } catch (error) {
-    console.error("Error en getSales:", error);
+    logger.error("Error en getSales:", error);
     return res.status(500).json({ message: "Error al obtener historial de ventas." });
   }
 };
@@ -132,7 +133,7 @@ export const registerSale = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    console.error("Error en registerSale:", error);
+    logger.error("Error en registerSale:", error);
     return res.status(500).json({ message: "Error interno al procesar la venta." });
   }
 };
@@ -231,7 +232,7 @@ export const getSalesAnalytics = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    console.error("Error en getSalesAnalytics:", error);
+    logger.error("Error en getSalesAnalytics:", error);
     return res.status(500).json({ message: "Error al generar analíticas." });
   }
 };

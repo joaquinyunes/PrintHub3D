@@ -11,7 +11,9 @@
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "worker:whatsapp": "ts-node src/workers/whatsapp.worker.ts",
-    "test": "jest --detectOpenHandles --forceExit",
+    "seed:settings": "ts-node src/scripts/seed-settings.ts",
+    "create:admin": "ts-node src/scripts/create-admin.ts",
+    "test": "jest --runInBand --detectOpenHandles --forceExit",
     "test:watch": "jest --watch"
   },
   "keywords": [],

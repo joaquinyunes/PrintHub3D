@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { ProductRepository } from '../../repositories/product.repository';
+import logger from '../../config/logger';
 import { reqParam } from '../../utils/reqParam';
 import Sale from "../sales/sale.model";
 import { InventoryService } from "./inventory.service";
@@ -29,7 +30,7 @@ export const getProducts = async (req: Request, res: Response) => {
 
     return res.json(products);
   } catch (error) {
-    console.error("getProducts:", error);
+    logger.error("getProducts:", error);
     return res.status(500).json({ message: "Error interno" });
   }
 };
@@ -48,7 +49,7 @@ export const getPublicProducts = async (req: Request, res: Response) => {
 
     return res.json(products);
   } catch (error) {
-    console.error("getPublicProducts:", error);
+    logger.error("getPublicProducts:", error);
     return res.status(500).json({ message: "Error cargando tienda pública" });
   }
 };
@@ -126,7 +127,7 @@ export const createProduct = async (req: Request, res: Response) => {
     return res.status(201).json(newProduct);
 
   } catch (error: any) {
-    console.error("createProduct:", error);
+    logger.error("createProduct:", error);
     const detail = process.env.NODE_ENV !== 'production' ? (error?.message ?? String(error)) : undefined;
     return res.status(500).json({ message: 'Error guardando producto' + (detail ? `: ${detail}` : '') });
   }
@@ -238,7 +239,7 @@ export const quickSell = async (req: Request, res: Response) => {
             throw serviceError;
         }
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         res.status(500).json({ message: "Error en venta rápida" });
     }
 };
@@ -262,7 +263,7 @@ export const bulkAddStock = async (req: Request, res: Response) => {
 
         res.json({ message: "Stock procesado correctamente", results });
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         res.status(500).json({ message: "Error al cargar stock masivo" });
     }
 };
@@ -275,7 +276,7 @@ export const getProductsSummary = async (req: Request, res: Response) => {
         const summary = await productRepository.getProductsSummary(tenantId);
         return res.json(summary);
     } catch (error) {
-        console.error('getProductsSummary:', error);
+        logger.error('getProductsSummary:', error);
         return res.status(500).json({ message: 'Error obteniendo resumen de inventario' });
     }
 };

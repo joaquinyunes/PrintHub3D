@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import { protect, adminOnly } from "../modules/auth/auth.middleware";
+import logger from '../config/logger';
 
 const router = express.Router();
 
@@ -37,7 +38,7 @@ router.post("/generate-image", protect, adminOnly, async (req: Request, res: Res
 
     if (!response.ok) {
       const error = await response.text();
-      console.error("OpenAI error:", error);
+      logger.error("OpenAI error:", error);
       return res.status(500).json({ error: "Error al generar imagen" });
     }
 
@@ -46,7 +47,7 @@ router.post("/generate-image", protect, adminOnly, async (req: Request, res: Res
 
     res.json({ imageUrl });
   } catch (e) {
-    console.error("AI generate error:", e);
+    logger.error("AI generate error:", e);
     res.status(500).json({ error: "Error interno" });
   }
 });

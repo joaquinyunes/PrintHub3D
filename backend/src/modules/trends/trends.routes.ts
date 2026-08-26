@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import axios from 'axios';
+import logger from '../../config/logger';
 import * as cheerio from 'cheerio';
 import { protect, adminOnly } from '../auth/auth.middleware';
 
@@ -49,7 +50,7 @@ async function scrapeTrends(query: string): Promise<any[]> {
 
     return results;
   } catch (error) {
-    console.error('Scraping error:', error);
+    logger.error('Scraping error:', error);
     return [];
   }
 }
@@ -66,7 +67,7 @@ router.get('/search', protect, adminOnly, async (req, res) => {
 
     res.json(results);
   } catch (error) {
-    console.error('Search error:', error);
+    logger.error('Search error:', error);
     res.status(500).json({ message: 'Error en búsqueda' });
   }
 });

@@ -1,5 +1,6 @@
 import Product from './product.model';
 import Sale from '../sales/sale.model';
+import logger from '../../config/logger';
 import InventoryMovement from '../inventory/inventory-movement.model';
 
 interface BulkStockItem {

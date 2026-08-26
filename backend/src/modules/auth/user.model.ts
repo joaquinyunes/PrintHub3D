@@ -9,6 +9,7 @@ export interface IUser extends Document {
     tenantId: string;
     createdAt: Date;
     verified: boolean;
+    active: boolean;
     avatar?: string;
     verificationToken?: string;
     verificationExpires?: Date;
@@ -27,6 +28,7 @@ const UserSchema: Schema = new Schema({
     role: { type: String, enum: ['admin', 'user', 'staff', 'reseller'], default: 'user' }, 
     tenantId: { type: String, default: appConfig.defaultTenantId },
     verified: { type: Boolean, default: true },
+    active: { type: Boolean, default: true },
     verificationToken: { type: String },
     verificationExpires: { type: Date },
     magicCode: { type: String },
