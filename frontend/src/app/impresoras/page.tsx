@@ -158,7 +158,7 @@ export default function ImpresorasPage() {
   if (!isMounted || loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-flame border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -174,7 +174,7 @@ export default function ImpresorasPage() {
             <ChevronLeft className="w-5 h-5" />
             <span className="text-sm">Volver</span>
           </Link>
-          <span className="font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <span className="font-bold bg-gradient-to-r from-flame to-flare bg-clip-text text-transparent">
             {sectionData?.title || "Impresoras"}
           </span>
           <div className="w-20" />
@@ -189,7 +189,7 @@ export default function ImpresorasPage() {
             subtitle={sectionData.animation.subtitle || 'La nueva generación de precisión y velocidad'}
             badge={sectionData.animation.badge || 'PROFESIONAL'}
             price={sectionData.animation.price || '$469.000'}
-            accentColor={sectionData.animation.accentColor || '#3b82f6'}
+            accentColor={sectionData.animation.accentColor || "#ff5c1a"}
           />
         </div>
       )}
@@ -210,7 +210,7 @@ export default function ImpresorasPage() {
           heroImage={sectionData?.heroImage}
           categories={categories}
           products={allProducts}
-          accentColor="#10b981"
+          accentColor="#ff5c1a"
         />
       )}
     </div>

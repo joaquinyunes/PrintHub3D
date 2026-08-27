@@ -217,7 +217,7 @@ function ProductModal({ product, category, onClose }: { product: ProductItem; ca
   );
 }
 
-export default function CollectionPage({ title, subtitle, badge, categories, products, accentColor = "#3b82f6", heroImage, searchOptions }: CollectionPageProps) {
+export default function CollectionPage({ title, subtitle, badge, categories, products, accentColor = "#ff5c1a", heroImage, searchOptions }: CollectionPageProps) {
   const [selectedCat, setSelectedCat] = useState("all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("name");

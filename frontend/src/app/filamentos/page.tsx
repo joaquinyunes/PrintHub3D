@@ -142,7 +142,7 @@ export default function FilamentosPage() {
   if (!isMounted || loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-flame border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -158,7 +158,7 @@ export default function FilamentosPage() {
             <ChevronLeft className="w-5 h-5" />
             <span className="text-sm">Volver</span>
           </Link>
-          <span className="font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <span className="font-bold bg-gradient-to-r from-flame to-flare bg-clip-text text-transparent">
             {sectionData?.title || "Filamentos"}
           </span>
           <div className="w-20" />
@@ -181,7 +181,7 @@ export default function FilamentosPage() {
           heroImage={sectionData?.heroImage}
           categories={categories}
           products={allProducts}
-          accentColor="#f97316"
+          accentColor="#ff5c1a"
         />
       )}
     </div>
