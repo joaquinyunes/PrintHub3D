@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Search, Send, ShoppingCart, User, MessageCircle, Instagram, Facebook } from 'lucide-react';
 import { apiUrl } from '@/lib/api';
+import { usePolling } from '@/hooks/usePolling';
 
 // Tipos de datos
 interface ChatPreview {
@@ -40,12 +41,7 @@ export default function SocialHubPage() {
     } catch (err) { console.error(err); }
   };
 
-  // Cargar al inicio y cada 5 segs (polling simple)
-  useEffect(() => {
-    fetchChats();
-    const interval = setInterval(fetchChats, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  usePolling(fetchChats, 8000);
 
   const scrollToBottom = () => {
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);

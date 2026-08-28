@@ -8,6 +8,7 @@ import {
   FileText, Timer, Activity, Flame
 } from "lucide-react";
 import { apiUrl } from "@/lib/api";
+import { usePolling } from "@/hooks/usePolling";
 
 // --- COMPONENTE: CRONÓMETRO INTERNO ---
 function CountdownTimer({ start, minutes }: { start: string, minutes: number }) {
@@ -116,6 +117,7 @@ export default function ProductionPage() {
   const [selectedOrderForFinish, setSelectedOrderForFinish] = useState<Order | null>(null);
   const [finishItemIndex, setFinishItemIndex] = useState<number | null>(null);
   const [newPrinterName, setNewPrinterName] = useState("");
+  const [newPrinterInt, setNewPrinterInt] = useState({ type: "none", url: "", apiKey: "" });
   const [startConfig, setStartConfig] = useState({ printerId: "", minutes: "60" });
 
   const fetchData = async (token: string) => {
@@ -140,12 +142,13 @@ export default function ProductionPage() {
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (!stored) { router.replace("/admin/login"); return; }
-    const currentSession = JSON.parse(stored);
-    setSession(currentSession);
-    fetchData(currentSession.token);
-    const interval = setInterval(() => fetchData(currentSession.token), 5000);
-    return () => clearInterval(interval);
+    setSession(JSON.parse(stored));
   }, [router]);
+
+  usePolling(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) fetchData(JSON.parse(stored).token);
+  }, 12000);
 
   const openStartModal = (orderId: string) => {
     setSelectedOrder(orderId);
@@ -209,9 +212,13 @@ export default function ProductionPage() {
     try {
         await fetch(apiUrl('/api/printers'), {
             method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.token}` },
-            body: JSON.stringify({ name: newPrinterName, model: 'Genérica' })
+            body: JSON.stringify({
+              name: newPrinterName,
+              printerModel: 'Genérica',
+              integration: newPrinterInt.type !== 'none' ? newPrinterInt : undefined,
+            })
         });
-        setNewPrinterName(""); setIsPrinterModalOpen(false);
+        setNewPrinterName(""); setNewPrinterInt({ type: "none", url: "", apiKey: "" }); setIsPrinterModalOpen(false);
         if (session) fetchData(session.token);
     } catch (error) { console.error(error); }
   };
@@ -358,8 +365,26 @@ export default function ProductionPage() {
          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in">
             <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl p-8 w-96 shadow-2xl">
                 <h3 className="font-black mb-6 text-white text-xl tracking-tight uppercase">Nueva Máquina</h3>
-                <input autoFocus placeholder="Nombre" className="w-full bg-black border border-white/10 rounded-2xl p-4 mb-6 text-sm text-white outline-none focus:border-cyan-500 transition-all font-bold" 
+                <input autoFocus placeholder="Nombre" className="w-full bg-black border border-white/10 rounded-2xl p-4 mb-4 text-sm text-white outline-none focus:border-cyan-500 transition-all font-bold"
                     value={newPrinterName} onChange={e => setNewPrinterName(e.target.value)} />
+
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Estado en vivo (opcional)</label>
+                <select value={newPrinterInt.type} onChange={e => setNewPrinterInt({ ...newPrinterInt, type: e.target.value })}
+                    className="w-full bg-black border border-white/10 rounded-2xl p-3 my-2 text-sm text-white outline-none [&>option]:bg-black">
+                    <option value="none">Sin integración (estado manual)</option>
+                    <option value="octoprint">OctoPrint</option>
+                    <option value="moonraker">Moonraker / Klipper (pronto)</option>
+                    <option value="bambu">Bambu Lab (pronto)</option>
+                </select>
+                {newPrinterInt.type !== 'none' && (
+                    <>
+                        <input placeholder="URL (ej: http://192.168.1.50)" className="w-full bg-black border border-white/10 rounded-2xl p-3 mb-2 text-sm text-white outline-none"
+                            value={newPrinterInt.url} onChange={e => setNewPrinterInt({ ...newPrinterInt, url: e.target.value })} />
+                        <input placeholder="API key" className="w-full bg-black border border-white/10 rounded-2xl p-3 mb-4 text-sm text-white outline-none"
+                            value={newPrinterInt.apiKey} onChange={e => setNewPrinterInt({ ...newPrinterInt, apiKey: e.target.value })} />
+                    </>
+                )}
+
                 <div className="flex justify-end gap-3">
                     <button onClick={() => setIsPrinterModalOpen(false)} className="text-[10px] font-black px-5 py-3 text-gray-500 hover:text-white uppercase tracking-widest">Cancelar</button>
                     <button onClick={addPrinter} className="bg-white text-black text-[10px] font-black px-8 py-3 rounded-xl hover:bg-gray-200 transition-all uppercase tracking-widest">Guardar</button>

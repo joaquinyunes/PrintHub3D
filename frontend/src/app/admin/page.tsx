@@ -13,6 +13,7 @@ import {
   ShoppingCart, TrendingUp, Wallet
 } from "lucide-react";
 import { apiUrl } from "@/lib/api";
+import { usePolling } from "@/hooks/usePolling";
 
 // --- COMPONENTE: TARJETA KPI ---
 function StatCard({ title, value, subtext, icon: Icon, color, trend }: any) {
@@ -45,9 +46,17 @@ function StatCard({ title, value, subtext, icon: Icon, color, trend }: any) {
     )
 }
 
+const fmtTimeLeft = (s?: number) => {
+    if (!s || s <= 0) return null;
+    const h = Math.floor(s / 3600);
+    const m = Math.round((s % 3600) / 60);
+    return h > 0 ? `${h} h ${m} min` : `${m} min`;
+};
+
 // --- COMPONENTE: MÓDULO DE IMPRESORA ---
 function PrinterModule({ printer }: { printer: any }) {
-    const isPrinting = printer.status === 'printing' || printer.status === 'in_progress';
+    const live = printer.live;
+    const isPrinting = live ? live.state === 'printing' : (printer.status === 'printing' || printer.status === 'in_progress');
     const [isTimeUp, setIsTimeUp] = useState(false);
 
     useEffect(() => {
@@ -101,7 +110,25 @@ function PrinterModule({ printer }: { printer: any }) {
                 </div>
                 <Printer size={18} className={colorClass} />
             </div>
-            {!isPrinting && (
+            {live && live.online && isPrinting && (
+                <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
+                    <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500" style={{ width: `${live.progress || 0}%` }} />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                        <span>{live.progress || 0}%{fmtTimeLeft(live.timeLeftSeconds) ? ` · ${fmtTimeLeft(live.timeLeftSeconds)}` : ''}</span>
+                        {typeof live.nozzleTemp === 'number' && <span>{Math.round(live.nozzleTemp)}° / {Math.round(live.bedTemp || 0)}°</span>}
+                    </div>
+                </div>
+            )}
+            {live && !live.online && (
+                <div className="mt-4 pt-4 border-t border-white/5">
+                    <span className="text-[10px] text-red-400/80 font-bold uppercase tracking-widest flex items-center gap-2">
+                        <Zap size={12}/> Sin conexión con la impresora
+                    </span>
+                </div>
+            )}
+            {!isPrinting && !live && (
                 <div className="mt-4 pt-4 border-t border-white/5">
                     <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest flex items-center gap-2">
                         <Zap size={12}/> Standby - Lista
@@ -133,6 +160,7 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [newTaskText, setNewTaskText] = useState("");
   const [monthlyGoal, setMonthlyGoal] = useState(2000000);
+  const [needsSetup, setNeedsSetup] = useState(false);
   const [isFilamentModalOpen, setIsFilamentModalOpen] = useState(false);
   const [bulkText, setBulkText] = useState("");
   const [parsedItems, setParsedItems] = useState<{name: string, quantity: number}[]>([]); 
@@ -169,6 +197,18 @@ export default function DashboardPage() {
                   return order ? { ...p, status: 'printing', startedAt: order.startedAt, printTimeMinutes: order.printTimeMinutes, clientName: order.clientName } : p;
               });
 
+              // Estado en vivo para las impresoras con integración (OctoPrint, etc.)
+              await Promise.all(
+                enrichedPrinters
+                  .filter((p: any) => p.integration && p.integration.type && p.integration.type !== 'none')
+                  .map(async (p: any) => {
+                    try {
+                      const r = await fetch(apiUrl(`/api/printers/${p._id}/live`), { headers: { Authorization: `Bearer ${token}` } });
+                      if (r.ok) p.live = await r.json();
+                    } catch { /* impresora offline */ }
+                  }),
+              );
+
               const now = new Date();
               // Excluye pedidos ya convertidos en venta para no sumar dos veces (el Sale ya cuenta ese importe).
               const revOrders = orders.filter((o:any) => new Date(o.createdAt).getMonth() === now.getMonth() && o.status !== 'cancelled' && !o.isSaleRegistered)
@@ -177,6 +217,7 @@ export default function DashboardPage() {
                                         .reduce((acc:number, s:any) => acc + (Number(s.price) || 0), 0);
 
               if (settingsData.monthlyGoal) setMonthlyGoal(settingsData.monthlyGoal);
+              setNeedsSetup(!settingsData.businessName || settingsData.businessName === "Global 3D" || !settingsData.contactInfo?.whatsapp);
 
               setStats({ 
                   pending: orders.filter((o:any) => o.status === 'pending').length, 
@@ -192,11 +233,7 @@ export default function DashboardPage() {
       } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
-  useEffect(() => {
-      fetchData();
-      const interval = setInterval(fetchData, 10000); 
-      return () => clearInterval(interval);
-  }, []);
+  usePolling(fetchData, 20000);
 
   const handleAddTask = async () => {
       if(!newTaskText.trim()) return;
@@ -278,6 +315,16 @@ export default function DashboardPage() {
                 <p className="text-gray-500 text-xs font-bold uppercase tracking-[0.3em] pl-1">Centro de Comando</p>
             </div>
         </div>
+
+        {needsSetup && (
+            <a href="/admin/setup" className="flex items-center justify-between gap-4 rounded-2xl border border-tone-red/30 bg-tone-red/10 px-5 py-4 transition hover:bg-tone-red/15">
+                <div>
+                    <p className="font-bold text-white">Terminá de configurar tu taller</p>
+                    <p className="text-xs text-gray-400">Nombre del negocio, WhatsApp y datos de contacto — un minuto.</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-tone-red px-4 py-2 text-xs font-black uppercase tracking-wider text-white">Configurar →</span>
+            </a>
+        )}
 
         {/* 1. KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

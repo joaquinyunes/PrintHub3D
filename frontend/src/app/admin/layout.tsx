@@ -42,7 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isAdmin = role === "admin";
 
   // Rutas solo-admin: un operario que las tipee vuelve al dashboard (la API igual las bloquea).
-  const ADMIN_ONLY = ["/admin/ventas", "/admin/expenses", "/admin/gastos", "/admin/analytics", "/admin/rentabilidad", "/admin/reports", "/admin/settings", "/admin/home", "/admin/usuarios", "/admin/sections", "/admin/social"];
+  const ADMIN_ONLY = ["/admin/ventas", "/admin/expenses", "/admin/gastos", "/admin/analytics", "/admin/rentabilidad", "/admin/reports", "/admin/settings", "/admin/setup", "/admin/home", "/admin/usuarios", "/admin/sections", "/admin/social"];
   useEffect(() => {
     if (isAuthorized && role === "staff" && ADMIN_ONLY.some((p) => pathname.startsWith(p))) {
       router.replace("/admin");
