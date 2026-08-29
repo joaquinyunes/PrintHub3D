@@ -118,14 +118,17 @@ export default function ProductionPage() {
   const [finishItemIndex, setFinishItemIndex] = useState<number | null>(null);
   const [newPrinterName, setNewPrinterName] = useState("");
   const [newPrinterInt, setNewPrinterInt] = useState({ type: "none", url: "", apiKey: "" });
-  const [startConfig, setStartConfig] = useState({ printerId: "", minutes: "60" });
+  const [startConfig, setStartConfig] = useState({ printerId: "", minutes: "60", filamentId: "", filamentGrams: "" });
+  const [filaments, setFilaments] = useState<any[]>([]);
 
   const fetchData = async (token: string) => {
     try {
-      const [resOrders, resPrinters] = await Promise.all([
+      const [resOrders, resPrinters, resFilaments] = await Promise.all([
         fetch(apiUrl('/api/orders'), { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(apiUrl('/api/printers'), { headers: { Authorization: `Bearer ${token}` } })
+        fetch(apiUrl('/api/printers'), { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(apiUrl('/api/filaments'), { headers: { Authorization: `Bearer ${token}` } })
       ]);
+      if (resFilaments.ok) setFilaments((await resFilaments.json()).items || []);
       if (resOrders.ok) {
           const data = await resOrders.json();
           const ordersData = Array.isArray(data)
@@ -152,7 +155,7 @@ export default function ProductionPage() {
 
   const openStartModal = (orderId: string) => {
     setSelectedOrder(orderId);
-    setStartConfig({ printerId: "", minutes: "60" });
+    setStartConfig({ printerId: "", minutes: "60", filamentId: "", filamentGrams: "" });
     setIsStartModalOpen(true);
   };
 
@@ -161,10 +164,13 @@ export default function ProductionPage() {
     try {
         await fetch(apiUrl(`/api/orders/${selectedOrder}/status`), {
             method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.token}` },
-            body: JSON.stringify({ 
-                status: 'in_progress', 
-                printTimeMinutes: Number(startConfig.minutes), 
-                printerId: startConfig.printerId 
+            body: JSON.stringify({
+                status: 'in_progress',
+                printTimeMinutes: Number(startConfig.minutes),
+                printerId: startConfig.printerId,
+                ...(startConfig.filamentId && Number(startConfig.filamentGrams) > 0
+                    ? { filamentId: startConfig.filamentId, filamentGrams: Number(startConfig.filamentGrams) }
+                    : {}),
             })
         });
         setIsStartModalOpen(false);
@@ -412,6 +418,23 @@ export default function ProductionPage() {
                         <label className="text-[10px] text-gray-500 block mb-2 uppercase font-black tracking-widest">Minutos Estimados</label>
                         <input type="number" className="w-full bg-black border border-white/10 rounded-2xl p-4 text-white outline-none focus:border-cyan-500 font-mono text-lg"
                             value={startConfig.minutes} onChange={e => setStartConfig({...startConfig, minutes: e.target.value})} />
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] gap-2">
+                        <div>
+                            <label className="text-[10px] text-gray-500 block mb-2 uppercase font-black tracking-widest">Filamento (opcional)</label>
+                            <select className="w-full bg-black border border-white/10 rounded-2xl p-3 text-sm text-white outline-none [&>option]:bg-black"
+                                value={startConfig.filamentId} onChange={e => setStartConfig({...startConfig, filamentId: e.target.value})}>
+                                <option value="">-- Ninguno --</option>
+                                {filaments.map(f => (
+                                    <option key={f._id} value={f._id}>{f.material} {f.color} ({(f.gramsRemaining/1000).toFixed(2)} kg)</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-[10px] text-gray-500 block mb-2 uppercase font-black tracking-widest">Gramos</label>
+                            <input type="number" placeholder="0" className="w-24 bg-black border border-white/10 rounded-2xl p-3 text-white outline-none font-mono"
+                                value={startConfig.filamentGrams} onChange={e => setStartConfig({...startConfig, filamentGrams: e.target.value})} />
+                        </div>
                     </div>
                 </div>
                 <div className="flex justify-end gap-3 mt-10">

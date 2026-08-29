@@ -30,6 +30,7 @@ export interface IOrder extends Document {
 
     // Producción y Sistema
     printTimeMinutes?: number;
+    filamentUsed?: { filamentId: string; grams: number };
     startedAt?: Date;
     finishedAt?: Date;
     adminNotified?: boolean;
@@ -76,6 +77,10 @@ const OrderSchema: Schema = new Schema({
     }],
 
     printTimeMinutes: { type: Number, default: 0 },
+    filamentUsed: {
+        filamentId: { type: Schema.Types.ObjectId, ref: 'Filament' },
+        grams: { type: Number },
+    },
     startedAt: { type: Date },
     finishedAt: { type: Date },
     adminNotified: { type: Boolean, default: false },

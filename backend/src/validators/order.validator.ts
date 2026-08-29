@@ -31,6 +31,8 @@ export const UpdateOrderStatusSchema = z.object({
   }),
   printTimeMinutes: z.number().min(0).optional(),
   printerId: z.string().optional(),
+  filamentId: z.string().optional(),
+  filamentGrams: z.number().min(0).optional(),
 });
 
 // Schema para feedback

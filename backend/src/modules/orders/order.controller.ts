@@ -213,7 +213,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     try {
         const tenantId = getTenantId(req) as string;
         const id = reqParam(req, 'id');
-        const { status, printTimeMinutes, printerId } = req.body;
+        const { status, printTimeMinutes, printerId, filamentId, filamentGrams } = req.body;
         if (!status || !Object.keys(statusCopy).includes(String(status))) {
             return res.status(400).json({ message: 'Estado inválido' });
         }
@@ -224,6 +224,21 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         }
 
         const updateData: any = { status };
+
+        // Descontar filamento consumido al arrancar la impresión
+        if (status === 'in_progress' && filamentId && Number(filamentGrams) > 0) {
+            try {
+                const Filament = require('../filaments/filament.model').default;
+                const fil: any = await Filament.findOne({ _id: filamentId, tenantId });
+                if (fil) {
+                    fil.gramsRemaining = Math.max(0, fil.gramsRemaining - Number(filamentGrams));
+                    await fil.save();
+                    updateData.filamentUsed = { filamentId, grams: Number(filamentGrams) };
+                }
+            } catch (filErr) {
+                logger.warn('No se pudo descontar filamento:', filErr);
+            }
+        }
 
         try {
             const Printer = require('../printers/printer.model').default;
