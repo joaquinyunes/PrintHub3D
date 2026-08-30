@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image"; // 👈 AGREGADO: Importamos Image de Next.js
-import { apiUrl } from "@/lib/api";
+import { apiUrl, apiFetch } from "@/lib/api";
 import { 
   LayoutDashboard, 
   Package, 
@@ -25,14 +25,6 @@ import {
   Percent
 } from "lucide-react";
 
-interface StoredUser {
-  token: string;
-  user: {
-    name?: string;
-    role: string;
-  };
-}
-
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -51,43 +43,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [isAuthorized, role, pathname]);
 
   // --- 1. SEGURIDAD ---
-  // El rol se valida SIEMPRE contra el backend: localStorage solo cachea el token.
+  // La sesión vive en cookies httpOnly; el rol se valida SIEMPRE contra el backend.
   useEffect(() => {
     if (pathname === "/admin/login") {
       setIsAuthorized(true);
       return;
     }
 
-    const stored = localStorage.getItem("user");
-    if (!stored) {
-      router.replace("/admin/login");
-      return;
-    }
-
-    let token = "";
-    try {
-      const session: StoredUser = JSON.parse(stored);
-      token = session.token;
-    } catch {
-      localStorage.removeItem("user");
-      router.replace("/admin/login");
-      return;
-    }
-
-    if (!token) {
-      localStorage.removeItem("user");
-      router.replace("/admin/login");
-      return;
-    }
-
     const controller = new AbortController();
     (async () => {
       try {
-        const res = await fetch(apiUrl("/api/auth/me"), {
-          headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
-          signal: controller.signal,
-        });
+        const res = await apiFetch("/api/auth/me", { signal: controller.signal });
         if (!res.ok) throw new Error("unauthorized");
         const data = await res.json();
         const r = data?.user?.role;

@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X, Image, Video, Trash2, Upload, CheckCircle2, Loader2, Search } from "lucide-react";
-import { apiUrl, resolveMediaUrl } from "@/lib/api";
-import { getAuthHeaders } from "@/lib/auth";
+import { apiFetch, resolveMediaUrl } from "@/lib/api";
 
 interface ProductMedia {
   _id: string;
@@ -14,14 +13,12 @@ interface ProductMedia {
   type: 'image' | 'video';
 }
 
-interface StoredUser { token: string; user: { role: string } }
 
 export default function MediaPage() {
   const router = useRouter();
   const [media, setMedia] = useState<ProductMedia[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [session, setSession] = useState<StoredUser | null>(null);
 
   const [form, setForm] = useState({
     productName: '',
@@ -33,22 +30,19 @@ export default function MediaPage() {
     const stored = localStorage.getItem('user');
     if (stored) {
       const user = JSON.parse(stored);
-      setSession(user);
-      if (user.user.role !== 'admin') {
+      if (user.user?.role !== 'admin') {
         router.push('/');
         return;
       }
-      loadMedia(user.token);
+      loadMedia();
     } else {
       router.push('/admin/login');
     }
   }, [router]);
 
-  const loadMedia = async (token: string) => {
+  const loadMedia = async () => {
     try {
-      const res = await fetch(apiUrl('/api/products/media'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiFetch('/api/products/media');
       if (!res.ok) {
         setMedia([]);
         setLoading(false);
@@ -66,12 +60,8 @@ export default function MediaPage() {
 
     setSaving(true);
     try {
-      const res = await fetch(apiUrl('/api/products/media'), {
+      const res = await apiFetch('/api/products/media', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.token}`
-        },
         body: JSON.stringify({
           productName: form.productName,
           imageUrl: form.imageUrl || undefined,
@@ -82,7 +72,7 @@ export default function MediaPage() {
 
       if (res.ok) {
         setForm({ productName: '', imageUrl: '', videoUrl: '' });
-        loadMedia(session!.token);
+        loadMedia();
       } else {
         alert('Error al agregar');
       }
@@ -94,10 +84,7 @@ export default function MediaPage() {
     if (!confirm('¿Eliminar esta imagen?')) return;
     
     try {
-      await fetch(apiUrl(`/api/products/media/${id}`), {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${session?.token}` }
-      });
+      await apiFetch(`/api/products/media/${id}`, { method: 'DELETE' });
       setMedia(media.filter(m => m._id !== id));
     } catch(e) { console.error(e); }
   };
@@ -130,7 +117,7 @@ export default function MediaPage() {
         fd.append('file', file);
         const response = await fetch('/api/upload', {
           method: 'POST',
-          headers: getAuthHeaders(),
+          credentials: 'include',
           body: fd,
         });
         const blob = await response.json();

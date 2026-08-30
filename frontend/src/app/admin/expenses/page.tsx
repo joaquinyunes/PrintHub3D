@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Plus, Trash2, DollarSign, Calendar, Tag } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 
 export default function ExpensesPage() {
     const [expenses, setExpenses] = useState<any[]>([]);
@@ -11,13 +11,7 @@ export default function ExpensesPage() {
     const categories = ["Materiales", "Mantenimiento", "Servicios", "Alquiler", "Otros"];
 
     const fetchExpenses = async () => {
-        const userStr = localStorage.getItem("user");
-        if (!userStr) return;
-        const { token } = JSON.parse(userStr);
-
-        const res = await fetch(apiUrl("/api/expenses"), {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await apiFetch("/api/expenses");
         if (res.ok) {
             const data = await res.json();
             const list = Array.isArray(data)
@@ -33,13 +27,8 @@ export default function ExpensesPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const userStr = localStorage.getItem("user");
-        if (!userStr) return;
-        const { token } = JSON.parse(userStr);
-
-        await fetch(apiUrl("/api/expenses"), {
+        await apiFetch("/api/expenses", {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify(form)
         });
         setForm({ description: "", amount: "", category: "Materiales" });
@@ -48,14 +37,7 @@ export default function ExpensesPage() {
 
     const handleDelete = async (id: string) => {
         if (!confirm("¿Borrar gasto?")) return;
-        const userStr = localStorage.getItem("user");
-        if (!userStr) return;
-        const { token } = JSON.parse(userStr);
-
-        await fetch(apiUrl(`/api/expenses/${id}`), {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        await apiFetch(`/api/expenses/${id}`, { method: "DELETE" });
         fetchExpenses();
     };
 

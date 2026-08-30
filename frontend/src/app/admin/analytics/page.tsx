@@ -10,7 +10,7 @@ import {
   Download, Zap, ArrowUpRight, Archive, Search, ChevronRight, 
   Boxes, LayoutGrid, Clock, ShoppingCart, BarChart3, ChevronDown, MousePointer2
 } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 
 /**
  * CONFIGURACIÓN DE COLORES Y CONSTANTES
@@ -113,17 +113,10 @@ export default function AnalyticsPage() {
    */
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const stored = localStorage.getItem("user");
-    if (!stored) return;
-    const session = JSON.parse(stored);
 
     try {
       const query = `?year=${selectedYear}&month=${selectedMonth}`;
-      
-      // Acá llamamos a tu nueva ruta de reportes que armamos en el backend
-      const res = await fetch(apiUrl(`/api/analytics/reports${query}`), {
-        headers: { Authorization: `Bearer ${session.token}` }
-      });
+      const res = await apiFetch(`/api/analytics/reports${query}`);
 
       if (res.ok) {
         const result = await res.json();

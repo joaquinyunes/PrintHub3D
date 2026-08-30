@@ -7,7 +7,7 @@ import {
   X, AlertTriangle, Barcode, TrendingUp, CheckCircle2,
   Wallet, Zap, History, ChevronRight, Calendar, Boxes, Bot
 } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 
 // --- INTERFACES ---
 interface Product {
@@ -71,21 +71,19 @@ export default function ProductsPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
-    if (!stored) { router.replace("/admin/login"); return; }
-    const currentSession = JSON.parse(stored);
-    setSession(currentSession);
+    if (stored) { try { setSession(JSON.parse(stored)); } catch { /* noop */ } }
 
     const storedSections = localStorage.getItem("customSections");
     if (storedSections) setCustomSections(JSON.parse(storedSections));
 
-    loadData(currentSession.token);
+    loadData();
   }, [router]);
 
-  const loadData = async (token: string) => {
+  const loadData = async () => {
       try {
         const [resP, resS] = await Promise.all([
-            fetch(apiUrl("/api/products"), { headers: { Authorization: `Bearer ${token}` } }),
-            fetch(apiUrl("/api/sales"), { headers: { Authorization: `Bearer ${token}` } })
+            apiFetch("/api/products"),
+            apiFetch("/api/sales")
         ]);
         if (resP.ok) {
           const productsData = await resP.json();
@@ -135,21 +133,20 @@ export default function ProductsPage() {
     e.preventDefault();
     if (!session) return;
     try {
-      const res = await fetch(apiUrl("/api/products"), {
+      const res = await apiFetch("/api/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
-        body: JSON.stringify({ 
-            ...newProduct, 
-            price: Number(newProduct.price), 
-            cost: Number(newProduct.cost), 
-            stock: Number(newProduct.stock) 
+        body: JSON.stringify({
+            ...newProduct,
+            price: Number(newProduct.price),
+            cost: Number(newProduct.cost),
+            stock: Number(newProduct.stock)
         }),
       });
       if (res.ok) {
         showToast("📦 Producto guardado");
         setIsProductModalOpen(false);
         setNewProduct({ name: "", price: "", cost: "", stock: "", category: "", sku: "", minStock: "5", imageUrl: "" });
-        await loadData(session.token); // RECARGA PARA GUARDADO INMEDIATO
+        await loadData();
       }
     } catch { showToast("Error", "error"); }
   };
@@ -170,21 +167,18 @@ export default function ProductsPage() {
     const newStock = Math.max(0, product.stock + amount);
     setProducts(prev => prev.map(p => p._id === id ? { ...p, stock: newStock } : p));
     try { 
-        await fetch(apiUrl(`/api/products/${id}`), { 
-            method: "PUT", 
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.token}` }, 
-            body: JSON.stringify({ stock: newStock }) 
-        }); 
+        await apiFetch(`/api/products/${id}`, {
+            method: "PUT",
+            body: JSON.stringify({ stock: newStock })
+        });
     } catch {}
   };
 
   const handleSellOne = async (product: Product) => {
     if (product.stock < 1) { showToast("Sin stock", "error"); return; }
     try {
-      const res = await fetch(apiUrl(`/api/products/${product._id}/sell`), {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.token}` }
-      });
-      if (res.ok) { showToast(`Vendido: ${product.name}`); loadData(session.token); }
+      const res = await apiFetch(`/api/products/${product._id}/sell`, { method: "POST" });
+      if (res.ok) { showToast(`Vendido: ${product.name}`); loadData(); }
     } catch { showToast("Error", "error"); }
   };
 
@@ -298,7 +292,7 @@ export default function ProductsPage() {
                                       <td className="px-8 py-6 text-right">
                                           <div className="flex justify-end items-center gap-3">
                                               <button onClick={() => handleSellOne(p)} className="p-3 rounded-xl bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white transition-all active:scale-90 border border-blue-500/20 shadow-lg"><Zap size={18} fill="currentColor"/></button>
-                                              <button onClick={async () => { if(confirm('¿Eliminar?')) { await fetch(apiUrl(`/api/products/${p._id}`), { method:'DELETE', headers:{Authorization:`Bearer ${session.token}`}}); loadData(session.token); }}} className="p-3 rounded-xl bg-white/5 text-gray-600 hover:text-red-500 transition-all"><Trash2 size={18}/></button>
+                                              <button onClick={async () => { if(confirm('¿Eliminar?')) { await apiFetch(`/api/products/${p._id}`, { method:'DELETE' }); loadData(); }}} className="p-3 rounded-xl bg-white/5 text-gray-600 hover:text-red-500 transition-all"><Trash2 size={18}/></button>
                                           </div>
                                       </td>
                                   </tr>

@@ -37,11 +37,8 @@ export default function RegisterPage() {
 
       if (!res.ok) throw new Error(data.message || 'Error al registrarse');
 
-      // Guardamos sesión automáticamente y redirigimos a la tienda
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
-      router.push('/'); // Redirigir al inicio (tienda)
+      // El registro no inicia sesión: se ingresa por /login (magic link) o /admin/login.
+      router.push('/login');
 
     } catch (err: any) {
       setError(err.message);

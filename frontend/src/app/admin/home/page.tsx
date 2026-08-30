@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import { Plus, X, Trash2, Upload, Image as ImageIcon, Save, Loader2, DollarSign, Home, Package, Printer, Cable, Phone, Search, ArrowUpDown, ChevronDown, ChevronRight, Eye, EyeOff, Video } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -175,11 +175,9 @@ contactInfo: {
     }
   });
 
-  const loadSettings = async (token: string) => {
+  const loadSettings = async () => {
     try {
-      const res = await fetch(apiUrl('/api/settings'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiFetch('/api/settings');
       if (res.ok) {
         const data = await res.json();
         if (data.homepageSections || data.rastreoSection || data.productosSection || data.impresorasSection || data.filamentosSection || data.contactInfo) {
@@ -225,11 +223,11 @@ contactInfo: {
       try {
         const user = JSON.parse(stored);
         setSession(user);
-        if (user.user.role !== 'admin') {
+        if (user.user?.role !== 'admin') {
           router.push('/');
           return;
         }
-        loadSettings(user.token);
+        loadSettings();
       } catch {
         router.push('/admin/login');
       }
@@ -246,14 +244,10 @@ contactInfo: {
     setSaving(true);
     try {
       const { monthlyGoal, rastreoSection, productosSection, impresorasSection, filamentosSection, contactoSection, ...homepageSectionsRest } = sections;
-      const res = await fetch(apiUrl('/api/settings'), {
+      const res = await apiFetch('/api/settings', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.token}`
-        },
-        body: JSON.stringify({ 
-          monthlyGoal, 
+        body: JSON.stringify({
+          monthlyGoal,
           rastreoSection, 
           productosSection, 
           impresorasSection, 
@@ -279,9 +273,8 @@ contactInfo: {
     if (!session) return '';
     const formData = new FormData();
     formData.append('image', file);
-    const res = await fetch(apiUrl('/api/settings/upload-image'), {
+    const res = await apiFetch('/api/settings/upload-image', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${session.token}` },
       body: formData
     });
     const data = await res.json();

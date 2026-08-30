@@ -9,7 +9,7 @@ import {
   Search, AlertTriangle, Pencil, DollarSign, Calendar,
   MessageSquare, Flame, ShoppingCart, Calculator, Wrench, Coins, Timer
 } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 
 // --- 1. INTERFACES Y TIPOS ---
 interface Product { _id: string; name: string; price: number; stock: number; }
@@ -141,15 +141,13 @@ export default function OrderListPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
-    if (!stored) { router.replace("/admin/login"); return; }
-    const currentSession = JSON.parse(stored);
-    setSession(currentSession);
+    if (stored) { try { setSession(JSON.parse(stored)); } catch { /* noop */ } }
     const loadData = async () => {
         try {
             const [resO, resP, resS] = await Promise.all([
-                fetch(apiUrl("/api/orders"), { headers: { Authorization: `Bearer ${currentSession.token}` } }),
-                fetch(apiUrl("/api/products"), { headers: { Authorization: `Bearer ${currentSession.token}` } }),
-                fetch(apiUrl("/api/settings"), { headers: { Authorization: `Bearer ${currentSession.token}` } }),
+                apiFetch("/api/orders"),
+                apiFetch("/api/products"),
+                apiFetch("/api/settings"),
             ]);
             if(resO.ok) {
               const rawOrders = await resO.json();
@@ -179,13 +177,11 @@ export default function OrderListPage() {
   }, [router]);
 
   useEffect(() => {
-    if (!isModalOpen || !session?.token) return;
+    if (!isModalOpen) return;
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(apiUrl("/api/settings"), {
-          headers: { Authorization: `Bearer ${session.token}` },
-        });
+        const res = await apiFetch("/api/settings");
         if (!res.ok || cancelled) return;
         const settings = await res.json();
         const cc =
@@ -200,7 +196,7 @@ export default function OrderListPage() {
     return () => {
       cancelled = true;
     };
-  }, [isModalOpen, session?.token]);
+  }, [isModalOpen]);
 
   // --- LÓGICA DE AGRUPACIÓN (MANTENIDA) ---
   const getGroupedOrders = () => {
@@ -262,10 +258,10 @@ export default function OrderListPage() {
       if(!formData.clientName || cart.length === 0) return;
       const finalDueDate = formData.dueDate ? formData.dueDate : null;
       const payload = { ...formData, dueDate: finalDueDate, deposit: Number(formData.deposit) || 0, items: cart, files, total: cart.reduce((acc, i) => acc + (Number(i.price) * Number(i.quantity)), 0) };
-      const url = editingOrderId ? apiUrl(`/api/orders/${editingOrderId}`) : apiUrl("/api/orders");
+      const url = editingOrderId ? `/api/orders/${editingOrderId}` : "/api/orders";
       const method = editingOrderId ? "PUT" : "POST";
       try {
-          const res = await fetch(url, { method, headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.token}` }, body: JSON.stringify(payload) });
+          const res = await apiFetch(url, { method, body: JSON.stringify(payload) });
           if(res.ok) {
               const saved = await res.json();
               if(editingOrderId) setOrders(orders.map(o => o._id === saved._id ? saved : o));
@@ -286,8 +282,8 @@ export default function OrderListPage() {
   const confirmDelivery = async () => {
       if(!deliverOrder || !session) return;
       try {
-          const res = await fetch(apiUrl(`/api/orders/${deliverOrder._id}/register-sale`), {
-              method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
+          const res = await apiFetch(`/api/orders/${deliverOrder._id}/register-sale`, {
+              method: "POST",
               body: JSON.stringify({ finalCost: Number(finalCost) || 0 })
           });
           if(res.ok) {
@@ -304,8 +300,8 @@ export default function OrderListPage() {
           if(o) { setDeliverOrder(o); setFinalCost(""); setIsDeliverModalOpen(true); return; }
       }
       setOrders(orders.map(o => o._id === id ? { ...o, status } : o));
-      await fetch(apiUrl(`/api/orders/${id}/status`), {
-          method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.token}` },
+      await apiFetch(`/api/orders/${id}/status`, {
+          method: "PUT",
           body: JSON.stringify({ status })
       });
   };
@@ -313,9 +309,9 @@ export default function OrderListPage() {
   const markAsPaid = async (order: Order) => {
       if(!confirm("¿Saldar deuda?")) return;
       try {
-          const res = await fetch(apiUrl(`/api/orders/${order._id}`), {
-              method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.token}` },
-              body: JSON.stringify({ deposit: order.total }) 
+          const res = await apiFetch(`/api/orders/${order._id}`, {
+              method: "PUT",
+              body: JSON.stringify({ deposit: order.total })
           });
           if(res.ok) {
               const updated = await res.json();
@@ -332,9 +328,8 @@ export default function OrderListPage() {
   const handlePrintItem = async () => {
       if (!printOrder || printIndex === null || !session) return;
       try {
-          const res = await fetch(apiUrl(`/api/orders/${printOrder._id}/print-item`), {
+          const res = await apiFetch(`/api/orders/${printOrder._id}/print-item`, {
               method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
               body: JSON.stringify({ itemIndex: printIndex })
           });
           if (res.ok) {

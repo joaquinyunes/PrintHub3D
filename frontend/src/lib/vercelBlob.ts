@@ -1,5 +1,3 @@
-import { getAuthHeaders } from './auth';
-
 export const VERCEL_BLOB_API_URL = '/api/upload';
 
 export async function uploadToVercelBlob(file: File): Promise<string> {
@@ -8,7 +6,7 @@ export async function uploadToVercelBlob(file: File): Promise<string> {
 
   const res = await fetch(VERCEL_BLOB_API_URL, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    credentials: 'include',
     body: formData,
   });
   

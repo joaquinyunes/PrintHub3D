@@ -1,23 +1,17 @@
 import { UserData } from "@/types";
 import { apiUrl } from "@/lib/api";
 
-export const getAuthHeaders = (): Record<string, string> => {
-  const stored = localStorage.getItem("user");
-  if (!stored) return {};
-  
-  try {
-    const parsed = JSON.parse(stored);
-    const token = parsed.token ?? parsed?.accessToken;
-    return token ? { "Authorization": `Bearer ${token}` } : {};
-  } catch {
-    return {};
-  }
-};
+// BLK-7: la sesión vive en cookies httpOnly. En localStorage solo queda el perfil
+// (nombre / rol / email) para pintar la UI; nada sensible ni utilizable para auth.
+
+/** @deprecated El token ya no se envía por header. Las llamadas usan cookies vía apiFetch. */
+export const getAuthHeaders = (): Record<string, string> => ({});
 
 export const getStoredUser = (): UserData | null => {
+  if (typeof window === "undefined") return null;
   const stored = localStorage.getItem("user");
   if (!stored) return null;
-  
+
   try {
     const parsed = JSON.parse(stored);
     return (parsed.user ?? parsed) as UserData;
@@ -26,18 +20,16 @@ export const getStoredUser = (): UserData | null => {
   }
 };
 
-export const saveAuth = (token: string, user: UserData, refreshToken?: string): void => {
-  const payload: Record<string, any> = { token, user };
-  if (refreshToken) payload.refreshToken = refreshToken;
-  localStorage.setItem("user", JSON.stringify(payload));
+export const saveAuth = (user: UserData): void => {
+  localStorage.setItem("user", JSON.stringify({ user }));
 };
 
 export const clearAuth = (): void => {
-  // Revoca el refresh token y limpia las cookies httpOnly (best-effort).
   try {
     fetch(apiUrl("/api/auth/logout"), { method: "POST", credentials: "include" }).catch(() => {});
   } catch {
     /* noop */
   }
   localStorage.removeItem("user");
+  localStorage.removeItem("ph_role");
 };

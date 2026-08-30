@@ -62,13 +62,7 @@ export default function MagicLoginPage() {
         throw new Error(data.message);
       }
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          token: data.token,
-          user: data.user,
-        })
-      );
+      localStorage.setItem("user", JSON.stringify({ user: data.user }));
 
       if (data.user.role === "admin") {
         router.push("/admin");

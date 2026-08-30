@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Search, Send, ShoppingCart, User, MessageCircle, Instagram, Facebook } from 'lucide-react';
-import { apiUrl } from '@/lib/api';
+import { apiFetch } from '@/lib/api';
 import { usePolling } from '@/hooks/usePolling';
 
 // Tipos de datos
@@ -31,11 +31,7 @@ export default function SocialHubPage() {
   // 1. Cargar la lista de contactos
   const fetchChats = async () => {
     try {
-        const stored = localStorage.getItem("user");
-        const token = stored ? JSON.parse(stored).token : null;
-        const res = await fetch(apiUrl('/api/chats'), {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const res = await apiFetch('/api/chats');
         const data = await res.json();
         setChats(data);
     } catch (err) { console.error(err); }
@@ -50,11 +46,7 @@ export default function SocialHubPage() {
   // 2. Cargar mensajes cuando seleccionas a alguien
   useEffect(() => {
     if (selectedChat) {
-        const stored = localStorage.getItem("user");
-        const token = stored ? JSON.parse(stored).token : null;
-        fetch(apiUrl(`/api/chats/${selectedChat._id}`), {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        })
+        apiFetch(`/api/chats/${selectedChat._id}`)
           .then(res => res.json())
           .then(data => {
               setMessages(data);
@@ -68,14 +60,8 @@ export default function SocialHubPage() {
     if (!inputText.trim() || !selectedChat) return;
 
     try {
-        const stored = localStorage.getItem("user");
-        const token = stored ? JSON.parse(stored).token : null;
-        const res = await fetch(apiUrl('/api/chats/send'), {
+        const res = await apiFetch('/api/chats/send', {
             method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
             body: JSON.stringify({
                 to: selectedChat._id,
                 message: inputText,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Save, X, ChevronDown, ChevronRight, Video, Package, Printer, Layers, Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 
 interface CustomVideo {
   code: string;
@@ -60,7 +60,6 @@ export default function SectionsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [session, setSession] = useState<any>(null);
   const [activeSection, setActiveSection] = useState<SectionType>('productos');
   const [data, setData] = useState<SectionData>({
     rastreoSection: { customVideos: [] },
@@ -73,22 +72,19 @@ export default function SectionsPage() {
     const stored = localStorage.getItem('user');
     if (stored) {
       const user = JSON.parse(stored);
-      setSession(user);
-      if (user.user.role !== 'admin') {
+      if (user.user?.role !== 'admin') {
         router.push('/');
         return;
       }
-      loadData(user.token);
+      loadData();
     } else {
       router.push('/admin/login');
     }
   }, [router]);
 
-  const loadData = async (token: string) => {
+  const loadData = async () => {
     try {
-      const res = await fetch(apiUrl('/api/settings'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiFetch('/api/settings');
       if (res.ok) {
         const settings = await res.json();
         setData({
@@ -113,12 +109,8 @@ export default function SectionsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch(apiUrl('/api/settings'), {
+      const res = await apiFetch('/api/settings', {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.token}`
-        },
         body: JSON.stringify({
           rastreoSection: { customVideos: data.rastreoSection.customVideos },
           productosSection: { categories: data.productosSection.categories },

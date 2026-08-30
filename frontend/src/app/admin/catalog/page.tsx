@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Edit, CheckCircle2, X, Loader2, Package } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 
 interface Product {
   _id: string;
@@ -23,7 +23,6 @@ export default function CatalogPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
-  const [session, setSession] = useState<any>(null);
   
   // Categorías y productos
   const [categories, setCategories] = useState<Category[]>([]);
@@ -35,22 +34,19 @@ export default function CatalogPage() {
     const stored = localStorage.getItem('user');
     if (stored) {
       const user = JSON.parse(stored);
-      setSession(user);
-      if (user.user.role !== 'admin') {
+      if (user.user?.role !== 'admin') {
         router.push('/');
         return;
       }
-      loadProducts(user.token);
+      loadProducts();
     } else {
       router.push('/admin/login');
     }
   }, [router]);
 
-  const loadProducts = async (token: string) => {
+  const loadProducts = async () => {
     try {
-      const res = await fetch(apiUrl('/api/products?tenantId=global3d_hq'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiFetch('/api/products?tenantId=global3d_hq');
       const data = await res.json();
       
       // Agrupar por categoría
@@ -84,12 +80,8 @@ export default function CatalogPage() {
     setSaving(true);
     try {
       // Crear producto en la base de datos
-      await fetch(apiUrl('/api/products'), {
+      await apiFetch('/api/products', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.token}`
-        },
         body: JSON.stringify({
           name: productName,
           price: Number(price),
@@ -98,9 +90,8 @@ export default function CatalogPage() {
           cost: 0
         })
       });
-      
-      // Recargar
-      loadProducts(session!.token);
+
+      loadProducts();
     } catch(e) { console.error(e); }
     finally { setSaving(false); }
   };
@@ -108,25 +99,18 @@ export default function CatalogPage() {
   const deleteProduct = async (id: string) => {
     if (!confirm('¿Eliminar este producto?')) return;
     try {
-      await fetch(apiUrl(`/api/products/${id}`), {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${session?.token}` }
-      });
-      loadProducts(session!.token);
+      await apiFetch(`/api/products/${id}`, { method: 'DELETE' });
+      loadProducts();
     } catch(e) { console.error(e); }
   };
 
   const updateProduct = async (id: string, name: string, price: number) => {
     try {
-      await fetch(apiUrl(`/api/products/${id}`), {
+      await apiFetch(`/api/products/${id}`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.token}`
-        },
         body: JSON.stringify({ name, price })
       });
-      loadProducts(session!.token);
+      loadProducts();
     } catch(e) { console.error(e); }
   };
 

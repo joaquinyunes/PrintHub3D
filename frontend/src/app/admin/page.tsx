@@ -12,7 +12,7 @@ import {
   AlertTriangle,
   ShoppingCart, TrendingUp, Wallet
 } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import { usePolling } from "@/hooks/usePolling";
 
 // --- COMPONENTE: TARJETA KPI ---
@@ -154,7 +154,6 @@ function ActionTile({ icon: Icon, label, color, onClick }: any) {
 export default function DashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState<any>(null);
   const [stats, setStats] = useState({ pending: 0, printing: 0, ready: 0, revenue: 0, activePrinters: 0, totalPrinters: 0 });
   const [printers, setPrinters] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
@@ -167,18 +166,12 @@ export default function DashboardPage() {
 
   const fetchData = async () => {
       try {
-          const userStr = localStorage.getItem("user");
-          if (!userStr) { router.push('/admin/login'); return; }
-          const currentSession = JSON.parse(userStr);
-          setSession(currentSession);
-          const token = currentSession.token;
-
           const [resOrders, resPrinters, resTasks, resSales, resSettings] = await Promise.all([
-              fetch(apiUrl("/api/orders"), { headers: { Authorization: `Bearer ${token}` } }),
-              fetch(apiUrl("/api/printers"), { headers: { Authorization: `Bearer ${token}` } }),
-              fetch(apiUrl("/api/tasks"), { headers: { Authorization: `Bearer ${token}` } }),
-              fetch(apiUrl("/api/sales"), { headers: { Authorization: `Bearer ${token}` } }),
-              fetch(apiUrl("/api/settings"), { headers: { Authorization: `Bearer ${token}` } })
+              apiFetch("/api/orders"),
+              apiFetch("/api/printers"),
+              apiFetch("/api/tasks"),
+              apiFetch("/api/sales"),
+              apiFetch("/api/settings")
           ]);
 
           if (resOrders.ok && resPrinters.ok) {
@@ -203,7 +196,7 @@ export default function DashboardPage() {
                   .filter((p: any) => p.integration && p.integration.type && p.integration.type !== 'none')
                   .map(async (p: any) => {
                     try {
-                      const r = await fetch(apiUrl(`/api/printers/${p._id}/live`), { headers: { Authorization: `Bearer ${token}` } });
+                      const r = await apiFetch(`/api/printers/${p._id}/live`);
                       if (r.ok) p.live = await r.json();
                     } catch { /* impresora offline */ }
                   }),
@@ -238,9 +231,8 @@ export default function DashboardPage() {
   const handleAddTask = async () => {
       if(!newTaskText.trim()) return;
       try {
-          const res = await fetch(apiUrl("/api/tasks"), {
+          const res = await apiFetch("/api/tasks", {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
               body: JSON.stringify({ text: newTaskText })
           });
           if(res.ok) { setNewTaskText(""); fetchData(); }
@@ -249,9 +241,8 @@ export default function DashboardPage() {
 
   const toggleTask = async (id: string, currentStatus: boolean) => {
       try {
-          await fetch(apiUrl(`/api/tasks/${id}`), {
+          await apiFetch(`/api/tasks/${id}`, {
               method: 'PUT',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
               body: JSON.stringify({ completed: !currentStatus })
           });
           fetchData();
@@ -261,10 +252,7 @@ export default function DashboardPage() {
   const deleteTask = async (id: string) => {
       if(!confirm("¿Borrar tarea?")) return;
       try {
-          await fetch(apiUrl(`/api/tasks/${id}`), {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${session.token}` }
-          });
+          await apiFetch(`/api/tasks/${id}`, { method: 'DELETE' });
           fetchData();
       } catch (e) { console.error(e); }
   };
@@ -291,9 +279,8 @@ export default function DashboardPage() {
 
   const confirmStockIngress = async () => {
       try {
-          const res = await fetch(apiUrl("/api/products/bulk-stock"), {
+          const res = await apiFetch("/api/products/bulk-stock", {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
               body: JSON.stringify({ items: parsedItems })
           });
           if(res.ok) { alert(`✅ Stock actualizado.`); setParsedItems([]); setIsFilamentModalOpen(false); }

@@ -6,11 +6,15 @@ const MAX_BYTES = Number(process.env.UPLOAD_MAX_BYTES || 30 * 1024 * 1024); // 3
 const ALLOWED_MIME = /^(image\/(jpeg|png|gif|webp|svg\+xml|avif)|video\/(mp4|webm|quicktime))$/;
 
 async function requireAdmin(request: Request): Promise<boolean> {
-  const auth = request.headers.get('authorization');
-  if (!auth?.startsWith('Bearer ')) return false;
+  const cookie = request.headers.get('cookie') || '';
+  const auth = request.headers.get('authorization') || '';
+  if (!cookie && !auth.startsWith('Bearer ')) return false;
   try {
     const res = await fetch(`${API_BASE.replace(/\/$/, '')}/api/auth/me`, {
-      headers: { Authorization: auth },
+      headers: {
+        ...(cookie ? { cookie } : {}),
+        ...(auth.startsWith('Bearer ') ? { Authorization: auth } : {}),
+      },
     });
     if (!res.ok) return false;
     const data = await res.json();

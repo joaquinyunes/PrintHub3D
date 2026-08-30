@@ -19,16 +19,6 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      try {
-        const session = JSON.parse(stored);
-        if (session.token && session.user?.role === "admin") {
-          router.replace("/admin");
-          return;
-        }
-      } catch {}
-    }
     // detect if backend is reachable
     fetch(apiUrl("/api/auth/login"), { method: "HEAD" })
       .then(() => setOffline(false))
@@ -62,7 +52,6 @@ export default function LoginPage() {
       localStorage.setItem(
         "user",
         JSON.stringify({
-          token: data.token,
           user: {
             id: data.user.id,
             email: data.user.email,

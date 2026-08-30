@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   Printer as PrinterIcon, Play, Plus, Trash2, Zap, 
   CheckCircle2, Package, Clock, Truck, AlertTriangle, Calendar,
   FileText, Timer, Activity, Flame
 } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import { usePolling } from "@/hooks/usePolling";
 
 // --- COMPONENTE: CRONÓMETRO INTERNO ---
@@ -107,8 +106,7 @@ const sortForProduction = (list: Order[]) => {
 };
 
 export default function ProductionPage() {
-  const router = useRouter();
-  const [session, setSession] = useState<{token: string} | null>(null);
+  const [session, setSession] = useState<{ user?: { role?: string } } | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [printers, setPrinters] = useState<Printer[]>([]);
   const [isPrinterModalOpen, setIsPrinterModalOpen] = useState(false);
@@ -121,12 +119,12 @@ export default function ProductionPage() {
   const [startConfig, setStartConfig] = useState({ printerId: "", minutes: "60", filamentId: "", filamentGrams: "" });
   const [filaments, setFilaments] = useState<any[]>([]);
 
-  const fetchData = async (token: string) => {
+  const fetchData = async () => {
     try {
       const [resOrders, resPrinters, resFilaments] = await Promise.all([
-        fetch(apiUrl('/api/orders'), { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(apiUrl('/api/printers'), { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(apiUrl('/api/filaments'), { headers: { Authorization: `Bearer ${token}` } })
+        apiFetch('/api/orders'),
+        apiFetch('/api/printers'),
+        apiFetch('/api/filaments')
       ]);
       if (resFilaments.ok) setFilaments((await resFilaments.json()).items || []);
       if (resOrders.ok) {
@@ -144,14 +142,10 @@ export default function ProductionPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
-    if (!stored) { router.replace("/admin/login"); return; }
-    setSession(JSON.parse(stored));
-  }, [router]);
+    if (stored) { try { setSession(JSON.parse(stored)); } catch { /* noop */ } }
+  }, []);
 
-  usePolling(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) fetchData(JSON.parse(stored).token);
-  }, 12000);
+  usePolling(() => { fetchData(); }, 12000);
 
   const openStartModal = (orderId: string) => {
     setSelectedOrder(orderId);
@@ -162,8 +156,8 @@ export default function ProductionPage() {
   const confirmStart = async () => {
     if (!selectedOrder || !startConfig.printerId) return alert("Selecciona una impresora");
     try {
-        await fetch(apiUrl(`/api/orders/${selectedOrder}/status`), {
-            method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.token}` },
+        await apiFetch(`/api/orders/${selectedOrder}/status`, {
+            method: 'PUT',
             body: JSON.stringify({
                 status: 'in_progress',
                 printTimeMinutes: Number(startConfig.minutes),
@@ -174,18 +168,18 @@ export default function ProductionPage() {
             })
         });
         setIsStartModalOpen(false);
-        if (session) fetchData(session.token);
+        fetchData();
     } catch (error) { console.error(error); }
   };
 
   const moveOrder = async (orderId: string, nextStatus: string) => {
     if (nextStatus === 'completed' && !confirm("¿Marcar terminado?")) return;
     try {
-        await fetch(apiUrl(`/api/orders/${orderId}/status`), {
-            method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.token}` },
+        await apiFetch(`/api/orders/${orderId}/status`, {
+            method: 'PUT',
             body: JSON.stringify({ status: nextStatus })
         });
-        if (session) fetchData(session.token);
+        fetchData();
     } catch (error) { console.error(error); }
   };
 
@@ -198,17 +192,14 @@ export default function ProductionPage() {
   const handleFinishItem = async () => {
     if (!selectedOrderForFinish || finishItemIndex === null || !session) return;
     try {
-        const res = await fetch(apiUrl(`/api/orders/${selectedOrderForFinish._id}/print-item`), {
+        const res = await apiFetch(`/api/orders/${selectedOrderForFinish._id}/print-item`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` },
             body: JSON.stringify({ itemIndex: finishItemIndex })
         });
         if (res.ok) {
-            // Cerramos el modal rapidísimo para mejorar la sensación del usuario
             setSelectedOrderForFinish(null);
             setFinishItemIndex(null);
-            // Volvemos a pedir TODO (órdenes e impresoras) para que cambien las tarjetas de lugar y colores
-            fetchData(session.token);
+            fetchData();
         }
     } catch (error) { console.error(error); }
   };
@@ -216,8 +207,8 @@ export default function ProductionPage() {
   const addPrinter = async () => {
     if (!newPrinterName) return;
     try {
-        await fetch(apiUrl('/api/printers'), {
-            method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.token}` },
+        await apiFetch('/api/printers', {
+            method: 'POST',
             body: JSON.stringify({
               name: newPrinterName,
               printerModel: 'Genérica',
@@ -225,23 +216,19 @@ export default function ProductionPage() {
             })
         });
         setNewPrinterName(""); setNewPrinterInt({ type: "none", url: "", apiKey: "" }); setIsPrinterModalOpen(false);
-        if (session) fetchData(session.token);
+        fetchData();
     } catch (error) { console.error(error); }
   };
 
   const updatePrinterStatus = async (id: string, status: string) => {
     try {
-      await fetch(apiUrl(`/api/printers/${id}/status`), {
+      await apiFetch(`/api/printers/${id}/status`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.token}`
-        },
         body: JSON.stringify({ status })
       });
-  
-      if (session) fetchData(session.token);
-  
+
+      fetchData();
+
     } catch (error) {
       console.error(error);
     }
@@ -250,8 +237,8 @@ export default function ProductionPage() {
   const deletePrinter = async (id: string) => {
     if(!confirm("¿Borrar?")) return;
     try {
-        await fetch(apiUrl(`/api/printers/${id}`), { method: 'DELETE', headers: { Authorization: `Bearer ${session?.token}` }});
-        if (session) fetchData(session.token);
+        await apiFetch(`/api/printers/${id}`, { method: 'DELETE' });
+        fetchData();
     } catch (error) { console.error(error); }
   };
 

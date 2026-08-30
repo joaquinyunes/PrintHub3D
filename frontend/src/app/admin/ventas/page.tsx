@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { DollarSign, Search, Plus, X, CheckCircle, Loader2 } from "lucide-react";
-import { apiUrl } from "@/lib/api";
-import { getAuthHeaders } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
 
 interface Sale {
   _id: string;
@@ -35,7 +34,7 @@ export default function AdminVentas() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(apiUrl("/api/sales?pageSize=200"), { headers: getAuthHeaders() });
+      const res = await apiFetch("/api/sales?pageSize=200");
       if (!res.ok) throw new Error("No se pudo cargar el historial de ventas");
       const data = await res.json();
       setSales(Array.isArray(data.items) ? data.items : []);
@@ -66,9 +65,8 @@ export default function AdminVentas() {
     setSaving(true);
     setError("");
     try {
-      const res = await fetch(apiUrl("/api/sales"), {
+      const res = await apiFetch("/api/sales", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           productName: form.productName.trim(),
           quantity: Number(form.quantity) || 1,

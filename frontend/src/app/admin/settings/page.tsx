@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Save, Building, Phone, DollarSign, MessageSquare, Database, Wifi, WifiOff, QrCode, RefreshCw, Loader2 } from 'lucide-react';
-import { apiUrl } from '@/lib/api';
+import { apiUrl, apiFetch } from '@/lib/api';
 
 interface CustomerTemplates {
   pending: string;
@@ -54,11 +54,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const stored = localStorage.getItem("user");
-        const token = stored ? JSON.parse(stored).token : null;
-        const res = await fetch(apiUrl('/api/settings'), {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const res = await apiFetch('/api/settings');
         if (!res.ok) return;
         const data = await res.json();
         setFormData({
@@ -130,11 +126,7 @@ export default function SettingsPage() {
 
   const fetchWaStatus = async () => {
     try {
-      const stored = localStorage.getItem("user");
-      const token = stored ? JSON.parse(stored).token : null;
-      const res = await fetch(apiUrl('/api/whatsapp/status'), {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      const res = await apiFetch('/api/whatsapp/status');
       const data = await res.json();
       setWaStatus({ isReady: data.isReady, hasQr: data.hasQr });
       if (data.hasQr && !data.isReady) {
@@ -145,12 +137,7 @@ export default function SettingsPage() {
 
   const reconnectWa = async () => {
     try {
-      const stored = localStorage.getItem("user");
-      const token = stored ? JSON.parse(stored).token : null;
-      await fetch(apiUrl('/api/whatsapp/reconnect'), {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      await apiFetch('/api/whatsapp/reconnect', { method: 'POST' });
       connectWhatsApp();
     } catch { /* silencioso */ }
   };
@@ -164,14 +151,8 @@ export default function SettingsPage() {
     setLoading(true);
     setMsg("");
     try {
-      const stored = localStorage.getItem("user");
-      const token = stored ? JSON.parse(stored).token : null;
-      const res = await fetch(apiUrl('/api/settings'), {
+      const res = await apiFetch('/api/settings', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
         body: JSON.stringify(formData),
       });
       if (res.ok) {

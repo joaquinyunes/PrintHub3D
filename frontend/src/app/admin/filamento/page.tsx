@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Spool, Plus, Search, Loader2, Minus, RefreshCw, Trash2, X, AlertTriangle } from "lucide-react";
-import { apiUrl } from "@/lib/api";
-import { getAuthHeaders } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
 
 interface Filament {
   _id: string;
@@ -39,13 +38,11 @@ export default function AdminFilamento() {
   const [form, setForm] = useState<Record<string, string>>(empty);
   const [saving, setSaving] = useState(false);
 
-  const authHeaders = () => ({ "Content-Type": "application/json", ...getAuthHeaders() });
-
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(apiUrl("/api/filaments"), { headers: getAuthHeaders() });
+      const res = await apiFetch("/api/filaments");
       if (!res.ok) throw new Error("No se pudieron cargar los filamentos");
       const data = await res.json();
       setItems(Array.isArray(data.items) ? data.items : []);
@@ -114,9 +111,8 @@ export default function AdminFilamento() {
       };
       const isEdit = modal?.mode === "edit";
       const url = isEdit ? `/api/filaments/${modal.item._id}` : "/api/filaments";
-      const res = await fetch(apiUrl(url), {
+      const res = await apiFetch(url, {
         method: isEdit ? "PUT" : "POST",
-        headers: authHeaders(),
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "Error al guardar");
@@ -131,9 +127,8 @@ export default function AdminFilamento() {
 
   const action = async (id: string, path: string, body: object) => {
     try {
-      const res = await fetch(apiUrl(`/api/filaments/${id}/${path}`), {
+      const res = await apiFetch(`/api/filaments/${id}/${path}`, {
         method: "POST",
-        headers: authHeaders(),
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "Error");
@@ -145,7 +140,7 @@ export default function AdminFilamento() {
 
   const remove = async (id: string) => {
     if (!confirm("¿Eliminar este filamento?")) return;
-    await fetch(apiUrl(`/api/filaments/${id}`), { method: "DELETE", headers: getAuthHeaders() });
+    await apiFetch(`/api/filaments/${id}`, { method: "DELETE" });
     await load();
   };
 

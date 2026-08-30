@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Users, Search, Star, MessageCircle, Instagram, Facebook, Camera } from 'lucide-react';
-import { apiUrl } from '@/lib/api';
+import { apiFetch } from '@/lib/api';
 
 interface Client {
   _id: string;
@@ -21,11 +21,7 @@ export default function ClientsPage() {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const stored = localStorage.getItem("user");
-        const token = stored ? JSON.parse(stored).token : '';
-        const res = await fetch(apiUrl('/api/clients'), {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await apiFetch('/api/clients');
         const data = await res.json();
         setClients(data.items || data);
       } catch (err) {
@@ -38,15 +34,8 @@ export default function ClientsPage() {
   }, []);
 
   const updateAvatar = async (clientId: string, avatarUrl: string) => {
-    const stored = localStorage.getItem("user");
-    const token = stored ? JSON.parse(stored).token : '';
-    
-    await fetch(apiUrl(`/api/clients/${clientId}`), {
+    await apiFetch(`/api/clients/${clientId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
       body: JSON.stringify({ avatar: avatarUrl })
     });
     

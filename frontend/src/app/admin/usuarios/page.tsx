@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { UserCog, Plus, Loader2, X, Copy, Check, ShieldCheck, User as UserIcon } from "lucide-react";
-import { apiUrl } from "@/lib/api";
-import { getAuthHeaders } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
 
 interface PanelUser {
   id: string;
@@ -13,8 +12,6 @@ interface PanelUser {
   active: boolean;
   createdAt: string;
 }
-
-const headers = () => ({ "Content-Type": "application/json", ...getAuthHeaders() });
 
 export default function UsuariosPage() {
   const [users, setUsers] = useState<PanelUser[]>([]);
@@ -30,7 +27,7 @@ export default function UsuariosPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(apiUrl("/api/users"), { headers: getAuthHeaders() });
+      const res = await apiFetch("/api/users");
       if (!res.ok) throw new Error("No se pudo cargar la lista de usuarios");
       setUsers((await res.json()).items || []);
     } catch (e: any) {
@@ -52,7 +49,7 @@ export default function UsuariosPage() {
     setSaving(true);
     setError("");
     try {
-      const res = await fetch(apiUrl("/api/users"), { method: "POST", headers: headers(), body: JSON.stringify(form) });
+      const res = await apiFetch("/api/users", { method: "POST", body: JSON.stringify(form) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Error al crear");
       if (data.tempPassword) setTempPass({ email: data.email, pass: data.tempPassword });
@@ -68,7 +65,7 @@ export default function UsuariosPage() {
 
   const patch = async (id: string, body: object) => {
     try {
-      const res = await fetch(apiUrl(`/api/users/${id}`), { method: "PATCH", headers: headers(), body: JSON.stringify(body) });
+      const res = await apiFetch(`/api/users/${id}`, { method: "PATCH", body: JSON.stringify(body) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Error");
       if (data.tempPassword) setTempPass({ email: data.email, pass: data.tempPassword });
@@ -80,7 +77,7 @@ export default function UsuariosPage() {
 
   const remove = async (id: string) => {
     if (!confirm("¿Eliminar este usuario? Perderá el acceso al panel.")) return;
-    const res = await fetch(apiUrl(`/api/users/${id}`), { method: "DELETE", headers: getAuthHeaders() });
+    const res = await apiFetch(`/api/users/${id}`, { method: "DELETE" });
     if (!res.ok) setError((await res.json().catch(() => ({}))).message || "Error al eliminar");
     await load();
   };

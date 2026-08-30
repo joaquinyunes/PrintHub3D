@@ -14,8 +14,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { TrendingUp, TrendingDown, Loader2, Percent, Wallet, Package, Layers } from "lucide-react";
-import { apiUrl } from "@/lib/api";
-import { getAuthHeaders } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
 
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const PIE = ["#ff5c1a", "#ff2e88", "#14e0c8", "#f5a524", "#8b5cf6", "#38bdf8"];
@@ -48,7 +47,7 @@ export default function RentabilidadPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(apiUrl(`/api/analytics/profitability?year=${year}&month=${month}`), { headers: getAuthHeaders() });
+      const res = await apiFetch(`/api/analytics/profitability?year=${year}&month=${month}`);
       if (!res.ok) throw new Error("No se pudo cargar la rentabilidad");
       setData(await res.json());
     } catch (e: any) {

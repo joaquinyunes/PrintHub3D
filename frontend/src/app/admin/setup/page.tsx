@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Check, Rocket, ArrowRight } from "lucide-react";
-import { apiUrl } from "@/lib/api";
-import { getAuthHeaders } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
 
 const STEPS = ["Tu taller", "Contacto", "Listo"];
 
@@ -30,7 +29,7 @@ export default function SetupPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(apiUrl("/api/settings"), { headers: getAuthHeaders() });
+        const res = await apiFetch("/api/settings");
         if (res.ok) {
           const s = await res.json();
           setCurrent(s);
@@ -61,9 +60,8 @@ export default function SetupPage() {
     setSaving(true);
     setError("");
     try {
-      const res = await fetch(apiUrl("/api/settings"), {
+      const res = await apiFetch("/api/settings", {
         method: "PUT",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           businessName: form.businessName.trim() || "Mi Taller 3D",
           currencySymbol: form.currencySymbol || "$",
