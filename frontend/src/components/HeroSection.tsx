@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WHATSAPP_PHONE } from '@/lib/config';
+import Magnetic from '@/components/motion/Magnetic';
+import CountUp from '@/components/motion/CountUp';
 
 interface HeroSectionProps {
   heroData?: {
@@ -183,7 +185,9 @@ export default function HeroSection({ heroData }: HeroSectionProps) {
           className="flex flex-col md:flex-row items-center justify-center gap-10 mt-16 p-8 bg-tone-dark/40 border border-white/5 rounded-xl backdrop-blur-xl shadow-2xl"
         >
           <div className="text-center group cursor-default">
-            <span className="text-5xl font-black text-tone-amber">{stats.reviews}</span>
+            <span className="text-5xl font-black text-tone-amber">
+              <CountUp to={parseFloat(stats.reviews) || 0} decimals={1} duration={1200} />
+            </span>
             <div className="flex justify-center mt-2 gap-1 group-hover:scale-110 transition-transform">
               {[1, 2, 3, 4, 5].map((s, i) => (
                 <motion.div
@@ -206,7 +210,13 @@ export default function HeroSection({ heroData }: HeroSectionProps) {
           <div className="text-center group cursor-default">
             <div className="flex items-center justify-center gap-3 group-hover:scale-110 transition-transform">
               <ShieldCheck className="w-8 h-8 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
-              <span className="text-4xl font-black text-white">{stats.orders}</span>
+              <span className="text-4xl font-black text-white">
+                <CountUp
+                  to={parseFloat(stats.orders) || 0}
+                  suffix={stats.orders?.replace(/[\d.,\s]/g, '') || ''}
+                  duration={1400}
+                />
+              </span>
             </div>
             <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-wider">
               Pedidos Entregados
@@ -232,35 +242,39 @@ export default function HeroSection({ heroData }: HeroSectionProps) {
           transition={{ duration: 0.7, delay: 1.9, ease: EASE }}
           className="flex flex-col sm:flex-row justify-center items-center gap-6 mt-16"
         >
-          <a
-            href="#productos"
-            className="group relative w-full sm:w-auto px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-3 overflow-hidden bg-white/5 border border-white/5 shadow-lg"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-tone-red to-tone-amber opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative z-10 flex items-center gap-3 text-white">
-              <Package className="w-6 h-6 group-hover:animate-bounce" />
-              <span className="text-lg tracking-wide">Ver Catálogo</span>
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </a>
+          <Magnetic strength={0.25} className="w-full sm:w-auto">
+            <a
+              href="#productos"
+              className="group relative w-full sm:w-auto px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-3 overflow-hidden bg-white/5 border border-white/5 shadow-lg"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-tone-red to-tone-amber opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10 flex items-center gap-3 text-white">
+                <Package className="w-6 h-6 group-hover:animate-bounce" />
+                <span className="text-lg tracking-wide">Ver Catálogo</span>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </a>
+          </Magnetic>
 
-          <a
-            href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent('Hola! Quiero info sobre impresiones 3D')}`}
-            target="_blank"
-            className="group relative w-full sm:w-auto px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-3 overflow-hidden bg-gradient-to-r from-tone-red to-tone-pink shadow-[0_0_20px_rgba(250,130,130,0.3)] hover:shadow-[0_0_35px_rgba(250,130,130,0.5)]"
-          >
-            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative z-10 flex items-center gap-3 text-white">
-              <motion.span
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ repeat: Infinity, duration: 2, delay: 3 }}
-                className="text-2xl drop-shadow-md"
-              >
-                💬
-              </motion.span>
-              <span className="text-lg tracking-wide">Consultar por WhatsApp</span>
-            </div>
-          </a>
+          <Magnetic strength={0.25} className="w-full sm:w-auto">
+            <a
+              href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent('Hola! Quiero info sobre impresiones 3D')}`}
+              target="_blank"
+              className="group relative w-full sm:w-auto px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-3 overflow-hidden bg-gradient-to-r from-tone-red to-tone-pink shadow-[0_0_20px_rgba(250,130,130,0.3)] hover:shadow-[0_0_35px_rgba(250,130,130,0.5)]"
+            >
+              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10 flex items-center gap-3 text-white">
+                <motion.span
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ repeat: Infinity, duration: 2, delay: 3 }}
+                  className="text-2xl drop-shadow-md"
+                >
+                  💬
+                </motion.span>
+                <span className="text-lg tracking-wide">Consultar por WhatsApp</span>
+              </div>
+            </a>
+          </Magnetic>
         </motion.div>
 
         <motion.div
