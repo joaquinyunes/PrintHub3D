@@ -2,28 +2,35 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import {
-  Search,
-  ArrowRight,
-  Package,
-  Instagram,
-  MapPin,
-  LogOut,
-  Menu,
-  X,
-  Box,
-  Phone,
-  Mail,
-} from 'lucide-react';
-import CartIcon from '@/components/CartIcon';
+import { Search, ArrowRight, Package, Instagram, MapPin, Phone, Mail, X } from 'lucide-react';
 import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/config';
 import { apiUrl } from '@/lib/api';
 import HeroSection from '@/components/HeroSection';
 import ProductCard from '@/components/ProductCard';
 import ScrollSequence from '@/components/ScrollSequence';
 import GsapReveal from '@/components/motion/GsapReveal';
+import GradientField from '@/components/motion/GradientField';
+import Marquee from '@/components/motion/Marquee';
+import Nav from '@/components/store/Nav';
+import Footer from '@/components/store/Footer';
 import type { Product } from '@/types';
+
+const Hero3D = dynamic(() => import('@/components/three/Hero3D'), { ssr: false });
+
+const MARQUEE_ITEMS = [
+  'PLA',
+  'PETG',
+  'ABS',
+  'TPU flexible',
+  'Resina alta definición',
+  'Envíos a todo el país',
+  'Bambu Lab X1C',
+  '+500 pedidos entregados',
+  'Garantía de calidad',
+  'Cotización al instante',
+];
 
 interface ShowcaseProduct {
   id: string;
@@ -51,8 +58,6 @@ interface ShowcaseCategory {
 export default function HomePage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
-  const [user, setUser] = useState<{ role?: string } | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
 
@@ -80,16 +85,6 @@ export default function HomePage() {
   const categories = [...new Set(displayProducts.map((p) => p.category).filter(Boolean))];
 
   useEffect(() => {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setUser(parsed.user);
-      } catch {
-        /* ignore parse errors */
-      }
-    }
-
     const loadData = async () => {
       try {
         const res = await fetch(apiUrl('/api/products/public?tenantId=global3d_hq'));
@@ -120,12 +115,6 @@ export default function HomePage() {
     loadSettings();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    window.location.href = '/';
-  };
-
   const handleWhatsAppBuy = (item: { name: string; price: number }) => {
     const text = `Hola! 👋 Quiero comprar: *${item.name}* ($${item.price}).`;
     window.open(`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`, '_blank');
@@ -142,117 +131,10 @@ export default function HomePage() {
     <div className="min-h-screen bg-tone-darker text-white font-mono">
       {/* Background effects */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-tone-red/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-tone-amber/10 blur-[120px] rounded-full" />
+        <GradientField />
       </div>
 
-      {/* NAVBAR */}
-      <nav className="fixed top-0 w-full z-50 bg-tone-darker/90 backdrop-blur-2xl border-b border-white/5">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 bg-gradient-to-br from-tone-red via-tone-pink to-tone-amber rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all shadow-lg shadow-tone-red/30">
-              <Box className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <span className="text-xl font-black bg-gradient-to-r from-tone-red via-tone-pink to-tone-amber bg-clip-text text-transparent">
-                {homeSections?.heroTitle || 'Global 3D'}
-              </span>
-              <p className="text-[10px] text-gray-600 tracking-[0.3em] uppercase -mt-1">
-                Corrientes
-              </p>
-            </div>
-          </Link>
-
-          <div className="hidden lg:flex items-center gap-1">
-            {[
-              { href: '/rastreo', label: 'Rastreo' },
-              { href: '/productos', label: 'Productos' },
-              { href: '/impresoras', label: 'Impresoras' },
-              { href: '/filamentos', label: 'Filamentos' },
-              { href: '/contacto', label: 'Contacto' },
-            ].map((item, i) => (
-              <Link
-                key={i}
-                href={item.href}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200 relative group"
-              >
-                {item.label}
-                <span className="absolute -bottom-1 left-1/2 w-0 h-0.5 bg-tone-red rounded-full group-hover:w-full group-hover:left-0 transition-all duration-300" />
-              </Link>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <CartIcon />
-            {user?.role === 'admin' ? (
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/admin"
-                  className="px-5 py-2.5 bg-tone-red hover:bg-tone-red/90 text-white rounded-xl text-sm font-bold transition-all"
-                >
-                  Admin
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="p-2.5 text-gray-600 hover:text-tone-red hover:bg-tone-red/10 rounded-xl transition-all"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <Link
-                href="/admin/login"
-                className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl border border-white/5 transition-all"
-              >
-                Ingresar
-              </Link>
-            )}
-            <button className="lg:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>
-              {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </div>
-
-        {menuOpen && (
-          <div className="lg:hidden fixed top-16 left-0 right-0 bg-tone-darker border-b border-white/5 p-4 z-40">
-            <Link
-              href="/rastreo"
-              className="block py-3 text-gray-400 hover:text-white border-b border-white/5"
-              onClick={() => setMenuOpen(false)}
-            >
-              Rastreo
-            </Link>
-            <Link
-              href="/productos"
-              className="block py-3 text-gray-400 hover:text-white border-b border-white/5"
-              onClick={() => setMenuOpen(false)}
-            >
-              Productos
-            </Link>
-            <Link
-              href="/impresoras"
-              className="block py-3 text-gray-400 hover:text-white border-b border-white/5"
-              onClick={() => setMenuOpen(false)}
-            >
-              Impresoras
-            </Link>
-            <Link
-              href="/filamentos"
-              className="block py-3 text-gray-400 hover:text-white border-b border-white/5"
-              onClick={() => setMenuOpen(false)}
-            >
-              Filamentos
-            </Link>
-            <Link
-              href="/contacto"
-              className="block py-3 text-gray-400 hover:text-white"
-              onClick={() => setMenuOpen(false)}
-            >
-              Contacto
-            </Link>
-          </div>
-        )}
-      </nav>
+      <Nav onQuote={() => router.push('/cotizar')} />
 
       {/* 1. 📦 RASTREO */}
       <section id="rastreo" className="pt-28 pb-12 px-4">
@@ -289,27 +171,47 @@ export default function HomePage() {
       </section>
 
       {/* 2. 🏠 HERO */}
-      <HeroSection
-        heroData={{
-          title: homeSections?.heroTitle || 'Global 3D',
-          subtitle: homeSections?.heroSubtitle || 'Transformamos tus ideas en objetos reales.',
-          description:
-            homeSections?.heroDescription || 'Impresión 3D de alta calidad en Corrientes',
-          badge: homeSections?.heroBadge || 'Envíos gratis en pedidos mayores a $50.000',
-          stats: homeSections?.heroStats || {
-            reviews: '4.9',
-            reviewsCount: '200+ reseñas',
-            orders: '500+',
-            delivery: '24-72h',
-          },
-          features: homeSections?.heroFeatures || [
-            'Impresión rápida',
-            'Calidad premium',
-            'Envío rápido',
-            'Soporte 24/7',
-          ],
-        }}
-      />
+      <div className="relative">
+        <div className="pointer-events-none absolute inset-0 -z-10 hidden opacity-80 mix-blend-screen md:block">
+          <Hero3D />
+        </div>
+        <HeroSection
+          heroData={{
+            title: homeSections?.heroTitle || 'Global 3D',
+            subtitle: homeSections?.heroSubtitle || 'Transformamos tus ideas en objetos reales.',
+            description:
+              homeSections?.heroDescription || 'Impresión 3D de alta calidad en Corrientes',
+            badge: homeSections?.heroBadge || 'Envíos gratis en pedidos mayores a $50.000',
+            stats: homeSections?.heroStats || {
+              reviews: '4.9',
+              reviewsCount: '200+ reseñas',
+              orders: '500+',
+              delivery: '24-72h',
+            },
+            features: homeSections?.heroFeatures || [
+              'Impresión rápida',
+              'Calidad premium',
+              'Envío rápido',
+              'Soporte 24/7',
+            ],
+          }}
+        />
+      </div>
+
+      {/* Franja de confianza */}
+      <div className="border-y border-white/5 bg-white/[0.02] py-4">
+        <Marquee duration={28}>
+          {MARQUEE_ITEMS.map((item, i) => (
+            <span
+              key={i}
+              className="flex items-center gap-6 font-mono text-xs uppercase tracking-[0.2em] text-gray-500"
+            >
+              {item}
+              <span className="text-tone-red">✦</span>
+            </span>
+          ))}
+        </Marquee>
+      </div>
 
       {/* 3. ⭐ PRODUCTO ESTRELLA */}
       {homeSections?.productStar?.enabled !== false && (
@@ -665,22 +567,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="py-10 px-4 border-t border-white/5">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-br from-tone-red to-tone-amber rounded-lg flex items-center justify-center">
-              <Box className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold bg-gradient-to-r from-tone-red to-tone-amber bg-clip-text text-transparent text-lg">
-              {homeSections?.heroTitle || 'Global 3D'}
-            </span>
-          </div>
-          <p className="text-gray-700 text-sm">
-            © 2024 Global 3D Corrientes. Todos los derechos reservados.
-          </p>
-        </div>
-      </footer>
+      <Footer contact={homeSections?.contactInfo} />
 
       {/* WhatsApp FAB */}
       <a
