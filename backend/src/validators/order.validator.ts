@@ -24,6 +24,10 @@ export const CreateOrderSchema = z.object({
   customerContact: z.string().optional(),
 });
 
+// Schema para editar pedido (todos los campos opcionales: permite updates parciales
+// como "saldar deuda", que solo manda { deposit })
+export const UpdateOrderSchema = CreateOrderSchema.partial();
+
 // Schema para actualizar estado
 export const UpdateOrderStatusSchema = z.object({
   status: z.enum(['pending', 'in_progress', 'completed', 'delivered', 'cancelled'], {
@@ -43,5 +47,6 @@ export const OrderFeedbackSchema = z.object({
 
 // Tipos inferidos automáticamente
 export type CreateOrderInput = z.infer<typeof CreateOrderSchema>;
+export type UpdateOrderInput = z.infer<typeof UpdateOrderSchema>;
 export type UpdateOrderStatusInput = z.infer<typeof UpdateOrderStatusSchema>;
 export type OrderFeedbackInput = z.infer<typeof OrderFeedbackSchema>;

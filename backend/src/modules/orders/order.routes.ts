@@ -17,7 +17,7 @@ import {
 import { protect, staffOrAdmin, adminOnly } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
 import { zodValidator } from '../../middleware/zodValidator';
-import { CreateOrderSchema, UpdateOrderStatusSchema, OrderFeedbackSchema } from '../../validators/order.validator';
+import { CreateOrderSchema, UpdateOrderSchema, UpdateOrderStatusSchema, OrderFeedbackSchema } from '../../validators/order.validator';
 
 const router = Router();
 
@@ -32,7 +32,7 @@ router.get('/', protect, withTenant, staffOrAdmin, getOrders);
 router.post('/', protect, withTenant, staffOrAdmin, zodValidator({ body: CreateOrderSchema }), createOrder);
 
 // Rutas de edición y estado
-router.put('/:id', protect, withTenant, staffOrAdmin, zodValidator({ body: CreateOrderSchema }), updateOrder);
+router.put('/:id', protect, withTenant, staffOrAdmin, zodValidator({ body: UpdateOrderSchema }), updateOrder);
 router.put('/:id/status', protect, withTenant, staffOrAdmin, zodValidator({ body: UpdateOrderStatusSchema }), updateOrderStatus);
 router.post('/:id/print-item', protect, withTenant, staffOrAdmin, markOrderItemPrinted);
 router.get('/:id/timeline', protect, withTenant, staffOrAdmin, getOrderTimeline);

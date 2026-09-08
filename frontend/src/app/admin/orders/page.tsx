@@ -454,10 +454,14 @@ export default function OrderListPage() {
       });
       if (res.ok) {
         const updated = await res.json();
-        setOrders(orders.map((o) => (o._id === updated._id ? updated : o)));
+        setOrders((cur) => cur.map((o) => (o._id === updated._id ? updated : o)));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.message || 'No se pudo saldar la deuda.');
       }
     } catch (e) {
       console.error(e);
+      alert('No se pudo saldar la deuda.');
     }
   };
 
