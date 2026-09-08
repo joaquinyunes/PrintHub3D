@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { z, ZodSchema, ZodError } from 'zod';
+import { ZodSchema, ZodError } from 'zod';
 
 type ZodValidationSchemas = {
   body?: ZodSchema;
@@ -14,7 +14,13 @@ export const zodValidator = (schemas: ZodValidationSchemas) => {
         req.body = await schemas.body.parseAsync(req.body);
       }
       if (schemas.query) {
-        req.query = await schemas.query.parseAsync(req.query);
+        // Express 5 expone req.query como getter de solo lectura: no se puede reasignar.
+        const parsedQuery = await schemas.query.parseAsync(req.query);
+        Object.defineProperty(req, 'query', {
+          value: parsedQuery,
+          writable: true,
+          configurable: true,
+        });
       }
       if (schemas.params) {
         req.params = await schemas.params.parseAsync(req.params);
