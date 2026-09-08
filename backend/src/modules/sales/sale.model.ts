@@ -8,10 +8,12 @@ export interface ISale extends Document {
   quantity: number;
   profit: number;
   category: string; // 👈 Campo clave para tus gráficos
+  kind: 'producto' | 'filamento' | 'servicio'; // hoja "Ventas Productos" vs "Ventas Filamento"
   orderId?: mongoose.Types.ObjectId; // Si la venta viene de un pedido entregado/cobrado
   client?: string;
   paymentMethod?: string;
   notes?: string;
+  importBatch?: string;
   tenantId: string;
   createdAt: Date;
 }
@@ -25,10 +27,12 @@ const SaleSchema: Schema = new Schema(
     quantity: { type: Number, required: true, default: 1 },
     profit: { type: Number, required: true },
     category: { type: String, required: true, default: "General" }, // 👈 Guardamos la categoría
+    kind: { type: String, enum: ["producto", "filamento", "servicio"], default: "producto", index: true },
     orderId: { type: Schema.Types.ObjectId, ref: "Order", index: true },
     client: { type: String, default: "" },
     paymentMethod: { type: String, default: "" },
     notes: { type: String, default: "" },
+    importBatch: { type: String, index: true },
     tenantId: { type: String, required: true, index: true },
   },
   { timestamps: true }

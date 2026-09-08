@@ -30,7 +30,7 @@ export const UpdateOrderSchema = CreateOrderSchema.partial();
 
 // Schema para actualizar estado
 export const UpdateOrderStatusSchema = z.object({
-  status: z.enum(['pending', 'in_progress', 'completed', 'delivered', 'cancelled'], {
+  status: z.enum(['pending', 'in_progress', 'post_processing', 'completed', 'delivered', 'cancelled'], {
     errorMap: () => ({ message: 'Estado inválido' }),
   }),
   printTimeMinutes: z.number().min(0).optional(),

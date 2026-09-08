@@ -24,6 +24,7 @@ const statusSteps = ['pending', 'in_progress', 'completed', 'delivered'];
 const statusCopy: Record<string, string> = {
     pending: 'Pendiente de producción',
     in_progress: 'En producción',
+    post_processing: 'En post-procesado',
     completed: 'Listo para retiro/entrega',
     delivered: 'Entregado',
     cancelled: 'Cancelado'
@@ -274,7 +275,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             const statusText = statusCopy[status] || status;
             const trackingCode = (order as any).trackingCode || 'sin código';
             const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || 'http://localhost:3000/track', trackingCode);
-            const templateKey = (status in statusCopy ? status : 'pending') as 'pending' | 'in_progress' | 'completed' | 'delivered' | 'cancelled';
+            const templateKey = (status in statusCopy ? status : 'pending') as 'pending' | 'in_progress' | 'post_processing' | 'completed' | 'delivered' | 'cancelled';
             const template = settings?.customerMessageTemplates?.[templateKey]
                 || 'Hola {clientName} 👋 Tu pedido {trackingCode} cambió a {status}. Sigue tu pedido en {trackingUrl}';
 

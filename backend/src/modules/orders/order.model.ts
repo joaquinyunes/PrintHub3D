@@ -35,6 +35,7 @@ export interface IOrder extends Document {
     finishedAt?: Date;
     adminNotified?: boolean;
     isSaleRegistered: boolean;
+    importBatch?: string;
     customerSatisfaction?: number;
     customerFeedback?: string;
     tenantId: string;
@@ -45,11 +46,12 @@ export interface IOrder extends Document {
 const OrderSchema: Schema = new Schema({
     clientName: { type: String, required: true },
     origin: { type: String, default: "Local" },
-    status: { 
-        type: String, 
-        enum: ['pending', 'in_progress', 'completed', 'delivered', 'cancelled'], 
-        default: 'pending' 
+    status: {
+        type: String,
+        enum: ['pending', 'in_progress', 'post_processing', 'completed', 'delivered', 'cancelled'],
+        default: 'pending'
     },
+    importBatch: { type: String, index: true },
     paymentMethod: { type: String, default: "Efectivo" },
     deposit: { type: Number, default: 0 },
     total: { type: Number, required: true },

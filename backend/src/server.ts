@@ -41,6 +41,7 @@ import tenantRoutes from './modules/tenants/tenant.routes';
 import healthRoutes from './routes/health.routes';
 import whatsappRoutes from './modules/notifications/whatsapp.routes';
 import aiRoutes from './routes/ai.routes';
+import importRoutes from './modules/import/import.routes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -63,7 +64,7 @@ app.use(
 );
 
 app.use(limiter);
-app.use(express.json());
+app.use(express.json({ limit: '15mb' })); // 15mb: la importación de la planilla manda cientos de filas en un POST
 app.use(cookieParser());
 // Sanitize input to prevent NoSQL injection (replaces express-mongo-sanitize)
 app.use((req, _res, next) => {
@@ -126,6 +127,7 @@ app.use('/api/tenant', tenantRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/import', importRoutes);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

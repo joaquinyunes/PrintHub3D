@@ -9,7 +9,10 @@ export interface IFilament extends Document {
   gramsRemaining: number; // gramos disponibles ahora
   spools: number; // cantidad de bobinas de este tipo
   lowThresholdGrams: number; // alerta cuando gramsRemaining cae por debajo
+  sku?: string;        // SKU del catálogo (hoja "Stock Sync")
+  salePrice?: number;  // precio de venta de la bobina
   notes: string;
+  importBatch?: string;
   tenantId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -25,7 +28,10 @@ const FilamentSchema: Schema = new Schema(
     gramsRemaining: { type: Number, default: 1000, min: 0 },
     spools: { type: Number, default: 1, min: 0 },
     lowThresholdGrams: { type: Number, default: 200, min: 0 },
+    sku: { type: String, default: '', trim: true, index: true },
+    salePrice: { type: Number, default: 0, min: 0 },
     notes: { type: String, default: '' },
+    importBatch: { type: String, index: true },
     tenantId: { type: String, required: true, index: true },
   },
   { timestamps: true },
