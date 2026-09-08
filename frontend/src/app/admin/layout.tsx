@@ -22,7 +22,8 @@ import {
   Spool,
   Wallet,
   UserCog,
-  Percent
+  Percent,
+  FileSpreadsheet
 } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -158,6 +159,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {isAdmin && (
             <>
               <div className="my-4 h-px bg-white/5 mx-2" />
+              <NavItem href="/admin/importar" icon={<FileSpreadsheet size={20} />} label="Importar planilla" active={pathname.includes("/importar")} />
               <NavItem href="/admin/usuarios" icon={<UserCog size={20} />} label="Usuarios" active={pathname.includes("/usuarios")} />
               <NavItem href="/admin/home" icon={<Home size={20} />} label="Inicio Web" active={pathname === "/admin/home"} />
               <NavItem href="/admin/settings" icon={<Settings size={20} />} label="Configuración" active={pathname.includes("/settings")} />

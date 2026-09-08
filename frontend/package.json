@@ -23,7 +23,8 @@
     "react-dom": "19.2.3",
     "react-parallax-tilt": "^1.7.327",
     "recharts": "^3.6.0",
-    "three": "^0.171.0"
+    "three": "^0.171.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^20",
