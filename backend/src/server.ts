@@ -8,6 +8,7 @@ import { appConfig } from './config';
 
 import logger from './config/logger';
 import { connectDB } from './config/db';
+import { bootstrapAdmin } from './utils/bootstrapAdmin';
 import { errorHandler } from './middleware/errorHandler';
 import limiter from './middlewares/rateLimiter';
 import { swaggerSpec } from './config/swagger';
@@ -46,46 +47,57 @@ const httpServer = createServer(app);
 
 app.set('trust proxy', 1);
 
-app.use(helmet({
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: 'cross-origin' }
-}));
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }),
+);
 
-app.use(cors({
-  origin: appConfig.corsOrigins,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: appConfig.corsOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true,
+  }),
+);
 
 app.use(limiter);
 app.use(express.json());
 app.use(cookieParser());
 // Sanitize input to prevent NoSQL injection (replaces express-mongo-sanitize)
 app.use((req, _res, next) => {
-  const sanitize = (obj: any): any => {
+  const sanitize = (obj: unknown): unknown => {
     if (!obj || typeof obj !== 'object') return obj;
     if (Array.isArray(obj)) return obj.map(sanitize);
-    return Object.keys(obj).reduce((acc, key) => {
+    const src = obj as Record<string, unknown>;
+    return Object.keys(src).reduce<Record<string, unknown>>((acc, key) => {
       if (key.startsWith('$') || key.includes('.')) {
-        acc['__' + key] = sanitize(obj[key]);
+        acc['__' + key] = sanitize(src[key]);
       } else {
-        acc[key] = sanitize(obj[key]);
+        acc[key] = sanitize(src[key]);
       }
       return acc;
-    }, {} as any);
+    }, {});
   };
   if (req.body) req.body = sanitize(req.body);
-  if (req.params) req.params = sanitize(req.params);
+  if (req.params) req.params = sanitize(req.params) as typeof req.params;
   next();
 });
 
-app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
-  setHeaders: (res) => {
-    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
-  }
-}));
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, '../uploads'), {
+    setHeaders: (res) => {
+      res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    },
+  }),
+);
 
-connectDB().then(() => logger.info('✅ Base de datos conectada'));
+connectDB().then(async () => {
+  logger.info('✅ Base de datos conectada');
+  await bootstrapAdmin();
+});
 
 app.use('/api/tasks', taskRoutes);
 app.use('/api/auth', authRoutes);
@@ -121,5 +133,5 @@ app.use(errorHandler);
 
 const PORT = appConfig.port;
 httpServer.listen(PORT, () => {
-    logger.info(`🚀 Servidor corriendo en puerto ${PORT} [${appConfig.nodeEnv}]`);
+  logger.info(`🚀 Servidor corriendo en puerto ${PORT} [${appConfig.nodeEnv}]`);
 });
