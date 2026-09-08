@@ -1,0 +1,283 @@
+'use client';
+
+import React from 'react';
+import {
+  Package,
+  Zap,
+  Award,
+  Truck,
+  HeadphonesIcon,
+  Sparkles,
+  ArrowRight,
+  Star,
+  Clock,
+  ShieldCheck,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { WHATSAPP_PHONE } from '@/lib/config';
+
+interface HeroSectionProps {
+  heroData?: {
+    title?: string;
+    subtitle?: string;
+    description?: string;
+    badge?: string;
+    stats?: { reviews: string; reviewsCount: string; orders: string; delivery: string };
+    features?: string[];
+  };
+}
+
+// Curva suave compartida (easeOutExpo aprox.) — nada de rebotes bruscos
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+const defaultFeatures = ['Impresión rápida', 'Calidad premium', 'Envío rápido', 'Soporte 24/7'];
+const featureIcons = [Zap, Award, Truck, HeadphonesIcon];
+const featureColors = [
+  'from-yellow-400 to-orange-500',
+  'from-purple-400 to-pink-500',
+  'from-blue-400 to-cyan-500',
+  'from-green-400 to-emerald-500',
+];
+
+// ==========================================
+// COMPONENTE ANIMATED LETTERS CORREGIDO
+// Animación minimalista por Opacidad (Evita el bug del texto transparente)
+// ==========================================
+const AnimatedLetters = ({ text, className }: { text: string; className?: string }) => {
+  const words = text.split(' ');
+  let charCount = 0; // Mantiene el conteo para que la aparición sea secuencial
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      className={className}
+      style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.25em' }}
+    >
+      {words.map((word, wordIndex) => (
+        <span key={wordIndex} style={{ display: 'inline-flex', whiteSpace: 'nowrap' }}>
+          {word.split('').map((char, charIndex) => {
+            const globalIndex = charCount++;
+            return (
+              <motion.span
+                key={charIndex}
+                initial={{ opacity: 0, y: '0.25em' }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.6,
+                  ease: EASE,
+                  delay: Math.min(globalIndex * 0.03, 1), // cascada suave, sin arrastre en textos largos
+                }}
+                style={{ display: 'inline-block' }}
+              >
+                {char}
+              </motion.span>
+            );
+          })}
+        </span>
+      ))}
+    </motion.div>
+  );
+};
+
+export default function HeroSection({ heroData }: HeroSectionProps) {
+  const title = heroData?.title || 'Global 3D';
+  const subtitle = heroData?.subtitle || 'Transformamos tus ideas en objetos reales.';
+  const description = heroData?.description || 'Impresión 3D de alta calidad en Corrientes';
+  const badge = heroData?.badge || 'Envíos gratis en pedidos mayores a $50.000';
+  const stats = heroData?.stats || {
+    reviews: '4.9',
+    reviewsCount: '200+ reseñas',
+    orders: '500+',
+    delivery: '24-72h',
+  };
+  const features = heroData?.features || defaultFeatures;
+
+  return (
+    <header className="relative pt-28 pb-24 px-4 w-full overflow-hidden selection:bg-blue-500/30">
+      <div className="absolute inset-0 bg-gradient-to-b from-tone-red/5 via-tone-amber/5 to-tone-darker pointer-events-none -z-20" />
+
+      <motion.div
+        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute top-20 left-1/4 w-80 h-80 bg-tone-red/10 rounded-full blur-[100px] -z-10 pointer-events-none"
+      />
+      <motion.div
+        animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+        className="absolute top-40 right-1/4 w-96 h-96 bg-tone-amber/10 rounded-full blur-[120px] -z-10 pointer-events-none"
+      />
+
+      <div className="relative z-10 max-w-5xl mx-auto text-center">
+        <motion.div
+          initial={{ opacity: 0, y: -14, scale: 0.94 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.7, ease: EASE }}
+          className="mb-8"
+        >
+          <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white/5 border border-white/5 rounded-full backdrop-blur-xl hover:bg-white/10 transition-all cursor-default">
+            <Sparkles className="w-5 h-5 text-tone-amber animate-pulse" />
+            <span className="text-sm font-semibold text-gray-200 tracking-wide">{badge}</span>
+          </div>
+        </motion.div>
+
+        <div className="relative inline-block mb-6">
+          <div className="absolute -inset-4 bg-gradient-to-r from-tone-red/20 via-tone-amber/20 to-tone-pink/20 blur-2xl rounded-full" />
+
+          <AnimatedLetters
+            text={title}
+            className="relative text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-tone-red via-tone-amber to-tone-pink drop-shadow-[0_0_15px_rgba(250,130,130,0.3)]"
+          />
+
+          <motion.div
+            initial={{ scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            transition={{ duration: 1, delay: 0.8, ease: 'easeOut' }}
+            className="mt-4 h-1.5 w-48 md:w-64 mx-auto bg-gradient-to-r from-tone-red via-tone-amber to-tone-pink rounded-full shadow-[0_0_15px_rgba(250,130,130,0.4)]"
+          />
+        </div>
+
+        <div className="mb-14 mt-6">
+          <AnimatedLetters
+            text={subtitle}
+            className="text-gray-200 text-2xl md:text-4xl max-w-3xl mx-auto leading-relaxed font-bold drop-shadow-md"
+          />
+          <div className="mt-4">
+            <AnimatedLetters
+              text={description}
+              className="text-gray-500 text-lg md:text-xl font-medium tracking-wide"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-10">
+          {features.map((f, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 1 + i * 0.09, ease: EASE }}
+              whileHover={{ y: -6, scale: 1.03 }}
+              className="group flex flex-col items-center gap-3 px-5 py-6 bg-tone-dark/50 border border-white/5 rounded-xl backdrop-blur-md transition-all duration-300 hover:border-white/10 hover:bg-tone-dark/80 shadow-lg"
+            >
+              <motion.div
+                whileHover={{ rotate: 8, scale: 1.08 }}
+                transition={{ duration: 0.4, ease: EASE }}
+                className={`p-4 rounded-2xl bg-gradient-to-br ${featureColors[i]} shadow-lg`}
+              >
+                {React.createElement(featureIcons[i], {
+                  className: 'w-8 h-8 text-white drop-shadow-md',
+                })}
+              </motion.div>
+              <span className="text-sm md:text-base font-bold text-gray-200 text-center group-hover:text-white transition-colors">
+                {f}
+              </span>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97, y: 26 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.5, ease: EASE }}
+          className="flex flex-col md:flex-row items-center justify-center gap-10 mt-16 p-8 bg-tone-dark/40 border border-white/5 rounded-xl backdrop-blur-xl shadow-2xl"
+        >
+          <div className="text-center group cursor-default">
+            <span className="text-5xl font-black text-tone-amber">{stats.reviews}</span>
+            <div className="flex justify-center mt-2 gap-1 group-hover:scale-110 transition-transform">
+              {[1, 2, 3, 4, 5].map((s, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.4 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.45, delay: 1.7 + i * 0.08, ease: EASE }}
+                >
+                  <Star className="w-5 h-5 text-tone-amber fill-tone-amber" />
+                </motion.div>
+              ))}
+            </div>
+            <span className="text-sm font-medium text-gray-400 mt-2 block uppercase tracking-wider">
+              {stats.reviewsCount}
+            </span>
+          </div>
+
+          <div className="hidden md:block w-px h-20 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+
+          <div className="text-center group cursor-default">
+            <div className="flex items-center justify-center gap-3 group-hover:scale-110 transition-transform">
+              <ShieldCheck className="w-8 h-8 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
+              <span className="text-4xl font-black text-white">{stats.orders}</span>
+            </div>
+            <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-wider">
+              Pedidos Entregados
+            </p>
+          </div>
+
+          <div className="hidden md:block w-px h-20 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+
+          <div className="text-center group cursor-default">
+            <div className="flex items-center justify-center gap-3 group-hover:scale-110 transition-transform">
+              <Clock className="w-8 h-8 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+              <span className="text-4xl font-black text-white">{stats.delivery}</span>
+            </div>
+            <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-wider">
+              Tiempo de Entrega
+            </p>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 1.9, ease: EASE }}
+          className="flex flex-col sm:flex-row justify-center items-center gap-6 mt-16"
+        >
+          <a
+            href="#productos"
+            className="group relative w-full sm:w-auto px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-3 overflow-hidden bg-white/5 border border-white/5 shadow-lg"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-tone-red to-tone-amber opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative z-10 flex items-center gap-3 text-white">
+              <Package className="w-6 h-6 group-hover:animate-bounce" />
+              <span className="text-lg tracking-wide">Ver Catálogo</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </a>
+
+          <a
+            href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent('Hola! Quiero info sobre impresiones 3D')}`}
+            target="_blank"
+            className="group relative w-full sm:w-auto px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-3 overflow-hidden bg-gradient-to-r from-tone-red to-tone-pink shadow-[0_0_20px_rgba(250,130,130,0.3)] hover:shadow-[0_0_35px_rgba(250,130,130,0.5)]"
+          >
+            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative z-10 flex items-center gap-3 text-white">
+              <motion.span
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ repeat: Infinity, duration: 2, delay: 3 }}
+                className="text-2xl drop-shadow-md"
+              >
+                💬
+              </motion.span>
+              <span className="text-lg tracking-wide">Consultar por WhatsApp</span>
+            </div>
+          </a>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.7, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 2.1, ease: EASE }}
+          className="mt-14 flex justify-center"
+        >
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-tone-dark/50 border border-white/5 rounded-full backdrop-blur-md transition-all cursor-default">
+            <span className="text-xl">📍</span>
+            <span className="text-sm font-semibold text-gray-300 tracking-wider">
+              Corrientes, Argentina
+            </span>
+            <span className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+          </div>
+        </motion.div>
+      </div>
+    </header>
+  );
+}

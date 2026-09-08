@@ -1,328 +1,698 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import { ArrowRight, ArrowUpRight, Search, Sparkles, Layers, Boxes, Timer } from "lucide-react";
-import { motion } from "framer-motion";
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import {
+  Search,
+  ArrowRight,
+  Package,
+  Instagram,
+  MapPin,
+  LogOut,
+  Menu,
+  X,
+  Box,
+  Phone,
+  Mail,
+} from 'lucide-react';
+import CartIcon from '@/components/CartIcon';
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/config';
+import { apiUrl } from '@/lib/api';
+import HeroSection from '@/components/HeroSection';
+import ProductCard from '@/components/ProductCard';
+import ScrollSequence from '@/components/ScrollSequence';
+import GsapReveal from '@/components/motion/GsapReveal';
+import type { Product } from '@/types';
 
-import { apiUrl } from "@/lib/api";
-import Appear from "@/components/motion/Appear";
-import { useMounted } from "@/components/motion/useMounted";
-import { WHATSAPP_PHONE } from "@/lib/config";
-import type { Product } from "@/types";
+interface ShowcaseProduct {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl?: string;
+  description?: string;
+  videoUrl?: string;
+}
 
-import Nav from "@/components/store/Nav";
-import Footer from "@/components/store/Footer";
-import StoreProductCard from "@/components/store/ProductCard";
-import GradientField from "@/components/motion/GradientField";
-import Reveal from "@/components/motion/Reveal";
-import Marquee from "@/components/motion/Marquee";
-import Magnetic from "@/components/motion/Magnetic";
-import CountUp from "@/components/motion/CountUp";
-import Cursor from "@/components/motion/Cursor";
+interface ShowcaseSubCategory {
+  id: string;
+  name: string;
+  products: ShowcaseProduct[];
+}
 
-const Hero3D = dynamic(() => import("@/components/three/Hero3D"), { ssr: false });
-
-const FALLBACK_CATS = [
-  { icon: "🥤", name: "Vasos personalizados", desc: "River, Boca, Racing y tu escudo" },
-  { icon: "🏆", name: "Trofeos y copas", desc: "Premios a medida, acabado premium" },
-  { icon: "🔑", name: "Llaveros", desc: "Diseños únicos, texto y logos" },
-  { icon: "🎮", name: "Funkos & figuras", desc: "Coleccionables impresos" },
-  { icon: "🧩", name: "Piezas técnicas", desc: "Repuestos, prototipos, encastres" },
-  { icon: "📦", name: "Organizadores", desc: "Guardado a medida para tu espacio" },
-];
-
-const MARQUEE = ["PLA", "PETG", "ABS", "TPU", "RESINA", "0.1 mm", "24–72 h", "CORRIENTES", "DISEÑO PROPIO", "ENVÍOS"];
+interface ShowcaseCategory {
+  id: string;
+  name: string;
+  icon?: string;
+  imageUrl?: string;
+  subCategories: ShowcaseSubCategory[];
+}
 
 export default function HomePage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
-  const [home, setHome] = useState<any>(null);
-  const [contact, setContact] = useState<any>(null);
-  const [q, setQ] = useState("");
-  const [code, setCode] = useState("");
+  const [user, setUser] = useState<{ role?: string } | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
+
+  const [trackingCode, setTrackingCode] = useState('');
+
+  // Dynamic home sections from admin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [homeSections, setHomeSections] = useState<Record<string, any> | null>(null);
+  const [openShowcaseCategory, setOpenShowcaseCategory] = useState<ShowcaseCategory | null>(null);
+
+  const resolveMediaUrl = (path?: string) => {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    return apiUrl(path.startsWith('/') ? path : `/${path}`);
+  };
+
+  const displayProducts = products;
+
+  const filteredProducts = displayProducts.filter((p) => {
+    const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchCategory = filterCategory === 'all' || p.category === filterCategory;
+    return matchSearch && matchCategory;
+  });
+
+  const categories = [...new Set(displayProducts.map((p) => p.category).filter(Boolean))];
 
   useEffect(() => {
-    fetch(apiUrl("/api/products/public?tenantId=global3d_hq"))
-      .then((r) => (r.ok ? r.json() : []))
-      .then((d) => setProducts(Array.isArray(d) ? d : []))
-      .catch(() => {});
-    fetch(apiUrl("/api/settings/public"))
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d?.homepageSections) setHome(d.homepageSections);
-        if (d?.contactInfo) setContact(d.contactInfo);
-      })
-      .catch(() => {});
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setUser(parsed.user);
+      } catch {
+        /* ignore parse errors */
+      }
+    }
+
+    const loadData = async () => {
+      try {
+        const res = await fetch(apiUrl('/api/products/public?tenantId=global3d_hq'));
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(Array.isArray(data) ? data : []);
+        }
+      } catch {
+        /* sin productos si falla la API */
+      }
+    };
+    loadData();
+
+    // Load settings from admin
+    const loadSettings = async () => {
+      try {
+        const res = await fetch(apiUrl('/api/settings/public'));
+        if (res.ok) {
+          const data = await res.json();
+          if (data.homepageSections) setHomeSections(data.homepageSections);
+        } else {
+          console.error('Error loading settings:', res.status);
+        }
+      } catch (e) {
+        console.error('Error loading settings:', e);
+      }
+    };
+    loadSettings();
   }, []);
 
-  const hero = home || {};
-  const stats = hero.heroStats || {};
-
-  const categories = useMemo(() => {
-    const list = home?.productCategories;
-    if (Array.isArray(list) && list.filter((c: any) => c?.name?.trim()).length) {
-      return list
-        .filter((c: any) => c?.name?.trim())
-        .map((c: any) => ({ icon: c.icon || "▲", name: c.name, desc: c.description || "Personalizado a tu gusto" }));
-    }
-    return FALLBACK_CATS;
-  }, [home]);
-
-  const featured = products.slice(0, 8);
-  const mounted = useMounted();
-
-  const goQuote = () => router.push("/cotizar");
-  const buyWA = (p: Product) => {
-    const text = `Hola! Quiero encargar: *${p.name}* ($${p.price}).`;
-    window.open(`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`, "_blank");
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
+    window.location.href = '/';
   };
-  const track = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (code.trim()) router.push(`/track?code=${encodeURIComponent(code.trim())}`);
+
+  const handleWhatsAppBuy = (item: { name: string; price: number }) => {
+    const text = `Hola! 👋 Quiero comprar: *${item.name}* ($${item.price}).`;
+    window.open(`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`, '_blank');
   };
-  const searchProducts = (e: React.FormEvent) => {
+
+  const handleTrackOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(q.trim() ? `/productos?q=${encodeURIComponent(q.trim())}` : "/productos");
+    const code = trackingCode.trim();
+    if (!code) return;
+    router.push(`/track?code=${encodeURIComponent(code)}`);
   };
 
   return (
-    <div className="min-h-screen bg-ground text-ink">
-      <Cursor />
-      <Nav onQuote={goQuote} />
+    <div className="min-h-screen bg-tone-darker text-white font-mono">
+      {/* Background effects */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-tone-red/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-tone-amber/10 blur-[120px] rounded-full" />
+      </div>
 
-      {/* ── HERO ───────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-16">
-        <GradientField />
-        <div className="relative mx-auto grid max-w-7xl items-center gap-6 px-4 pb-10 pt-12 md:grid-cols-2 md:px-6 md:pb-20 md:pt-20">
-          <div>
-            <Appear delay={0} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.18em] text-ink-dim">
-              <span className="h-1.5 w-1.5 rounded-full bg-resin" />
-              {hero.heroBadge || "Taller de impresión 3D · Corrientes"}
-            </Appear>
-
-            <h1 className="mt-5 font-display text-[clamp(2.6rem,6vw,4.6rem)] leading-[0.95] tracking-tight text-balance">
-              {(hero.heroTitle || "Tu idea, impresa en 24 horas").split(" ").map((w: string, i: number) => {
-                const hot = w === "3D" || w.toLowerCase() === "impresa";
-                return mounted ? (
-                  <motion.span
-                    key={i}
-                    className="inline-block"
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.06, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                  >
-                    <span className={hot ? "text-flux" : undefined}>{w}</span>&nbsp;
-                  </motion.span>
-                ) : (
-                  <span key={i} className="inline-block">
-                    <span className={hot ? "text-flux" : undefined}>{w}</span>&nbsp;
-                  </span>
-                );
-              })}
-            </h1>
-
-            <Appear delay={0.45} className="mt-5 max-w-md text-pretty text-base text-ink-dim md:text-lg">
-              {hero.heroDescription ||
-                "Diseñamos e imprimimos piezas a medida con precisión de 0,1 mm. Vasos, trofeos, repuestos y proyectos personalizados."}
-            </Appear>
-
-            <Appear delay={0.55} className="mt-8 flex flex-wrap items-center gap-3">
-              <Magnetic>
-                <button
-                  onClick={goQuote}
-                  className="group flex items-center gap-2 rounded-full bg-flux px-6 py-3.5 font-mono text-xs uppercase tracking-[0.14em] text-white shadow-xl shadow-flare/30 transition hover:brightness-110"
-                >
-                  Cotizar mi pieza
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </button>
-              </Magnetic>
-              <Link
-                href="/productos"
-                className="rounded-full border border-white/15 px-6 py-3.5 font-mono text-xs uppercase tracking-[0.14em] text-ink-dim transition hover:border-flame/50 hover:text-ink"
-              >
-                Ver catálogo
-              </Link>
-            </Appear>
-
-            <Appear delay={0.7} className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <form onSubmit={searchProducts} className="flex flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                <Search className="h-4 w-4 text-ink-dim" />
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Buscar en el catálogo"
-                  className="w-full bg-transparent text-sm text-ink placeholder:text-ink-dim/60 focus:outline-none"
-                />
-              </form>
-              <form onSubmit={track} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                <input
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="Código de seguimiento"
-                  className="w-40 bg-transparent font-mono text-sm uppercase text-ink placeholder:text-ink-dim/60 focus:outline-none"
-                />
-                <button type="submit" className="text-flame" aria-label="Rastrear">
-                  <ArrowUpRight className="h-4 w-4" />
-                </button>
-              </form>
-            </Appear>
-          </div>
-
-          <div className="relative h-[340px] md:h-[520px]">
-            <Hero3D />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center">
-              <span className="rounded-full border border-white/10 bg-ground/70 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim backdrop-blur">
-                render en vivo
-              </span>
+      {/* NAVBAR */}
+      <nav className="fixed top-0 w-full z-50 bg-tone-darker/90 backdrop-blur-2xl border-b border-white/5">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-12 h-12 bg-gradient-to-br from-tone-red via-tone-pink to-tone-amber rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all shadow-lg shadow-tone-red/30">
+              <Box className="w-6 h-6 text-white" />
             </div>
-          </div>
-        </div>
-
-        <Marquee className="border-y border-white/10 bg-white/[0.02] py-3" duration={38}>
-          {MARQUEE.map((m, i) => (
-            <span key={i} className="flex items-center gap-6 font-mono text-xs uppercase tracking-[0.25em] text-ink-dim">
-              {m} <span className="text-flame">/</span>
-            </span>
-          ))}
-        </Marquee>
-      </section>
-
-      {/* ── STATS ──────────────────────────────────────────── */}
-      <section className="mx-auto max-w-7xl px-4 py-14 md:px-6">
-        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-4">
-          {[
-            { v: parseInt(stats.orders) || 500, suffix: "+", label: "pedidos entregados" },
-            { v: parseFloat(stats.reviews) || 4.9, decimals: 1, label: "estrellas de reseña" },
-            { v: 72, suffix: " h", label: "entrega promedio" },
-            { v: 6, suffix: "+", label: "materiales disponibles" },
-          ].map((s, i) => (
-            <Reveal key={i} delay={i * 0.05} className="bg-ground-2 p-6 text-center">
-              <div className="font-display text-4xl text-flux">
-                <CountUp to={s.v} suffix={s.suffix} decimals={s.decimals || 0} />
-              </div>
-              <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-ink-dim">{s.label}</p>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ── CATEGORÍAS ─────────────────────────────────────── */}
-      <section id="categorias" className="mx-auto max-w-7xl px-4 py-16 md:px-6">
-        <Reveal className="mb-10 flex items-end justify-between gap-4">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-flame">Qué imprimimos</p>
-            <h2 className="mt-2 font-display text-[clamp(1.9rem,4vw,3rem)] leading-tight">Elegí un punto de partida</h2>
-          </div>
-          <Link href="/productos" className="hidden shrink-0 font-mono text-xs uppercase tracking-[0.14em] text-ink-dim hover:text-flame md:block">
-            Ver todo →
-          </Link>
-        </Reveal>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.slice(0, 6).map((c: any, i: number) => (
-            <Reveal key={c.name} delay={i * 0.05}>
-              <Link
-                href="/productos"
-                className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-ground-2 p-6 transition-colors hover:border-flame/40"
-              >
-                <div className="grain absolute inset-0 opacity-30" />
-                <span className="relative text-3xl">{c.icon}</span>
-                <h3 className="relative mt-4 font-display text-xl">{c.name}</h3>
-                <p className="relative mt-1 text-sm text-ink-dim">{c.desc}</p>
-                <ArrowUpRight className="relative mt-6 h-5 w-5 text-ink-dim transition-all group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:text-flame" />
-              </Link>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ── CÓMO FUNCIONA ──────────────────────────────────── */}
-      <section className="relative overflow-hidden border-y border-white/10 bg-ground-2 py-20">
-        <GradientField className="opacity-50" />
-        <div className="relative mx-auto max-w-7xl px-4 md:px-6">
-          <Reveal>
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-flame">Cómo funciona</p>
-            <h2 className="mt-2 font-display text-[clamp(1.9rem,4vw,3rem)] leading-tight">De la idea a la pieza, en 3 pasos</h2>
-          </Reveal>
-          <div className="mt-12 grid gap-8 md:grid-cols-3">
-            {[
-              { n: "01", icon: Sparkles, t: "Contanos tu idea", d: "Subís tu archivo o nos describís la pieza por WhatsApp. Sin STL también sirve." },
-              { n: "02", icon: Layers, t: "Cotizamos al instante", d: "Calculamos material, tiempo de impresión y precio con nuestro cotizador." },
-              { n: "03", icon: Boxes, t: "Imprimimos y entregamos", d: "Producción en 24–72 h. Retirás en el taller o te lo enviamos." },
-            ].map((s, i) => (
-              <Reveal key={s.n} delay={i * 0.08}>
-                <div className="relative h-full rounded-2xl border border-white/10 bg-ground/60 p-6">
-                  <span className="font-mono text-sm text-ink-dim/50">{s.n}</span>
-                  <s.icon className="mt-4 h-7 w-7 text-flame" />
-                  <h3 className="mt-4 font-display text-xl">{s.t}</h3>
-                  <p className="mt-2 text-sm text-ink-dim">{s.d}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── DESTACADOS ─────────────────────────────────────── */}
-      {featured.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 py-20 md:px-6">
-          <Reveal className="mb-10 flex items-end justify-between gap-4">
             <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-flame">Catálogo</p>
-              <h2 className="mt-2 font-display text-[clamp(1.9rem,4vw,3rem)] leading-tight">Listos para llevar</h2>
+              <span className="text-xl font-black bg-gradient-to-r from-tone-red via-tone-pink to-tone-amber bg-clip-text text-transparent">
+                {homeSections?.heroTitle || 'Global 3D'}
+              </span>
+              <p className="text-[10px] text-gray-600 tracking-[0.3em] uppercase -mt-1">
+                Corrientes
+              </p>
             </div>
-            <Link href="/productos" className="shrink-0 font-mono text-xs uppercase tracking-[0.14em] text-ink-dim hover:text-flame">
-              Ver todo →
-            </Link>
-          </Reveal>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {featured.map((p, i) => (
-              <Reveal key={p._id} delay={(i % 4) * 0.05}>
-                <StoreProductCard product={p} onWhatsApp={buyWA} />
-              </Reveal>
+          </Link>
+
+          <div className="hidden lg:flex items-center gap-1">
+            {[
+              { href: '/rastreo', label: 'Rastreo' },
+              { href: '/productos', label: 'Productos' },
+              { href: '/impresoras', label: 'Impresoras' },
+              { href: '/filamentos', label: 'Filamentos' },
+              { href: '/contacto', label: 'Contacto' },
+            ].map((item, i) => (
+              <Link
+                key={i}
+                href={item.href}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200 relative group"
+              >
+                {item.label}
+                <span className="absolute -bottom-1 left-1/2 w-0 h-0.5 bg-tone-red rounded-full group-hover:w-full group-hover:left-0 transition-all duration-300" />
+              </Link>
             ))}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <CartIcon />
+            {user?.role === 'admin' ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/admin"
+                  className="px-5 py-2.5 bg-tone-red hover:bg-tone-red/90 text-white rounded-xl text-sm font-bold transition-all"
+                >
+                  Admin
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="p-2.5 text-gray-600 hover:text-tone-red hover:bg-tone-red/10 rounded-xl transition-all"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/admin/login"
+                className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl border border-white/5 transition-all"
+              >
+                Ingresar
+              </Link>
+            )}
+            <button className="lg:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>
+              {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+
+        {menuOpen && (
+          <div className="lg:hidden fixed top-16 left-0 right-0 bg-tone-darker border-b border-white/5 p-4 z-40">
+            <Link
+              href="/rastreo"
+              className="block py-3 text-gray-400 hover:text-white border-b border-white/5"
+              onClick={() => setMenuOpen(false)}
+            >
+              Rastreo
+            </Link>
+            <Link
+              href="/productos"
+              className="block py-3 text-gray-400 hover:text-white border-b border-white/5"
+              onClick={() => setMenuOpen(false)}
+            >
+              Productos
+            </Link>
+            <Link
+              href="/impresoras"
+              className="block py-3 text-gray-400 hover:text-white border-b border-white/5"
+              onClick={() => setMenuOpen(false)}
+            >
+              Impresoras
+            </Link>
+            <Link
+              href="/filamentos"
+              className="block py-3 text-gray-400 hover:text-white border-b border-white/5"
+              onClick={() => setMenuOpen(false)}
+            >
+              Filamentos
+            </Link>
+            <Link
+              href="/contacto"
+              className="block py-3 text-gray-400 hover:text-white"
+              onClick={() => setMenuOpen(false)}
+            >
+              Contacto
+            </Link>
+          </div>
+        )}
+      </nav>
+
+      {/* 1. 📦 RASTREO */}
+      <section id="rastreo" className="pt-28 pb-12 px-4">
+        <div className="max-w-xl mx-auto">
+          <div className="bg-tone-dark/60 border border-white/5 rounded-xl p-6 md:p-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Package className="h-7 w-7 text-tone-red" />
+              <h2 className="text-xl md:text-2xl font-bold text-white">Rastrear Mi Pedido</h2>
+            </div>
+            <p className="text-gray-600 text-center mb-6 text-sm">
+              Ingresá el código para ver el estado de producción
+            </p>
+            <form onSubmit={handleTrackOrder} className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-700" />
+                <input
+                  type="text"
+                  value={trackingCode}
+                  onChange={(e) => setTrackingCode(e.target.value)}
+                  placeholder="Ej: joaquin-vasoboca-17032026"
+                  className="w-full bg-tone-darker/80 border border-white/5 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={!trackingCode.trim()}
+                className="bg-tone-red hover:bg-tone-red/90 disabled:bg-gray-800 disabled:text-gray-600 text-white px-6 py-3 rounded-xl font-medium transition flex items-center justify-center gap-2"
+              >
+                Rastrear <ArrowRight className="h-4 w-4" />
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. 🏠 HERO */}
+      <HeroSection
+        heroData={{
+          title: homeSections?.heroTitle || 'Global 3D',
+          subtitle: homeSections?.heroSubtitle || 'Transformamos tus ideas en objetos reales.',
+          description:
+            homeSections?.heroDescription || 'Impresión 3D de alta calidad en Corrientes',
+          badge: homeSections?.heroBadge || 'Envíos gratis en pedidos mayores a $50.000',
+          stats: homeSections?.heroStats || {
+            reviews: '4.9',
+            reviewsCount: '200+ reseñas',
+            orders: '500+',
+            delivery: '24-72h',
+          },
+          features: homeSections?.heroFeatures || [
+            'Impresión rápida',
+            'Calidad premium',
+            'Envío rápido',
+            'Soporte 24/7',
+          ],
+        }}
+      />
+
+      {/* 3. ⭐ PRODUCTO ESTRELLA */}
+      {homeSections?.productStar?.enabled !== false && (
+        <section id="producto-estrella" className="py-20 px-4">
+          <GsapReveal className="max-w-4xl mx-auto text-center" selector="[data-reveal]">
+            <span
+              data-reveal
+              className="inline-block px-4 py-1.5 rounded-full border border-tone-amber/30 bg-tone-amber/10 text-tone-amber text-xs tracking-[0.15em] uppercase mb-4"
+            >
+              Destacado
+            </span>
+            <h2 data-reveal className="text-4xl md:text-5xl font-black text-white">
+              Producto Estrella
+            </h2>
+          </GsapReveal>
+        </section>
+      )}
+
+      {/* 4. 🏆 SECUENCIA 1: COPA (scroll estilo Apple) */}
+      {homeSections?.copaAnimation?.enabled !== false && (
+        <ScrollSequence
+          framesDir="/frames-copakling/"
+          frameCount={73}
+          nativeWidth={744}
+          nativeHeight={1232}
+          scrollVh={4}
+          emoji="🏆"
+          title={homeSections?.copaAnimation?.title || 'Copa de la Liga'}
+          subtitle={
+            homeSections?.copaAnimation?.subtitle ||
+            'Diseño 3D de alta calidad con detalles premium'
+          }
+          badge={homeSections?.copaAnimation?.badge || 'TROFEO PREMIUM'}
+          price={homeSections?.copaAnimation?.price || '$12.500'}
+          accentColor={homeSections?.copaAnimation?.accentColor || '#f5a524'}
+          sectionId="scroll-animation-copa"
+        />
+      )}
+
+      {/* 5. 📂 CATEGORÍAS */}
+      <section id="categorias" className="py-20 px-4">
+        <div className="max-w-5xl mx-auto">
+          <GsapReveal className="text-center mb-12" selector="[data-reveal]">
+            <span
+              data-reveal
+              className="inline-block px-4 py-1.5 rounded-full border border-tone-red/30 bg-tone-red/10 text-tone-red text-xs tracking-[0.15em] uppercase mb-4"
+            >
+              Explorá
+            </span>
+            <h2 data-reveal className="text-4xl md:text-5xl font-black text-white mt-2">
+              Nuestras Categorías
+            </h2>
+            <p data-reveal className="text-gray-600 mt-3 text-sm max-w-xl mx-auto">
+              Elegí una sección para ver todos nuestros productos
+            </p>
+          </GsapReveal>
+          <GsapReveal
+            className="grid grid-cols-1 md:grid-cols-3 gap-5"
+            selector="a"
+            y={56}
+            stagger={0.12}
+          >
+            <Link
+              href="/productos"
+              className="group text-left relative bg-tone-dark/60 border border-white/5 rounded-xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-tone-red/40 transition-all duration-300 shadow-lg"
+            >
+              <div className="text-5xl mb-4">🏆</div>
+              <h3 className="font-bold text-white text-xl leading-tight">
+                Productos Personalizados
+              </h3>
+              <p className="text-sm text-gray-500 mt-3">Vasos, trofeos, llaveros y más</p>
+            </Link>
+            <Link
+              href="/impresoras"
+              className="group text-left relative bg-tone-dark/60 border border-white/5 rounded-xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-tone-red/40 transition-all duration-300 shadow-lg"
+            >
+              <div className="text-5xl mb-4">🖨️</div>
+              <h3 className="font-bold text-white text-xl leading-tight">Impresoras 3D</h3>
+              <p className="text-sm text-gray-500 mt-3">Bambu Lab y más modelos</p>
+            </Link>
+            <Link
+              href="/filamentos"
+              className="group text-left relative bg-tone-dark/60 border border-white/5 rounded-xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-tone-red/40 transition-all duration-300 shadow-lg"
+            >
+              <div className="text-5xl mb-4">🧵</div>
+              <h3 className="font-bold text-white text-xl leading-tight">Filamentos</h3>
+              <p className="text-sm text-gray-500 mt-3">PLA, PETG, ABS y materiales</p>
+            </Link>
+          </GsapReveal>
+        </div>
+      </section>
+
+      {openShowcaseCategory && (
+        <div
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="category-modal-title"
+          onClick={() => setOpenShowcaseCategory(null)}
+        >
+          <div
+            className="w-full sm:max-w-lg bg-zinc-950 border border-white/20 sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl shadow-black/60"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start gap-3 p-5 border-b border-white/10 bg-zinc-900/90 shrink-0">
+              <h3
+                id="category-modal-title"
+                className="text-xl sm:text-2xl font-black text-white leading-tight pr-2"
+              >
+                <span className="mr-2" aria-hidden>
+                  {openShowcaseCategory.icon || '📦'}
+                </span>
+                {openShowcaseCategory.name}
+              </h3>
+              <button
+                type="button"
+                className="shrink-0 rounded-xl p-2 text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
+                onClick={() => setOpenShowcaseCategory(null)}
+                aria-label="Cerrar"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-5 space-y-8 flex-1">
+              {(openShowcaseCategory.subCategories || []).length === 0 ? (
+                <p className="text-zinc-200 font-medium text-center py-6">
+                  Todavía no hay subcategorías cargadas. Configuralas en{' '}
+                  <span className="text-white font-bold">
+                    Admin → Inicio web → Categorías de productos
+                  </span>
+                  .
+                </p>
+              ) : (
+                openShowcaseCategory.subCategories.map((sub) => (
+                  <div key={sub.id}>
+                    <h4 className="text-xs font-black text-blue-400 uppercase tracking-[0.2em] mb-3 border-b border-blue-500/30 pb-2">
+                      {String(sub.name || '').trim() || 'Sin nombre'}
+                    </h4>
+                    <div className="space-y-4">
+                      {(sub.products || []).length === 0 ? (
+                        <p className="text-zinc-300 text-sm font-medium">
+                          Sin productos en esta subcategoría.
+                        </p>
+                      ) : (
+                        (sub.products || []).map((p) => (
+                          <div
+                            key={p.id}
+                            className="bg-zinc-900/90 rounded-xl p-4 border border-white/10 space-y-3"
+                          >
+                            {p.imageUrl ? (
+                              <img
+                                src={resolveMediaUrl(p.imageUrl)}
+                                alt=""
+                                className="w-full max-h-48 object-cover rounded-lg border border-white/10"
+                              />
+                            ) : null}
+                            {p.videoUrl ? (
+                              <video
+                                src={resolveMediaUrl(p.videoUrl)}
+                                controls
+                                className="w-full rounded-lg border border-white/10 bg-black"
+                              />
+                            ) : null}
+                            <p className="text-lg font-black text-white">
+                              {String(p.name || '').trim() || 'Producto'}
+                            </p>
+                            {p.description ? (
+                              <p className="text-sm text-zinc-100 leading-relaxed font-medium">
+                                {p.description}
+                              </p>
+                            ) : null}
+                            <p className="text-emerald-400 font-black text-xl">
+                              ${Number(p.price || 0).toLocaleString('es-AR')}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleWhatsAppBuy({
+                                  name: p.name || 'Producto',
+                                  price: p.price ?? 0,
+                                })
+                              }
+                              className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-sm transition-colors"
+                            >
+                              Consultar por WhatsApp
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. 🛒 CATÁLOGO DE PRODUCTOS */}
+      {filteredProducts.length > 0 && (
+        <section id="productos" className="py-16 px-4">
+          <div className="max-w-7xl mx-auto">
+            <GsapReveal className="text-center mb-10" selector="[data-reveal]">
+              <span
+                data-reveal
+                className="inline-block px-4 py-1.5 rounded-full border border-tone-red/30 bg-tone-red/10 text-tone-red text-xs tracking-[0.15em] uppercase mb-4"
+              >
+                Productos
+              </span>
+              <h2 data-reveal className="text-3xl md:text-4xl font-bold text-white">
+                Todos los Productos
+              </h2>
+            </GsapReveal>
+
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar productos..."
+                  className="w-full bg-tone-darker/80 border border-white/5 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40"
+                />
+              </div>
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="bg-tone-darker/80 border border-white/5 rounded-xl py-3 px-4 text-white font-medium focus:outline-none focus:border-tone-red/40 [&>option]:bg-tone-darker [&>option]:text-white"
+              >
+                <option value="all">Todas las categorías</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <GsapReveal
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+              selector="[data-card]"
+              y={50}
+              stagger={0.06}
+            >
+              {filteredProducts.map((product, idx) => (
+                <div data-card key={product._id}>
+                  <ProductCard product={product} handleWhatsAppBuy={handleWhatsAppBuy} idx={idx} />
+                </div>
+              ))}
+            </GsapReveal>
           </div>
         </section>
       )}
 
-      {/* ── CTA FINAL ──────────────────────────────────────── */}
-      <section className="relative overflow-hidden">
-        <GradientField />
-        <div className="relative mx-auto max-w-4xl px-4 py-24 text-center md:px-6">
-          <Reveal>
-            <Timer className="mx-auto h-8 w-8 text-flame" />
-            <h2 className="mt-5 font-display text-[clamp(2.2rem,5vw,4rem)] leading-[0.95] text-balance">
-              ¿Tenés una pieza en mente?
+      {/* 7. 🖨️ SECUENCIA 2: IMPRESORA (scroll estilo Apple) */}
+      {homeSections?.impresoraAnimation?.enabled !== false && (
+        <ScrollSequence
+          framesDir="/frames-mp/"
+          frameCount={192}
+          nativeWidth={1280}
+          nativeHeight={720}
+          scrollVh={5}
+          emoji="🖨️"
+          title={homeSections?.impresoraAnimation?.title || 'Impresora 3D Bambu Lab X1C'}
+          subtitle={
+            homeSections?.impresoraAnimation?.subtitle ||
+            'La nueva generación de precisión y velocidad'
+          }
+          badge={homeSections?.impresoraAnimation?.badge || 'PROFESIONAL'}
+          price={homeSections?.impresoraAnimation?.price || '$469.000'}
+          accentColor={homeSections?.impresoraAnimation?.accentColor || '#14e0c8'}
+          sectionId="scroll-animation-impresora"
+        />
+      )}
+
+      {/* 8. 📞 CONTACTO */}
+      <section id="contacto" className="py-20 px-4 bg-white/[0.02]">
+        <div className="max-w-4xl mx-auto">
+          <GsapReveal className="text-center mb-12" selector="[data-reveal]">
+            <span
+              data-reveal
+              className="inline-block px-4 py-1.5 rounded-full border border-tone-red/30 bg-tone-red/10 text-tone-red text-xs tracking-[0.15em] uppercase mb-4"
+            >
+              Contacto
+            </span>
+            <h2 data-reveal className="text-4xl md:text-5xl font-black text-white mb-3">
+              Contacto
             </h2>
-            <p className="mx-auto mt-4 max-w-lg text-ink-dim">
-              Mandanos la idea y te devolvemos precio y plazo el mismo día.
+            <p data-reveal className="text-gray-600">
+              Respondemos en el día
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Magnetic>
-                <button
-                  onClick={goQuote}
-                  className="rounded-full bg-flux px-7 py-4 font-mono text-xs uppercase tracking-[0.14em] text-white shadow-xl shadow-flare/30 transition hover:brightness-110"
-                >
-                  Cotizar ahora
-                </button>
-              </Magnetic>
+          </GsapReveal>
+          <div className="flex flex-col gap-6">
+            <GsapReveal
+              className="grid md:grid-cols-3 gap-6"
+              selector="a,div.text-center"
+              y={48}
+              stagger={0.12}
+            >
               <a
-                href={`https://wa.me/${WHATSAPP_PHONE}`}
+                href={`https://wa.me/${homeSections?.contactInfo?.whatsapp || WHATSAPP_PHONE}`}
                 target="_blank"
-                rel="noreferrer"
-                className="rounded-full border border-white/15 px-7 py-4 font-mono text-xs uppercase tracking-[0.14em] text-ink-dim transition hover:border-resin/50 hover:text-ink"
+                className="bg-tone-dark/60 border border-white/5 rounded-xl p-8 text-center hover:border-tone-red/30 hover:scale-105 transition-all duration-300 group"
               >
-                Escribir por WhatsApp
+                <div className="w-14 h-14 bg-tone-red/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-tone-red/20 group-hover:scale-110 transition-all">
+                  <Phone className="w-7 h-7 text-tone-red" />
+                </div>
+                <h3 className="font-bold text-white text-lg mb-2">WhatsApp</h3>
+                <p className="text-gray-500">
+                  {homeSections?.contactInfo?.whatsappDisplay || WHATSAPP_DISPLAY}
+                </p>
               </a>
-            </div>
-          </Reveal>
+              <a
+                href={
+                  homeSections?.contactInfo?.instagramUrl ||
+                  'https://instagram.com/global3dcorrientes'
+                }
+                target="_blank"
+                className="bg-tone-dark/60 border border-white/5 rounded-xl p-8 text-center hover:border-tone-amber/30 hover:scale-105 transition-all duration-300 group"
+              >
+                <div className="w-14 h-14 bg-tone-amber/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-tone-amber/20 group-hover:scale-110 transition-all">
+                  <Instagram className="w-7 h-7 text-tone-amber" />
+                </div>
+                <h3 className="font-bold text-white text-lg mb-2">Instagram</h3>
+                <p className="text-gray-500">
+                  @{homeSections?.contactInfo?.instagram || 'global3dcorrientes'}
+                </p>
+              </a>
+              <div className="bg-tone-dark/60 border border-white/5 rounded-xl p-8 text-center">
+                <div className="w-14 h-14 bg-tone-red/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <MapPin className="w-7 h-7 text-tone-red" />
+                </div>
+                <h3 className="font-bold text-white text-lg mb-2">Ubicación</h3>
+                <p className="text-gray-500">
+                  {homeSections?.contactInfo?.location || 'Corrientes, Argentina'}
+                </p>
+              </div>
+            </GsapReveal>
+            <a
+              href={`mailto:${homeSections?.contactInfo?.email || 'contacto@global3d.com'}`}
+              className="bg-tone-dark/60 border border-white/5 rounded-xl p-8 text-center hover:border-tone-amber/30 hover:scale-105 transition-all duration-300 group max-w-md mx-auto w-full"
+            >
+              <div className="w-14 h-14 bg-tone-amber/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-tone-amber/20 group-hover:scale-110 transition-all">
+                <Mail className="w-7 h-7 text-tone-amber" />
+              </div>
+              <h3 className="font-bold text-white text-lg mb-2">Email</h3>
+              <p className="text-gray-500">
+                {homeSections?.contactInfo?.email || 'contacto@global3d.com'}
+              </p>
+            </a>
+          </div>
         </div>
       </section>
 
-      <Footer contact={contact} />
+      {/* FOOTER */}
+      <footer className="py-10 px-4 border-t border-white/5">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-gradient-to-br from-tone-red to-tone-amber rounded-lg flex items-center justify-center">
+              <Box className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold bg-gradient-to-r from-tone-red to-tone-amber bg-clip-text text-transparent text-lg">
+              {homeSections?.heroTitle || 'Global 3D'}
+            </span>
+          </div>
+          <p className="text-gray-700 text-sm">
+            © 2024 Global 3D Corrientes. Todos los derechos reservados.
+          </p>
+        </div>
+      </footer>
+
+      {/* WhatsApp FAB */}
+      <a
+        href={`https://wa.me/${WHATSAPP_PHONE}`}
+        target="_blank"
+        className="fixed bottom-6 right-6 bg-tone-red hover:bg-tone-red/90 p-4 rounded-full shadow-lg shadow-tone-red/30 z-50 transition hover:scale-110"
+        title="Chatear por WhatsApp"
+      >
+        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.964-.94 1.162-.173.199-.347.223-.644.075-.197-.103-1.379-1.437-2.612-3.078-.297-.199-.496-.297-.673.15-.176.297-.697.872-1.075.994-.379.123-.646.148-1.143.049-.496-.099-2.425-1.588-3.868-3.012-.298-.298-.497-.447-.696-.447-.02 0-.04 0-.06 0-.2 0-.485.099-.698.298l-1.095 2.697c-.099.297-.022.595.099.793.149.198.397.396.793.495.396.099.793.099 1.141.099.348 0 .695-.099 1.041-.298.349-.198.768-.595.924-.994.099-.299.099-.596.049-.793-.099-.198-.448-1.591-.616-2.137-.149-.546-.298-1.193-.546-1.193z" />
+        </svg>
+      </a>
     </div>
   );
 }
