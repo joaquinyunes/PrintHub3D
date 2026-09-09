@@ -1,39 +1,62 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
-import CartIcon from "@/components/CartIcon";
-import Magnetic from "@/components/motion/Magnetic";
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Menu, X, LogOut } from 'lucide-react';
+import CartIcon from '@/components/CartIcon';
+import Magnetic from '@/components/motion/Magnetic';
 
 const links = [
-  { href: "/productos", label: "Productos" },
-  { href: "/impresoras", label: "Impresoras" },
-  { href: "/filamentos", label: "Filamentos" },
-  { href: "/track", label: "Rastreo" },
-  { href: "/contacto", label: "Contacto" },
+  { href: '/productos', label: 'Productos' },
+  { href: '/impresoras', label: 'Impresoras' },
+  { href: '/filamentos', label: 'Filamentos' },
+  { href: '/track', label: 'Rastreo' },
+  { href: '/contacto', label: 'Contacto' },
 ];
 
 export default function Nav({ onQuote }: { onQuote?: () => void }) {
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) setIsAdmin(JSON.parse(stored)?.user?.role === 'admin');
+    } catch {
+      /* ignore parse errors */
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    window.location.href = '/';
+  };
+
+  const goQuote = onQuote || (() => router.push('/cotizar'));
 
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        scrolled ? "border-b border-white/10 bg-ground/80 backdrop-blur-xl" : "border-b border-transparent"
+        scrolled
+          ? 'border-b border-white/10 bg-ground/80 backdrop-blur-xl'
+          : 'border-b border-transparent'
       }`}
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2.5">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-flux font-display text-sm text-white">3D</span>
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-flux font-display text-sm text-white">
+            3D
+          </span>
           <span className="font-display text-lg tracking-tight text-ink">
             GLOBAL<span className="text-flame">3D</span>
           </span>
@@ -56,13 +79,41 @@ export default function Nav({ onQuote }: { onQuote?: () => void }) {
           <CartIcon />
           <Magnetic className="hidden md:block">
             <button
-              onClick={onQuote}
+              onClick={goQuote}
               className="rounded-full bg-flux px-5 py-2 font-mono text-xs uppercase tracking-[0.12em] text-white shadow-lg shadow-flare/25 transition hover:brightness-110"
             >
               Cotizar
             </button>
           </Magnetic>
-          <button className="md:hidden text-ink" onClick={() => setOpen((v) => !v)} aria-label="Menú">
+          {isAdmin ? (
+            <div className="hidden items-center gap-1.5 md:flex">
+              <Link
+                href="/admin"
+                className="rounded-full bg-flame px-4 py-2 font-mono text-xs uppercase tracking-[0.12em] text-white transition hover:brightness-110"
+              >
+                Admin
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="rounded-full p-2 text-ink-dim transition hover:bg-flame/10 hover:text-flame"
+                aria-label="Cerrar sesión"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/admin/login"
+              className="hidden rounded-full border border-white/10 px-4 py-2 font-mono text-xs uppercase tracking-[0.12em] text-ink-dim transition hover:border-white/25 hover:text-ink md:block"
+            >
+              Ingresar
+            </Link>
+          )}
+          <button
+            className="md:hidden text-ink"
+            onClick={() => setOpen((v) => !v)}
+            aria-label="Menú"
+          >
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
@@ -81,10 +132,27 @@ export default function Nav({ onQuote }: { onQuote?: () => void }) {
                 {l.label}
               </Link>
             ))}
+            {isAdmin ? (
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className="rounded-lg px-3 py-3 font-mono text-sm uppercase tracking-[0.12em] text-ink-dim hover:bg-white/5 hover:text-ink"
+              >
+                Admin
+              </Link>
+            ) : (
+              <Link
+                href="/admin/login"
+                onClick={() => setOpen(false)}
+                className="rounded-lg px-3 py-3 font-mono text-sm uppercase tracking-[0.12em] text-ink-dim hover:bg-white/5 hover:text-ink"
+              >
+                Ingresar
+              </Link>
+            )}
             <button
               onClick={() => {
                 setOpen(false);
-                onQuote?.();
+                goQuote();
               }}
               className="mt-2 rounded-full bg-flux px-5 py-3 font-mono text-sm uppercase tracking-[0.12em] text-white"
             >
