@@ -1,10 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import { ChevronLeft, MessageCircle, MapPin, Mail, Loader2, Phone, Instagram } from "lucide-react";
-import { apiUrl } from "@/lib/api";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { ChevronLeft, MessageCircle, MapPin, Mail, Loader2, Phone, Instagram } from 'lucide-react';
+import { apiUrl } from '@/lib/api';
+import { motion } from 'framer-motion';
+import GradientField from '@/components/motion/GradientField';
+import Magnetic from '@/components/motion/Magnetic';
 
 function useScrollReveal(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
@@ -14,8 +16,13 @@ function useScrollReveal(threshold = 0.15) {
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
-      { threshold }
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -24,7 +31,15 @@ function useScrollReveal(threshold = 0.15) {
   return { ref, visible };
 }
 
-function RevealSection({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+function RevealSection({
+  children,
+  delay = 0,
+  className = '',
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  className?: string;
+}) {
   const { ref, visible } = useScrollReveal();
   return (
     <div ref={ref} className={className}>
@@ -40,24 +55,24 @@ function RevealSection({ children, delay = 0, className = "" }: { children: Reac
 }
 
 const DEFAULT_CONTACT = {
-  whatsapp: "5493794000000",
-  whatsappDisplay: "+54 9379 4000000",
-  instagram: "global3dcorrientes",
-  instagramUrl: "https://instagram.com/global3dcorrientes",
-  location: "Corrientes, Argentina",
-  email: "contacto@global3d.com",
+  whatsapp: '5493794000000',
+  whatsappDisplay: '+54 9379 4000000',
+  instagram: 'global3dcorrientes',
+  instagramUrl: 'https://instagram.com/global3dcorrientes',
+  location: 'Corrientes, Argentina',
+  email: 'contacto@global3d.com',
 };
 
 export default function ContactoPage() {
   const [contact, setContact] = useState(DEFAULT_CONTACT);
   const [loaded, setLoaded] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    fetch(apiUrl("/api/settings/public"))
-      .then((r) => r.ok ? r.json() : null)
+    fetch(apiUrl('/api/settings/public'))
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data?.contactInfo) {
           setContact({ ...DEFAULT_CONTACT, ...data.contactInfo });
@@ -68,55 +83,61 @@ export default function ContactoPage() {
   }, []);
 
   const handleWhatsApp = () => {
-    const text = `Hola!${formData.name ? ` Soy ${formData.name}` : ""}${formData.message ? `: ${formData.message}` : ""}`;
-    window.open(`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(text)}`, "_blank");
+    const text = `Hola!${formData.name ? ` Soy ${formData.name}.` : ''}${
+      formData.email ? ` (${formData.email})` : ''
+    }${formData.message ? `\n${formData.message}` : ''}`;
+    window.open(`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
+  // No hay backend de email: el "envío" abre WhatsApp con el mensaje ya redactado,
+  // que es el canal real por el que el negocio responde.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.message.trim()) return;
     setSending(true);
+    handleWhatsApp();
     setTimeout(() => {
       setSending(false);
       setSent(true);
-      setTimeout(() => setSent(false), 3000);
-    }, 1200);
+      setTimeout(() => setSent(false), 4000);
+    }, 400);
   };
 
   const contactCards = [
     {
       icon: <Phone className="w-6 h-6" />,
-      label: "WhatsApp",
+      label: 'WhatsApp',
       value: contact.whatsappDisplay,
-      action: { label: "Escribir", onClick: handleWhatsApp },
-      accent: "#22c55e",
-      bgGlow: "rgba(34,197,94,0.08)",
+      action: { label: 'Escribir', onClick: handleWhatsApp },
+      accent: '#22c55e',
+      bgGlow: 'rgba(34,197,94,0.08)',
     },
     {
       icon: <Instagram className="w-6 h-6" />,
-      label: "Instagram",
+      label: 'Instagram',
       value: `@${contact.instagram}`,
-      action: { label: "Seguir", href: contact.instagramUrl },
-      accent: "#e94c89",
-      bgGlow: "rgba(233,76,137,0.08)",
+      action: { label: 'Seguir', href: contact.instagramUrl },
+      accent: '#e94c89',
+      bgGlow: 'rgba(233,76,137,0.08)',
     },
     {
       icon: <MapPin className="w-6 h-6" />,
-      label: "Ubicación",
+      label: 'Ubicación',
       value: contact.location,
-      accent: "#f59e0b",
-      bgGlow: "rgba(245,158,11,0.08)",
+      accent: '#f59e0b',
+      bgGlow: 'rgba(245,158,11,0.08)',
     },
     {
       icon: <Mail className="w-6 h-6" />,
-      label: "Email",
+      label: 'Email',
       value: contact.email,
-      action: { label: "Enviar", href: `mailto:${contact.email}` },
-      accent: "#3b82f6",
-      bgGlow: "rgba(59,130,246,0.08)",
+      action: { label: 'Enviar', href: `mailto:${contact.email}` },
+      accent: '#3b82f6',
+      bgGlow: 'rgba(59,130,246,0.08)',
     },
   ];
 
-  const renderCard = (card: typeof contactCards[0], delay: number, extraClass = "") => (
+  const renderCard = (card: (typeof contactCards)[0], delay: number, extraClass = '') => (
     <motion.div
       key={card.label}
       initial={{ opacity: 0, y: 30 }}
@@ -126,7 +147,9 @@ export default function ContactoPage() {
     >
       <div
         className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
-        style={{ background: `radial-gradient(600px circle at 50% 50%, ${card.bgGlow}, transparent 70%)` }}
+        style={{
+          background: `radial-gradient(600px circle at 50% 50%, ${card.bgGlow}, transparent 70%)`,
+        }}
       />
       <div className="relative z-10 flex items-start gap-4">
         <div
@@ -139,8 +162,8 @@ export default function ContactoPage() {
           <p className="text-xs text-gray-600 uppercase tracking-widest mb-1">{card.label}</p>
           <p className="text-white font-medium truncate">{card.value}</p>
         </div>
-        {card.action && (
-          "onClick" in card.action ? (
+        {card.action &&
+          ('onClick' in card.action ? (
             <button
               onClick={card.action.onClick}
               className="flex-shrink-0 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-gray-400 hover:text-white transition-all border border-white/5 hover:border-white/10"
@@ -156,17 +179,23 @@ export default function ContactoPage() {
             >
               {card.action.label}
             </a>
-          )
-        )}
+          ))}
       </div>
     </motion.div>
   );
 
   return (
-    <div className="min-h-screen bg-tone-darker font-mono">
+    <div className="relative min-h-screen bg-tone-darker font-mono">
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <GradientField />
+      </div>
+
       <div className="fixed top-0 left-0 right-0 z-50 bg-tone-darker/90 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-white transition-colors text-sm">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-gray-600 hover:text-white transition-colors text-sm"
+          >
             <ChevronLeft className="w-4 h-4" />
             Volver
           </Link>
@@ -213,14 +242,16 @@ export default function ContactoPage() {
             <div className="grid md:grid-cols-3 gap-4">
               {contactCards.slice(0, 3).map((card, i) => renderCard(card, 0.3 + i * 0.1))}
             </div>
-            {renderCard(contactCards[3], 0.6, "max-w-md mx-auto w-full")}
+            {renderCard(contactCards[3], 0.6, 'max-w-md mx-auto w-full')}
           </div>
 
           <RevealSection delay={0.2}>
             <div className="bg-tone-dark/60 border border-white/5 rounded-xl p-8 md:p-10">
               <div className="max-w-xl mx-auto">
                 <h2 className="text-xl font-bold text-white mb-2 text-center">Mensaje directo</h2>
-                <p className="text-gray-600 text-sm text-center mb-8">Te respondemos a la brevedad</p>
+                <p className="text-gray-600 text-sm text-center mb-8">
+                  Te respondemos a la brevedad
+                </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
@@ -249,25 +280,30 @@ export default function ContactoPage() {
                   />
 
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button
-                      type="submit"
-                      disabled={sending || !formData.message.trim()}
-                      className="flex-1 flex items-center justify-center gap-2 bg-tone-red hover:bg-tone-red/90 disabled:bg-gray-800 disabled:text-gray-600 text-white py-3 px-6 rounded-lg text-sm font-medium transition-all"
-                    >
-                      {sending ? (
-                        <><Loader2 className="w-4 h-4 animate-spin" /> Enviando</>
-                      ) : (
-                        <><Mail className="w-4 h-4" /> Enviar mensaje</>
-                      )}
-                    </button>
+                    <Magnetic strength={0.2} className="flex-1">
+                      <button
+                        type="submit"
+                        disabled={sending || !formData.message.trim()}
+                        className="w-full flex items-center justify-center gap-2 bg-tone-red hover:bg-tone-red/90 disabled:bg-gray-800 disabled:text-gray-600 text-white py-3 px-6 rounded-lg text-sm font-medium transition-all"
+                      >
+                        {sending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" /> Abriendo WhatsApp
+                          </>
+                        ) : (
+                          <>
+                            <MessageCircle className="w-4 h-4" /> Enviar por WhatsApp
+                          </>
+                        )}
+                      </button>
+                    </Magnetic>
 
-                    <button
-                      type="button"
-                      onClick={handleWhatsApp}
+                    <a
+                      href={`mailto:${contact.email}`}
                       className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white py-3 px-6 rounded-lg text-sm font-medium transition-all border border-white/5 hover:border-white/10"
                     >
-                      <MessageCircle className="w-4 h-4" /> WhatsApp
-                    </button>
+                      <Mail className="w-4 h-4" /> Email
+                    </a>
                   </div>
 
                   {sent && (
@@ -276,7 +312,7 @@ export default function ContactoPage() {
                       animate={{ opacity: 1, y: 0 }}
                       className="text-center text-sm text-tone-amber pt-2"
                     >
-                      Mensaje enviado correctamente
+                      Te abrimos WhatsApp con tu mensaje listo para enviar
                     </motion.p>
                   )}
                 </form>
@@ -285,7 +321,6 @@ export default function ContactoPage() {
           </RevealSection>
         </div>
       </main>
-
     </div>
   );
 }
