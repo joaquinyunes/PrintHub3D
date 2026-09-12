@@ -1,11 +1,21 @@
-"use client";
+'use client';
 
-import React, { Suspense, useEffect, useState, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Package, CheckCircle, Clock, Zap, Box, Star, CreditCard, Loader2 } from "lucide-react";
-import { apiUrl, resolveMediaUrl } from "@/lib/api";
+import React, { Suspense, useEffect, useState, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import {
+  ArrowLeft,
+  Package,
+  CheckCircle,
+  Clock,
+  Zap,
+  Box,
+  CreditCard,
+  Loader2,
+  Search,
+} from 'lucide-react';
+import { apiUrl, resolveMediaUrl } from '@/lib/api';
 
-const money = (n: number) => "$" + Math.round(n || 0).toLocaleString("es-AR");
+const money = (n: number) => '$' + Math.round(n || 0).toLocaleString('es-AR');
 
 interface StatusStep {
   key: string;
@@ -50,34 +60,35 @@ interface OrderData {
 function TrackContentInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const code = searchParams.get("code") || "";
-  
+  const code = searchParams.get('code') || '';
+
   const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [customVideo, setCustomVideo] = useState<string | null>(null);
   const [payLoading, setPayLoading] = useState(false);
-  const [payError, setPayError] = useState("");
+  const [payError, setPayError] = useState('');
+  const [codeInput, setCodeInput] = useState('');
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const payBalance = async () => {
     if (!order) return;
     setPayLoading(true);
-    setPayError("");
+    setPayError('');
     try {
-      const res = await fetch(apiUrl("/api/payments/create-preference"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch(apiUrl('/api/payments/create-preference'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trackingCode: order.trackingCode, balance: true }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "No se pudo generar el pago");
+      if (!res.ok) throw new Error(data.message || 'No se pudo generar el pago');
       const url = data.initPoint || data.sandboxInitPoint;
       if (url) window.location.href = url;
-      else throw new Error("MercadoPago no devolvió un link");
-    } catch (e: any) {
-      setPayError(e.message);
+      else throw new Error('MercadoPago no devolvió un link');
+    } catch (e: unknown) {
+      setPayError(e instanceof Error ? e.message : 'Error desconocido');
     } finally {
       setPayLoading(false);
     }
@@ -85,36 +96,36 @@ function TrackContentInner() {
 
   useEffect(() => {
     if (!code) {
-      router.push("/");
+      setLoading(false);
       return;
     }
-    
+
     const fetchOrder = async () => {
       try {
         const res = await fetch(apiUrl(`/api/orders/track/${encodeURIComponent(code)}`));
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Pedido no encontrado");
-        
+        if (!res.ok) throw new Error(data.message || 'Pedido no encontrado');
+
         setOrder(data);
 
         const rawVideo = data.customVideoUrl;
         if (rawVideo && String(rawVideo).trim()) {
           setCustomVideo(resolveMediaUrl(String(rawVideo).trim()));
         }
-      } catch (err: any) {
-        setError(err.message || "Error al cargar el pedido");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Error al cargar el pedido');
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchOrder();
   }, [code, router]);
 
   useEffect(() => {
     if (videoRef.current && customVideo) {
       videoRef.current.load();
-      videoRef.current.play().catch(e => console.log("Autoplay bloqueado:", e));
+      videoRef.current.play().catch(() => {});
     }
   }, [customVideo]);
 
@@ -124,28 +135,83 @@ function TrackContentInner() {
     return <Clock className="h-5 w-5 text-gray-700" />;
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-tone-darker flex items-center justify-center">
-      <div className="animate-spin h-10 w-10 border-4 border-tone-red border-t-transparent rounded-full" />
-    </div>
-  );
+  if (!code)
+    return (
+      <div className="min-h-screen bg-tone-darker flex flex-col items-center justify-center p-6 text-center font-mono">
+        <Package className="h-14 w-14 text-tone-red mb-4" />
+        <h1 className="text-2xl font-bold text-white mb-2">Rastrear Mi Pedido</h1>
+        <p className="text-gray-500 mb-6 max-w-sm">
+          Ingresá el código que te enviamos para ver el estado de producción.
+        </p>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const c = codeInput.trim();
+            if (c) router.push(`/track?code=${encodeURIComponent(c)}`);
+          }}
+          className="w-full max-w-sm flex flex-col sm:flex-row gap-3"
+        >
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-700" />
+            <input
+              type="text"
+              value={codeInput}
+              onChange={(e) => setCodeInput(e.target.value)}
+              placeholder="Ej: joaquin-vasoboca-17032026"
+              className="w-full bg-tone-dark/60 border border-white/5 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={!codeInput.trim()}
+            className="bg-tone-red hover:bg-tone-red/90 disabled:bg-gray-800 disabled:text-gray-600 text-white px-6 py-3 rounded-xl font-medium transition"
+          >
+            Rastrear
+          </button>
+        </form>
+        <button
+          onClick={() => router.push('/')}
+          className="mt-8 flex items-center gap-2 text-gray-600 hover:text-white transition-colors text-sm"
+        >
+          <ArrowLeft className="h-4 w-4" /> Volver al inicio
+        </button>
+      </div>
+    );
 
-  if (error || !order) return (
-    <div className="min-h-screen bg-tone-darker flex flex-col items-center justify-center p-6 text-center">
-      <Package className="h-16 w-16 text-tone-red mb-4" />
-      <h1 className="text-2xl font-bold mb-2">¡Oops! Pedido no encontrado</h1>
-      <p className="text-gray-500 mb-6">{error}</p>
-      <button onClick={() => router.push("/")} className="bg-tone-red hover:bg-tone-red/90 px-6 py-2 rounded-xl font-bold">Volver al inicio</button>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="min-h-screen bg-tone-darker flex items-center justify-center">
+        <div className="animate-spin h-10 w-10 border-4 border-tone-red border-t-transparent rounded-full" />
+      </div>
+    );
+
+  if (error || !order)
+    return (
+      <div className="min-h-screen bg-tone-darker flex flex-col items-center justify-center p-6 text-center">
+        <Package className="h-16 w-16 text-tone-red mb-4" />
+        <h1 className="text-2xl font-bold mb-2">¡Oops! Pedido no encontrado</h1>
+        <p className="text-gray-500 mb-6">{error}</p>
+        <button
+          onClick={() => router.push('/')}
+          className="bg-tone-red hover:bg-tone-red/90 px-6 py-2 rounded-xl font-bold"
+        >
+          Volver al inicio
+        </button>
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-tone-darker text-white font-mono selection:bg-tone-red/30">
       <header className="fixed top-0 w-full z-50 bg-tone-darker/80 backdrop-blur-xl border-b border-white/5 h-16 flex items-center px-6 justify-between">
-        <button onClick={() => router.push("/")} className="flex items-center gap-2 text-gray-600 hover:text-white transition-colors">
+        <button
+          onClick={() => router.push('/')}
+          className="flex items-center gap-2 text-gray-600 hover:text-white transition-colors"
+        >
           <ArrowLeft className="h-4 w-4" /> Volver
         </button>
-        <span className="text-xl font-black bg-gradient-to-r from-tone-red to-tone-amber bg-clip-text text-transparent">Global 3D</span>
+        <span className="text-xl font-black bg-gradient-to-r from-tone-red to-tone-amber bg-clip-text text-transparent">
+          Global 3D
+        </span>
       </header>
 
       <main className="pt-24 pb-12 px-6 max-w-3xl mx-auto space-y-6">
@@ -161,7 +227,10 @@ function TrackContentInner() {
             </div>
           </div>
           <div className="h-3 bg-tone-darker rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-tone-red to-tone-amber transition-all duration-1000" style={{ width: `${order.progress}%` }} />
+            <div
+              className="h-full bg-gradient-to-r from-tone-red to-tone-amber transition-all duration-1000"
+              style={{ width: `${order.progress}%` }}
+            />
           </div>
         </div>
 
@@ -196,15 +265,21 @@ function TrackContentInner() {
         </div>
 
         <div className="bg-tone-dark/60 border border-white/5 rounded-xl p-8">
-          <h3 className="text-xs font-black text-gray-600 uppercase tracking-[0.15em] mb-8">Línea de Tiempo</h3>
+          <h3 className="text-xs font-black text-gray-600 uppercase tracking-[0.15em] mb-8">
+            Línea de Tiempo
+          </h3>
           <div className="space-y-8 relative">
             <div className="absolute left-[10px] top-2 bottom-2 w-px bg-gray-800" />
             {order.statusSteps?.map((step) => (
               <div key={step.key} className="flex items-start gap-6 relative z-10">
-                <div className={`mt-1 p-1 rounded-full bg-tone-darker border ${step.isComplete ? 'border-tone-red/30' : 'border-gray-800'}`}>
+                <div
+                  className={`mt-1 p-1 rounded-full bg-tone-darker border ${step.isComplete ? 'border-tone-red/30' : 'border-gray-800'}`}
+                >
                   {getStatusIcon(step)}
                 </div>
-                <p className={`font-bold ${step.isComplete ? 'text-white' : 'text-gray-600'}`}>{step.label}</p>
+                <p className={`font-bold ${step.isComplete ? 'text-white' : 'text-gray-600'}`}>
+                  {step.label}
+                </p>
               </div>
             ))}
           </div>
@@ -213,21 +288,33 @@ function TrackContentInner() {
         {/* Detalle + pago del saldo */}
         {order.items && order.items.length > 0 && (
           <div className="bg-tone-dark/60 border border-white/5 rounded-xl p-6">
-            <h3 className="text-xs font-black text-gray-600 uppercase tracking-[0.15em] mb-4">Tu pedido</h3>
+            <h3 className="text-xs font-black text-gray-600 uppercase tracking-[0.15em] mb-4">
+              Tu pedido
+            </h3>
             <div className="space-y-2">
               {order.items.map((it, i) => (
                 <div key={i} className="flex justify-between text-sm">
-                  <span className="text-gray-300">{it.productName} <span className="text-gray-600">× {it.quantity}</span></span>
+                  <span className="text-gray-300">
+                    {it.productName} <span className="text-gray-600">× {it.quantity}</span>
+                  </span>
                   <span className="text-gray-400">{money(it.price * it.quantity)}</span>
                 </div>
               ))}
             </div>
             <div className="mt-4 border-t border-white/5 pt-4 space-y-1.5 text-sm">
-              <div className="flex justify-between text-gray-400"><span>Total</span><span>{money(order.total)}</span></div>
-              <div className="flex justify-between text-gray-400"><span>Pagado</span><span>{money(order.deposit)}</span></div>
+              <div className="flex justify-between text-gray-400">
+                <span>Total</span>
+                <span>{money(order.total)}</span>
+              </div>
+              <div className="flex justify-between text-gray-400">
+                <span>Pagado</span>
+                <span>{money(order.deposit)}</span>
+              </div>
               <div className="flex justify-between text-lg font-black text-white">
                 <span>Saldo</span>
-                <span className={order.total - order.deposit > 0 ? "text-tone-amber" : "text-green-400"}>
+                <span
+                  className={order.total - order.deposit > 0 ? 'text-tone-amber' : 'text-green-400'}
+                >
                   {money(Math.max(0, order.total - order.deposit))}
                 </span>
               </div>
@@ -240,7 +327,11 @@ function TrackContentInner() {
                   disabled={payLoading}
                   className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#009EE3] py-3 font-bold text-white transition hover:bg-[#008BD0] disabled:opacity-50"
                 >
-                  {payLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <CreditCard className="h-5 w-5" />}
+                  {payLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <CreditCard className="h-5 w-5" />
+                  )}
                   Pagar saldo con MercadoPago
                 </button>
                 {payError && <p className="mt-2 text-center text-xs text-tone-red">{payError}</p>}
@@ -259,7 +350,13 @@ function TrackContentInner() {
 
 export default function TrackPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-tone-darker flex items-center justify-center text-white font-mono">Cargando...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-tone-darker flex items-center justify-center text-white font-mono">
+          Cargando...
+        </div>
+      }
+    >
       <TrackContentInner />
     </Suspense>
   );
