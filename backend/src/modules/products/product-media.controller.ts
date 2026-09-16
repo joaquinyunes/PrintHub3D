@@ -14,7 +14,19 @@ const storage = multer.diskStorage({
     cb(null, fname);
   },
 });
-const upload = multer({ storage });
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
+      cb(new Error('Tipo de archivo no permitido. Solo imágenes (jpg, png, webp, gif).'));
+      return;
+    }
+    cb(null, true);
+  },
+});
 
 // Subir imagen asociada a un producto
 export const uploadProductImage = [upload.single('image'), async (req: Request, res: Response) => {
