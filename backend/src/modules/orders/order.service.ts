@@ -133,16 +133,22 @@ export const OrderService = {
     const enrichedItems = await Promise.all(
       items.map(async (item) => {
         let productCost = 0;
+        // El precio de catálogo nunca se confía del cliente: para ítems no personalizados
+        // se recalcula siempre desde el producto guardado en la base de datos.
+        let effectivePrice = Number(item.price || 0);
         if (item.productId && !item.isCustom) {
-          try {
-            const product = await productRepository.findById(item.productId, tenantId);
-            if (product) productCost = product.cost ?? 0;
-          } catch (err) {
+          const product = await productRepository.findById(item.productId, tenantId).catch((err) => {
             logger.error('Error buscando producto en OrderService:', err);
+            return null;
+          });
+          if (!product) {
+            throw new Error('Uno de los productos del pedido ya no está disponible');
           }
+          productCost = product.cost ?? 0;
+          effectivePrice = product.price ?? 0;
         }
 
-        const subtotal = Number(item.price || 0) * Number(item.quantity || 0);
+        const subtotal = effectivePrice * Number(item.quantity || 0);
         const subcost = Number(productCost || 0) * Number(item.quantity || 0);
 
         calculatedTotal += subtotal;
@@ -150,6 +156,7 @@ export const OrderService = {
 
         return {
           ...item,
+          price: effectivePrice,
           printedQuantity: 0,
           printTimeMinutes: item.printTimeMinutes || 30,
         };
