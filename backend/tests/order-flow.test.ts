@@ -46,11 +46,13 @@ describe('Flujo pedido → venta', () => {
   });
 
   it('registerOrderSale crea una venta ligada al pedido y lo marca', async () => {
-    const p: any = await makeProduct({ stock: 10, cost: 1000 });
+    const p: any = await makeProduct({ stock: 10, cost: 1000, price: 5000 });
+    // El precio del ítem lo recalcula el server desde el producto (no se confía el del cliente):
+    // se pasa un price distinto acá justamente para probar que se ignora.
     const order: any = await OrderService.createOrder({
       tenantId: TENANT,
       clientName: 'Cliente',
-      items: [{ productId: String(p._id), productName: p.name, quantity: 2, price: 5000 }],
+      items: [{ productId: String(p._id), productName: p.name, quantity: 2, price: 1 }],
     });
 
     const { sale } = await OrderService.registerOrderSale({
@@ -60,7 +62,7 @@ describe('Flujo pedido → venta', () => {
     });
 
     expect(String((sale as any).orderId)).toBe(String(order._id));
-    expect((sale as any).price).toBe(10000); // total del pedido (2 x 5000)
+    expect((sale as any).price).toBe(10000); // total del pedido (2 x 5000 del producto, no el price enviado)
     expect((sale as any).profit).toBe(8000); // 10000 - 2000
 
     const updated = await Order.findById(order._id);
