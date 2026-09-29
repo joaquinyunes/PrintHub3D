@@ -138,7 +138,7 @@ export default function HomeSettingsPage() {
       enabled: true,
       title: 'Copa de la Liga',
       subtitle: 'Diseño 3D de alta calidad con detalles premium',
-      badge: '🏆 TROFEO PREMIUM',
+      badge: '',
       price: '$12.500',
       accentColor: '#f59e0b',
       framesDir: '/frames-copakling/',
@@ -148,7 +148,7 @@ export default function HomeSettingsPage() {
       enabled: true,
       title: 'Impresora 3D Bambu Lab X1C',
       subtitle: 'La nueva generación de precisión y velocidad',
-      badge: '🖨️ PROFESIONAL',
+      badge: '',
       price: '$469.000',
       accentColor: '#3b82f6',
       framesDir: '/frames-mp/',
@@ -160,7 +160,7 @@ export default function HomeSettingsPage() {
     productCategories: [],
     rastreoSection: { enabled: true, title: 'Rastreá tu Pedido', subtitle: 'Ingresá tu código y seguí tu pedido en tiempo real', badge: '📦 RASTREO', categories: [], customVideos: [] },
     productosSection: { enabled: true, title: 'Productos Personalizados', subtitle: 'Vasos, llaveros, trofeos y más', badge: '🏆 PRODUCTOS', heroImage: '', categories: [], allProductsSearch: { enabled: true, placeholder: 'Buscar productos...', sortOptions: ['price_asc', 'price_desc', 'name_asc', 'name_desc', 'newest'], filterOptions: ['searchByName', 'searchByDescription', 'filterByPrice'] } },
-    impresorasSection: { enabled: true, title: 'Impresoras 3D', subtitle: 'Bambu Lab y más', badge: '🖨️ IMPRESORAS', heroImage: '', categories: [], animation: { enabled: true, title: 'Impresora 3D Bambu Lab X1C', subtitle: 'La nueva generación', badge: '🖨️ PROFESIONAL', price: '$469.000', accentColor: '#3b82f6', framesDir: '/frames-mp/', totalFrames: 192 } },
+    impresorasSection: { enabled: true, title: 'Impresoras 3D', subtitle: 'Bambu Lab y más', badge: '🖨️ IMPRESORAS', heroImage: '', categories: [], animation: { enabled: true, title: 'Impresora 3D Bambu Lab X1C', subtitle: 'La nueva generación', badge: '', price: '$469.000', accentColor: '#3b82f6', framesDir: '/frames-mp/', totalFrames: 192 } },
     filamentosSection: { enabled: true, title: 'Filamentos y Materiales', subtitle: 'PLA, PETG, ABS y más', badge: '🧵 FILAMENTOS', heroImage: '', categories: [] },
     contactoSection: { enabled: true, title: 'Contactanos', subtitle: 'Estamos para ayudarte', badge: '📩 CONTACTO' },
 contactInfo: {
@@ -638,7 +638,6 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
               <div className="grid grid-cols-2 gap-4">
                 <div><label className="text-xs text-gray-500 block mb-1">Título</label><input type="text" value={sections.copaAnimation?.title || ''} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.copaAnimation?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Badge</label><input type="text" value={sections.copaAnimation?.badge || ''} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Precio</label><input type="text" value={sections.copaAnimation?.price || ''} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, price: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Color acento</label><input type="text" value={sections.copaAnimation?.accentColor || ''} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, accentColor: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Carpeta frames</label><input type="text" value={sections.copaAnimation?.framesDir || ''} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, framesDir: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
@@ -654,7 +653,6 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
               <div className="grid grid-cols-2 gap-4">
                 <div><label className="text-xs text-gray-500 block mb-1">Título</label><input type="text" value={sections.impresoraAnimation?.title || ''} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.impresoraAnimation?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Badge</label><input type="text" value={sections.impresoraAnimation?.badge || ''} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Precio</label><input type="text" value={sections.impresoraAnimation?.price || ''} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, price: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Color acento</label><input type="text" value={sections.impresoraAnimation?.accentColor || ''} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, accentColor: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Carpeta frames</label><input type="text" value={sections.impresoraAnimation?.framesDir || ''} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, framesDir: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
@@ -921,7 +919,6 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                 <div><label className="text-xs text-gray-500 block mb-1">Animación habilitada</label><input type="checkbox" checked={sections.impresorasSection?.animation?.enabled} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, enabled: e.target.checked } } }))} className="w-5 h-5 rounded" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Título</label><input type="text" value={sections.impresorasSection?.animation?.title || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, title: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.impresorasSection?.animation?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, subtitle: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Badge</label><input type="text" value={sections.impresorasSection?.animation?.badge || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, badge: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Precio</label><input type="text" value={sections.impresorasSection?.animation?.price || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, price: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Color acento</label><input type="text" value={sections.impresorasSection?.animation?.accentColor || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, accentColor: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">Carpeta frames</label><input type="text" value={sections.impresorasSection?.animation?.framesDir || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, framesDir: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>

@@ -71,7 +71,9 @@ export default function HomePage() {
   const resolveMediaUrl = (path?: string) => {
     if (!path) return '';
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    return apiUrl(path.startsWith('/') ? path : `/${path}`);
+    // Solo /uploads lo sirve el backend; el resto vive en public/ del frontend.
+    if (path.startsWith('/uploads')) return apiUrl(path);
+    return path.startsWith('/') ? path : `/${path}`;
   };
 
   const displayProducts = products;
@@ -244,7 +246,6 @@ export default function HomePage() {
             homeSections?.copaAnimation?.subtitle ||
             'Diseño 3D de alta calidad con detalles premium'
           }
-          badge={homeSections?.copaAnimation?.badge || 'TROFEO PREMIUM'}
           price={homeSections?.copaAnimation?.price || '$12.500'}
           accentColor={homeSections?.copaAnimation?.accentColor || '#f5a524'}
           sectionId="scroll-animation-copa"
@@ -481,7 +482,6 @@ export default function HomePage() {
             homeSections?.impresoraAnimation?.subtitle ||
             'La nueva generación de precisión y velocidad'
           }
-          badge={homeSections?.impresoraAnimation?.badge || 'PROFESIONAL'}
           price={homeSections?.impresoraAnimation?.price || '$469.000'}
           accentColor={homeSections?.impresoraAnimation?.accentColor || '#14e0c8'}
           sectionId="scroll-animation-impresora"

@@ -16,10 +16,12 @@ export const resolveMediaUrl = (url: string): string => {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
-  if (url.startsWith('/uploads') || url.startsWith('/')) {
+  // Solo /uploads lo sirve el backend. El resto de las rutas absolutas son
+  // assets del propio frontend (public/): prefijarlas con la API las rompia.
+  if (url.startsWith('/uploads')) {
     return apiUrl(url);
   }
-  return url;
+  return url.startsWith('/') ? url : `/${url}`;
 };
 
 // --- Sesión por cookies httpOnly (BLK-7) ---

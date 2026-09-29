@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800" role="img" aria-label="Bambu Lab X1 Carbon">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="42%" r="62%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity=".26"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0 H0 V40" fill="none" stroke="#ffffff" stroke-opacity=".04" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="800" fill="#08080b"/>
+  <rect width="800" height="800" fill="url(#grid)"/>
+  <rect width="800" height="800" fill="url(#glow)"/>
+  <g transform="translate(400 360)">
+    <rect x="-160" y="-150" width="320" height="300" rx="14" fill="#3b82f6" fill-opacity=".07" stroke="#3b82f6" stroke-opacity=".85" stroke-width="4"/>
+    <path d="M-160 -96 L160 -96" stroke="#3b82f6" stroke-opacity=".5" stroke-width="3"/>
+    <rect x="-34" y="-58" width="68" height="30" rx="6" fill="#3b82f6" fill-opacity=".9"/>
+    <path d="M0 -28 L0 52" stroke="#3b82f6" stroke-opacity=".55" stroke-width="3" stroke-dasharray="7 7"/>
+    <path d="M-70 118 L0 78 L70 118 L0 158 Z" fill="#3b82f6" fill-opacity=".5" stroke="#3b82f6" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="-118" y="120" width="236" height="14" rx="7" fill="#3b82f6" fill-opacity=".3"/></g>
+  <text x="400" y="704" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif,system-ui,Segoe UI,Arial" font-size="40" font-weight="800">Bambu Lab X1 Carbon</text>
+  <text x="400" y="746" text-anchor="middle" fill="#ffffff" fill-opacity=".45" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="21" letter-spacing="2">IMPRESORA</text>
+  <text x="774" y="780" text-anchor="end" fill="#3b82f6" fill-opacity=".5" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" letter-spacing="3">GLOBAL 3D</text>
+</svg>

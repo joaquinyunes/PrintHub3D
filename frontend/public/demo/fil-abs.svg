@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800" role="img" aria-label="Filamento ABS">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="42%" r="62%">
+      <stop offset="0%" stop-color="#ff5c1a" stop-opacity=".26"/>
+      <stop offset="100%" stop-color="#ff5c1a" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0 H0 V40" fill="none" stroke="#ffffff" stroke-opacity=".04" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="800" fill="#08080b"/>
+  <rect width="800" height="800" fill="url(#grid)"/>
+  <rect width="800" height="800" fill="url(#glow)"/>
+  <g transform="translate(400 360)">
+    <circle r="150" fill="#ff5c1a" fill-opacity=".1" stroke="#ff5c1a" stroke-opacity=".85" stroke-width="5"/>
+    <circle r="104" fill="#ff5c1a" fill-opacity=".3" stroke="#ff5c1a" stroke-opacity=".6" stroke-width="3"/>
+    <path d="M44.0 0.0 L102.0 0.0" stroke="#ff5c1a" stroke-opacity=".35" stroke-width="3"/><path d="M37.0 23.8 L85.8 55.1" stroke="#ff5c1a" stroke-opacity=".35" stroke-width="3"/><path d="M18.3 40.0 L42.4 92.8" stroke="#ff5c1a" stroke-opacity=".35" stroke-width="3"/><path d="M-6.3 43.6 L-14.5 101.0" stroke="#ff5c1a" stroke-opacity=".35" stroke-width="3"/><path d="M-28.8 33.3 L-66.8 77.1" stroke="#ff5c1a" stroke-opacity=".35" stroke-width="3"/><path d="M-42.2 12.4 L-97.9 28.7" stroke="#ff5c1a" stroke-opacity=".35" stroke-width="3"/><path d="M-42.2 -12.4 L-97.9 -28.7" stroke="#ff5c1a" stroke-opacity=".35" stroke-width="3"/><path d="M-28.8 -33.3 L-66.8 -77.1" stroke="#ff5c1a" stroke-opacity=".35" stroke-width="3"/><path d="M-6.3 -43.6 L-14.5 -101.0" stroke="#ff5c1a" stroke-opacity=".35" stroke-width="3"/><path d="M18.3 -40.0 L42.4 -92.8" stroke="#ff5c1a" stroke-opacity=".35" stroke-width="3"/><path d="M37.0 -23.8 L85.8 -55.1" stroke="#ff5c1a" stroke-opacity=".35" stroke-width="3"/>
+    <circle r="40" fill="#08080b" stroke="#ff5c1a" stroke-opacity=".9" stroke-width="5"/>
+    <path d="M150 0 q58 26 40 86" fill="none" stroke="#ff5c1a" stroke-opacity=".9" stroke-width="5" stroke-linecap="round"/></g>
+  <text x="400" y="704" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif,system-ui,Segoe UI,Arial" font-size="40" font-weight="800">Filamento ABS</text>
+  <text x="400" y="746" text-anchor="middle" fill="#ffffff" fill-opacity=".45" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="21" letter-spacing="2">MATERIAL</text>
+  <text x="774" y="780" text-anchor="end" fill="#ff5c1a" fill-opacity=".5" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" letter-spacing="3">GLOBAL 3D</text>
+</svg>
