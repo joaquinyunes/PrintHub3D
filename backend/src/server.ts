@@ -9,6 +9,7 @@ import { appConfig } from './config';
 import logger from './config/logger';
 import { connectDB } from './config/db';
 import { bootstrapAdmin } from './utils/bootstrapAdmin';
+import { bootstrapDemoCatalog } from './utils/bootstrapDemoCatalog';
 import { errorHandler } from './middleware/errorHandler';
 import limiter from './middlewares/rateLimiter';
 import { swaggerSpec } from './config/swagger';
@@ -98,6 +99,7 @@ app.use(
 connectDB().then(async () => {
   logger.info('✅ Base de datos conectada');
   await bootstrapAdmin();
+  await bootstrapDemoCatalog();
 });
 
 app.use('/api/tasks', taskRoutes);
