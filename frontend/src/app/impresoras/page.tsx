@@ -116,7 +116,7 @@ export default function ImpresorasPage() {
                   imageUrl: prod.imageUrl || '',
                   imageHover: prod.imageHover || '',
                   videoUrl: prod.videoUrl || '',
-                  categoryId: cat.id
+                  categoryId: cat.id, enabled: prod.enabled !== false
                 });
               }
             });
@@ -136,7 +136,7 @@ export default function ImpresorasPage() {
               imageUrl: prod.imageUrl || '',
               imageHover: prod.imageHover || '',
               videoUrl: prod.videoUrl || '',
-              categoryId: cat.id
+              categoryId: cat.id, enabled: prod.enabled !== false
             });
           }
         });
