@@ -96,6 +96,7 @@ export interface ISettings extends Document {
         heroFeatures: string[];
         productStar: { enabled: boolean; title: string; subtitle: string; badge: string; price: string; originalPrice: string; teams: string[] };
         copaAnimation: { enabled: boolean; title: string; subtitle: string; badge: string; price: string; accentColor: string; framesDir: string; totalFrames: number };
+        impresoraAnimation: { enabled: boolean; title: string; subtitle: string; badge: string; price: string; accentColor: string; framesDir: string; totalFrames: number };
     };
     tenantId: string;
 }
@@ -181,11 +182,14 @@ const SettingsSchema: Schema = new Schema({
         enabled: { type: Boolean, default: true },
         title: { type: String, default: 'Impresoras 3D' },
         subtitle: { type: String, default: 'Bambu Lab y más - Precisión y velocidad' },
+        // badge y heroImage faltaban: se editaban en /admin/home pero se perdían al guardar.
+        badge: { type: String, default: 'IMPRESORAS' },
+        heroImage: { type: String, default: '' },
         animation: {
             enabled: { type: Boolean, default: true },
             title: { type: String, default: 'Impresora 3D Bambu Lab X1C' },
             subtitle: { type: String, default: 'La nueva generación de precisión y velocidad' },
-            badge: { type: String, default: '🖨️ PROFESIONAL' },
+            badge: { type: String, default: '' },
             price: { type: String, default: '$469.000' },
             accentColor: { type: String, default: '#3b82f6' },
             framesDir: { type: String, default: '/frames-mp/' },
@@ -218,6 +222,9 @@ const SettingsSchema: Schema = new Schema({
         enabled: { type: Boolean, default: true },
         title: { type: String, default: 'Filamentos y Materiales' },
         subtitle: { type: String, default: 'PLA, PETG, ABS y más - Todos los colores' },
+        // badge y heroImage faltaban: se editaban en /admin/home pero se perdían al guardar.
+        badge: { type: String, default: 'FILAMENTOS' },
+        heroImage: { type: String, default: '' },
         categories: [{
             id: { type: String, required: true },
             name: { type: String, required: true },
@@ -279,11 +286,23 @@ const SettingsSchema: Schema = new Schema({
             enabled: { type: Boolean, default: true },
             title: { type: String, default: 'Copa de la Liga' },
             subtitle: { type: String, default: 'Diseño 3D de alta calidad con detalles premium' },
-            badge: { type: String, default: '🏆 TROFEO PREMIUM' },
+            badge: { type: String, default: '' },
             price: { type: String, default: '$12.500' },
             accentColor: { type: String, default: '#f59e0b' },
             framesDir: { type: String, default: '/frames-copakling/' },
             totalFrames: { type: Number, default: 73 },
+        },
+        // Faltaba en el schema: lo que se editaba en /admin/home > "Impresora
+        // Animation" se descartaba silenciosamente al guardar.
+        impresoraAnimation: {
+            enabled: { type: Boolean, default: true },
+            title: { type: String, default: 'Impresora 3D Bambu Lab X1C' },
+            subtitle: { type: String, default: 'La nueva generación de precisión y velocidad' },
+            badge: { type: String, default: '' },
+            price: { type: String, default: '$469.000' },
+            accentColor: { type: String, default: '#14e0c8' },
+            framesDir: { type: String, default: '/frames-mp/' },
+            totalFrames: { type: Number, default: 192 },
         },
     },
     tenantId: { type: String, default: appConfig.defaultTenantId }

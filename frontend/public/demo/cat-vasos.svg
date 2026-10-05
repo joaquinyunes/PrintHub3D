@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800" role="img" aria-label="Vasos y Mates">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="42%" r="62%">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity=".26"/>
+      <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0 H0 V40" fill="none" stroke="#ffffff" stroke-opacity=".04" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="800" fill="#08080b"/>
+  <rect width="800" height="800" fill="url(#grid)"/>
+  <rect width="800" height="800" fill="url(#glow)"/>
+  <g transform="translate(400 360)">
+    <path d="M0 -166.5 L150 -82.5 L0 1.5 L-150 -82.5 Z" fill="#22c55e" fill-opacity=".55"/>
+    <path d="M-150 -82.5 L0 1.5 L0 166.5 L-150 82.5 Z" fill="#22c55e" fill-opacity=".22"/>
+    <path d="M150 -82.5 L0 1.5 L0 166.5 L150 82.5 Z" fill="#22c55e" fill-opacity=".34"/>
+    <path d="M-150 -58.92857142857143 L0 25.071428571428573 L150 -58.92857142857143" fill="none" stroke="#22c55e" stroke-opacity=".16" stroke-width="2"/><path d="M-150 -35.357142857142854 L0 48.642857142857146 L150 -35.357142857142854" fill="none" stroke="#22c55e" stroke-opacity=".16" stroke-width="2"/><path d="M-150 -11.785714285714292 L0 72.21428571428571 L150 -11.785714285714292" fill="none" stroke="#22c55e" stroke-opacity=".16" stroke-width="2"/><path d="M-150 11.785714285714292 L0 95.78571428571429 L150 11.785714285714292" fill="none" stroke="#22c55e" stroke-opacity=".16" stroke-width="2"/><path d="M-150 35.35714285714286 L0 119.35714285714286 L150 35.35714285714286" fill="none" stroke="#22c55e" stroke-opacity=".16" stroke-width="2"/><path d="M-150 58.928571428571416 L0 142.92857142857142 L150 58.928571428571416" fill="none" stroke="#22c55e" stroke-opacity=".16" stroke-width="2"/>
+    <path d="M0 -166.5 L150 -82.5 L0 1.5 L-150 -82.5 Z" fill="none" stroke="#22c55e" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M-150 -82.5 L-150 82.5 L0 166.5 L150 82.5 L150 -82.5" fill="none" stroke="#22c55e" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M0 1.5 L0 166.5" fill="none" stroke="#22c55e" stroke-opacity=".9" stroke-width="3"/></g>
+  <text x="400" y="704" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif,system-ui,Segoe UI,Arial" font-size="40" font-weight="800">Vasos y Mates</text>
+  <text x="400" y="746" text-anchor="middle" fill="#ffffff" fill-opacity=".45" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="21" letter-spacing="2">CATEGORIA</text>
+  <text x="774" y="780" text-anchor="end" fill="#22c55e" fill-opacity=".5" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" letter-spacing="3">GLOBAL 3D</text>
+</svg>

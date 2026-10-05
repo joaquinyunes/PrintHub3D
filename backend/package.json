@@ -14,7 +14,8 @@
     "seed:settings": "ts-node src/scripts/seed-settings.ts",
     "create:admin": "ts-node src/scripts/create-admin.ts",
     "test": "jest --runInBand --detectOpenHandles --forceExit",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "seed:demo": "ts-node src/scripts/seed-demo.ts"
   },
   "keywords": [],
   "author": "",

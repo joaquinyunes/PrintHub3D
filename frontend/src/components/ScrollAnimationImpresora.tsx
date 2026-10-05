@@ -16,7 +16,7 @@ export default function ScrollAnimationImpresora({
   videoSrc = "/mp_.mp4",
   title = "Impresora 3D Bambu Lab",
   subtitle = "La nueva generación de precisión y velocidad",
-  badge = "Profesional",
+  badge,
   price = "$469.000",
   accentColor = "#3b82f6",
   sectionId = "scroll-animation-impresora"
@@ -199,14 +199,16 @@ export default function ScrollAnimationImpresora({
           transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)", zIndex: 10
         }}>
           <div className="max-w-3xl mx-auto text-center">
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: "0.5rem",
-              background: `${accentColor}25`, border: `1px solid ${accentColor}40`,
-              borderRadius: "9999px", padding: "0.6rem 1.25rem", marginBottom: "1.25rem"
-            }}>
-              <span style={{ fontSize: "16px" }}>🖨️</span>
-              <span style={{ color: accentColor, fontSize: "12px", fontWeight: "700", letterSpacing: "0.08em", textTransform: "uppercase" }}>{badge}</span>
-            </div>
+            {badge && (
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: "0.5rem",
+                background: `${accentColor}25`, border: `1px solid ${accentColor}40`,
+                borderRadius: "9999px", padding: "0.6rem 1.25rem", marginBottom: "1.25rem"
+              }}>
+                <span style={{ fontSize: "16px" }}>🖨️</span>
+                <span style={{ color: accentColor, fontSize: "12px", fontWeight: "700", letterSpacing: "0.08em", textTransform: "uppercase" }}>{badge}</span>
+              </div>
+            )}
             <h2 style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", fontWeight: "800", color: "white", lineHeight: 1.1, marginBottom: "0.75rem", letterSpacing: "-0.02em" }}>{title}</h2>
             <p style={{ fontSize: "1.125rem", color: "rgba(255,255,255,0.65)", marginBottom: "2rem" }}>{subtitle}</p>
             <div style={{

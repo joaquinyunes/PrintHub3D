@@ -85,7 +85,7 @@ export default function ImpresorasPage() {
           subtitle: "Bambu Lab y más",
           badge: "🖨️ IMPRESORAS",
           heroImage: "",
-          animation: { enabled: true, title: 'Impresora 3D Bambu Lab X1C', subtitle: 'La nueva generación', badge: '🖨️ PROFESIONAL', price: '$469.000', accentColor: '#3b82f6', framesDir: '/frames-mp/', totalFrames: 192 },
+          animation: { enabled: true, title: 'Impresora 3D Bambu Lab X1C', subtitle: 'La nueva generación', badge: '', price: '$469.000', accentColor: '#3b82f6', framesDir: '/frames-mp/', totalFrames: 192 },
           categories: []
         });
       }
@@ -178,7 +178,6 @@ export default function ImpresorasPage() {
             videoSrc="/mp_.mp4"
             title={sectionData.animation.title || 'Impresora 3D Bambu Lab X1C'}
             subtitle={sectionData.animation.subtitle || 'La nueva generación de precisión y velocidad'}
-            badge={sectionData.animation.badge || 'PROFESIONAL'}
             price={sectionData.animation.price || '$469.000'}
             accentColor={sectionData.animation.accentColor || "#ff5c1a"}
           />
