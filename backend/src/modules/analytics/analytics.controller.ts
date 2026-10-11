@@ -12,7 +12,7 @@ import { appConfig } from '../../config';
 // ==========================================
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).tenantId || (req as any).user?.tenantId || appConfig.defaultTenantId;
+        const tenantId = req.tenantId || req.user?.tenantId || appConfig.defaultTenantId;
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -56,7 +56,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 // ==========================================
 export const getReportsData = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).tenantId || (req as any).user?.tenantId || appConfig.defaultTenantId;
+        const tenantId = req.tenantId || req.user?.tenantId || appConfig.defaultTenantId;
         const { year, month } = req.query;
 
         // 1. Configurar los límites de fecha según el filtro del frontend
@@ -153,7 +153,7 @@ export const getReportsData = async (req: Request, res: Response) => {
 // ==========================================
 export const getProfitability = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).tenantId || (req as any).user?.tenantId || appConfig.defaultTenantId;
+        const tenantId = req.tenantId || req.user?.tenantId || appConfig.defaultTenantId;
         const { year, month } = req.query as Record<string, string | undefined>;
 
         const y = parseInt(year || '') || new Date().getFullYear();

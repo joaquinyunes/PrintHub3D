@@ -1,6 +1,7 @@
 import { Queue, JobsOptions } from 'bullmq';
 import IORedis from 'ioredis';
 import { appConfig } from '../config';
+import logger from '../config/logger';
 
 export type NotificationJob =
   | {
@@ -29,9 +30,7 @@ export const enqueueNotification = async (
 ): Promise<void> => {
   if (!notificationQueue) {
     // En entornos sin Redis configurado, evitamos romper el flujo
-    console.warn(
-      `[NotificationQueue] Cola no configurada, se omite job "${job.type}"`,
-    );
+    logger.warn(`[NotificationQueue] Cola no configurada, se omite job "${job.type}"`);
     return;
   }
 

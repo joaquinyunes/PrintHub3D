@@ -46,8 +46,8 @@ make up
 | Usuarios y roles | `/admin/usuarios` | ✅ (admin) |
 | Pagos MercadoPago | checkout + webhook | 🟡 requiere credenciales |
 | Notificaciones WhatsApp | Twilio | 🟡 requiere credenciales |
-| Facturación AFIP | — | ⛔ pendiente |
-| Integración con impresoras (OctoPrint/Bambu) | — | ⛔ pendiente |
+| Facturación AFIP | `/api/invoices` | 🟡 estructura lista; la emisión con AFIP (WSFEv1) aún no está implementada |
+| Estado en vivo de impresoras | `/impresoras` + `/api/printers` | 🟡 OctoPrint listo · Moonraker/Bambu pendientes |
 
 ## Roles
 
@@ -57,10 +57,27 @@ make up
 
 Crear operarios desde `/admin/usuarios`.
 
+## Archivos subidos
+
+Las imágenes y videos que se suben desde el panel se guardan en **MongoDB (GridFS)**
+y se sirven en `/uploads/<archivo>`. No dependen del disco del hosting, así que
+sobreviven a deploys y reinicios, y quedan incluidos en el backup de Mongo.
+El tipo de archivo se valida por su contenido real (no por la extensión ni el MIME
+que declara el navegador): solo imágenes (jpg/png/gif/webp/avif) y videos
+(mp4/webm/mov).
+
+## Tests
+
+```bash
+cd backend  && npm test        # jest + MongoDB en memoria (auth, roles, tenants, pagos, subidas...)
+cd frontend && npm test        # vitest (lógica del panel de pedidos y utilidades)
+```
+
 ## Scripts útiles (backend)
 
 ```bash
 npm run typecheck        # tsc --noEmit
+npm run lint             # eslint
 npm test                 # jest
 npm run seed:settings
 npm run create:admin -- --email jefe@taller.com --password "ClaveFuerte"

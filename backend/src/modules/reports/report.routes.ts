@@ -1,17 +1,18 @@
 import { Router, Request, Response } from 'express';
-import { protect, adminOnly } from '../auth/auth.middleware';
+import { protect, adminOnly, authUser } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
 import { enqueuePDFJob } from '../../queue/pdfQueue';
+import { reqParam } from '../../utils/reqParam';
 
 const router = Router();
 
-router.post('/sales', protect, withTenant, adminOnly, async (req: any, res) => {
+router.post('/sales', protect, withTenant, adminOnly, async (req, res) => {
   try {
     const { format = 'pdf', dateFrom, dateTo } = req.body;
     await enqueuePDFJob({
       type: 'report',
-      tenantId: req.user.tenantId,
-      userId: req.user.id,
+      tenantId: authUser(req).tenantId,
+      userId: authUser(req).id,
       reportType: 'sales',
       dateFrom,
       dateTo,
@@ -24,15 +25,15 @@ router.post('/sales', protect, withTenant, adminOnly, async (req: any, res) => {
 });
 
 // Solicitar remito de orden
-router.post('/remito/:orderId', protect, withTenant, adminOnly, async (req: any, res) => {
+router.post('/remito/:orderId', protect, withTenant, adminOnly, async (req, res) => {
   try {
-    const { orderId } = req.params;
+    const orderId = reqParam(req, 'orderId');
 
     await enqueuePDFJob({
       type: 'remito',
-      tenantId: req.user.tenantId,
+      tenantId: authUser(req).tenantId,
       orderId,
-      userId: req.user.id,
+      userId: authUser(req).id,
     });
 
     res.json({ message: 'Remito en cola. Se notificará cuando esté listo.' });
@@ -42,7 +43,7 @@ router.post('/remito/:orderId', protect, withTenant, adminOnly, async (req: any,
 });
 
 // Solicitar presupuesto
-router.post('/presupuesto', protect, withTenant, adminOnly, async (req: any, res) => {
+router.post('/presupuesto', protect, withTenant, adminOnly, async (req, res) => {
   try {
     const { items, clientName } = req.body;
 
@@ -52,8 +53,8 @@ router.post('/presupuesto', protect, withTenant, adminOnly, async (req: any, res
 
     await enqueuePDFJob({
       type: 'presupuesto',
-      tenantId: req.user.tenantId,
-      userId: req.user.id,
+      tenantId: authUser(req).tenantId,
+      userId: authUser(req).id,
       items,
       clientName: clientName || 'Cliente',
     });

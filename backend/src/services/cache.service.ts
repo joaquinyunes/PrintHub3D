@@ -1,5 +1,6 @@
 import Redis from 'ioredis';
 import { appConfig } from '../config';
+import logger from '../config/logger';
 
 type RedisClient = Redis | null;
 
@@ -12,11 +13,11 @@ if (appConfig.redisUrl) {
   });
 
   redisClient.on('error', (err) => {
-    console.error('Redis Client Error:', err);
+    logger.error({ msg: 'Redis Client Error', err: err.message });
   });
 
   redisClient.on('connect', () => {
-    console.log('✅ Redis conectado para caché');
+    logger.info('✅ Redis conectado para caché');
   });
 }
 

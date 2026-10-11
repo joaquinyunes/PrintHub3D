@@ -3,16 +3,20 @@ import crypto from 'crypto';
 import ApiKey from '../modules/settings/api-key.model';
 import logger from '../config/logger';
 
-export interface ApiKeyRequest extends Request {
-  apiKey?: {
-    id: string;
-    tenantId: string;
-    scopes: string[];
-  };
+declare global {
+  namespace Express {
+    interface Request {
+      apiKey?: {
+        id: string;
+        tenantId: string;
+        scopes: string[];
+      };
+    }
+  }
 }
 
 export const apiKeyAuth = async (
-  req: ApiKeyRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -50,14 +54,14 @@ export const apiKeyAuth = async (
   };
 
   // Inyectar tenantId para que los controladores lo usen
-  (req as any).tenantId = keyDoc.tenantId;
+  req.tenantId = keyDoc.tenantId;
 
   next();
 };
 
 // Middleware para verificar scope específico
 export const requireScope = (requiredScope: string) => {
-  return (req: ApiKeyRequest, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     if (!req.apiKey?.scopes.includes(requiredScope)) {
       return res.status(403).json({ message: `Scope requerido: ${requiredScope}` });
     }

@@ -1,15 +1,15 @@
 import { Router, Request, Response } from 'express';
 import Expense from './expense.model';
-import { protect, adminOnly } from '../auth/auth.middleware';
+import { protect, adminOnly, authUser } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
 
 const router = Router();
 
 // 1. Crear un Gasto
-router.post('/', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.post('/', protect, withTenant, adminOnly, async (req, res) => {
     try {
         const { description, amount, category, date } = req.body;
-        const tenantId = req.user.tenantId;
+        const tenantId = authUser(req).tenantId;
 
         const newExpense = new Expense({
             description,
@@ -27,9 +27,9 @@ router.post('/', protect, withTenant, adminOnly, async (req: any, res: Response)
 });
 
 // 2. Obtener Gastos (del mes actual por defecto o todos) con paginación y filtros
-router.get('/', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.get('/', protect, withTenant, adminOnly, async (req, res) => {
     try {
-        const tenantId = req.user.tenantId;
+        const tenantId = authUser(req).tenantId;
         const {
             page = '1',
             pageSize = '50',
@@ -71,9 +71,9 @@ router.get('/', protect, withTenant, adminOnly, async (req: any, res: Response) 
 });
 
 // 3. Eliminar Gasto (solo admin)
-router.delete('/:id', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.delete('/:id', protect, withTenant, adminOnly, async (req, res) => {
     try {
-        const tenantId = req.user.tenantId;
+        const tenantId = authUser(req).tenantId;
         await Expense.findOneAndDelete({ _id: req.params.id, tenantId });
         res.json({ message: 'Gasto eliminado' });
     } catch (error) {

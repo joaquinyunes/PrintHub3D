@@ -126,6 +126,6 @@ export class OrderRepository extends BaseRepository<IOrder> {
   ): Promise<IOrder | null> {
     const query: FilterQuery<IOrder> = { _id: id, tenantId } as FilterQuery<IOrder>;
     const updates: Record<string, any> = { status, ...additionalUpdates };
-    return await this.model.findOneAndUpdate(query, updates, { new: true });
+    return await this.model.findOneAndUpdate(query, updates, { returnDocument: 'after' });
   }
 }

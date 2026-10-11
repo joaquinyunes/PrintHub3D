@@ -10,7 +10,7 @@ const router = Router();
 // 1. OBTENER BANDEJA DE ENTRADA (Agrupada por clientes) con paginación
 router.get('/', protect, withTenant, adminOnly, async (req, res) => {
     try {
-        const tenantId = (req as any).tenantId;
+        const tenantId = req.tenantId;
         const {
             page = '1',
             pageSize = '50',
@@ -73,7 +73,7 @@ router.get('/:id', protect, withTenant, adminOnly, async (req, res) => {
         const skip = (pageNumber - 1) * limit;
 
         // Traer mensajes donde el usuario sea el remitente O el destinatario
-        const tenantId = (req as any).tenantId;
+        const tenantId = req.tenantId;
 
         const filter = { 
             tenantId,
@@ -103,7 +103,7 @@ router.get('/:id', protect, withTenant, adminOnly, async (req, res) => {
 router.post('/send', protect, withTenant, adminOnly, async (req, res) => {
     try {
         const { to, message, platform } = req.body;
-        const tenantId = (req as any).tenantId;
+        const tenantId = req.tenantId;
 
         // A. Enviar a la red correspondiente
         if (platform === 'whatsapp') {

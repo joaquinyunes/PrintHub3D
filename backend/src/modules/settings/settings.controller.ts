@@ -1,37 +1,18 @@
 import { Request, Response } from 'express';
-import multer from 'multer';
-import path from 'path';
 import Settings from './settings.model';
+import { MB, singleUpload } from '../../middleware/upload.middleware';
 import { appConfig } from '../../config';
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.resolve(__dirname, '../../../uploads'));
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        // path.basename descarta cualquier segmento de directorio (../, rutas absolutas)
-        // que venga en el nombre original del archivo subido.
-        const safeOriginalName = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_');
-        cb(null, uniqueSuffix + '-' + safeOriginalName);
-    }
-});
-
-const upload = multer({ storage, limits: { fileSize: 200 * 1024 * 1024 } });
-
 export const uploadHomeImage = [
-    upload.single('image'),
+    // Imágenes o videos para la home. El tipo se verifica por contenido, no por el MIME del cliente.
+    singleUpload({ field: 'image', allowedKinds: ['image', 'video'], maxBytes: 50 * MB }),
     async (req: Request, res: Response) => {
-        try {
-            const file = (req as any).file;
-            if (!file) {
-                res.status(400).json({ message: 'No se recibió imagen' });
-                return;
-            }
-            res.json({ imageUrl: `/uploads/${file.filename}` });
-        } catch (error) {
-            res.status(500).json({ message: 'Error al subir imagen' });
+        const file = req.file;
+        if (!file) {
+            res.status(400).json({ message: 'No se recibió imagen' });
+            return;
         }
+        res.json({ imageUrl: `/uploads/${file.filename}` });
     }
 ];
 
@@ -128,7 +109,7 @@ function mergeSettings(settings: any) {
 export const getSettings = async (req: Request, res: Response) => {
     try {
         const tenantId =
-            (req as any).tenantId || (req as any).user?.tenantId || appConfig.defaultTenantId;
+            req.tenantId || req.user?.tenantId || appConfig.defaultTenantId;
         let settings = await Settings.findOne({ tenantId }).lean();
 
         if (!settings) {
@@ -145,7 +126,7 @@ export const getSettings = async (req: Request, res: Response) => {
 
 export const getPublicSettings = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).tenantId || appConfig.defaultTenantId;
+        const tenantId = req.tenantId || appConfig.defaultTenantId;
         let settings = await Settings.findOne({ tenantId }).lean();
 
         if (!settings) {
@@ -163,7 +144,7 @@ export const getPublicSettings = async (req: Request, res: Response) => {
 export const updateSettings = async (req: Request, res: Response) => {
     try {
         const tenantId =
-            (req as any).tenantId || (req as any).user?.tenantId || appConfig.defaultTenantId;
+            req.tenantId || req.user?.tenantId || appConfig.defaultTenantId;
         const {
             businessName,
             adminPhone,

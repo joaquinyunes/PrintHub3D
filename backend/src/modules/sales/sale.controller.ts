@@ -8,7 +8,7 @@ import Product from "../products/product.model";
    ========================================================================== */
 export const getSales = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+    const tenantId = req.tenantId || req.user?.tenantId;
     if (!tenantId) {
       return res.status(401).json({ message: 'No autorizado' });
     }
@@ -64,7 +64,7 @@ export const getSales = async (req: Request, res: Response) => {
    ========================================================================== */
 export const registerSale = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+    const tenantId = req.tenantId || req.user?.tenantId;
     const { productId, quantity = 1 } = req.body;
 
     // --- Venta manual / libre (mostrador sin producto de inventario) ---
@@ -144,7 +144,7 @@ export const registerSale = async (req: Request, res: Response) => {
    ========================================================================== */
 export const getSalesAnalytics = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+    const tenantId = req.tenantId || req.user?.tenantId;
     const { year, month } = req.query;
 
     // --- CONFIGURACIÓN DE FECHAS ---

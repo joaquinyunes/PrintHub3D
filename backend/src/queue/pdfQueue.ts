@@ -1,6 +1,7 @@
 import { Queue, JobsOptions } from 'bullmq';
 import IORedis from 'ioredis';
 import { appConfig } from '../config';
+import logger from '../config/logger';
 
 export type PDFJob =
   | {
@@ -39,7 +40,7 @@ export const enqueuePDFJob = async (
   options?: JobsOptions,
 ): Promise<void> => {
   if (!pdfQueue) {
-    console.warn(`[PDFQueue] Cola no configurada, se omite job "${job.type}"`);
+    logger.warn(`[PDFQueue] Cola no configurada, se omite job "${job.type}"`);
     return;
   }
 

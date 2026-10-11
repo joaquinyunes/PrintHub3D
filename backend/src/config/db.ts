@@ -1,35 +1,42 @@
 import mongoose from 'mongoose';
 import { appConfig } from './index';
+import logger from './logger';
 
-let memoryServer: any = null;
+let memoryServer: { stop: () => Promise<unknown> } | null = null;
 
+/**
+ * Conecta a MongoDB. Si falla en producción lanza el error (el arranque decide
+ * qué hacer, normalmente salir para que el orquestador reinicie el servicio).
+ * En desarrollo cae a un MongoDB en memoria para poder trabajar sin instalar nada.
+ */
 export const connectDB = async (): Promise<void> => {
-    try {
-        const conn = await mongoose.connect(appConfig.mongoUri);
-        console.log(`✅ MongoDB Conectado: ${conn.connection.host}`);
-        return;
-    } catch (error: any) {
-        console.error(`❌ Error de conexión a MongoDB: ${error.message}`);
-        // If in development, attempt to start an in-memory MongoDB for local work
-        if (process.env.NODE_ENV !== 'production') {
-            try {
-                const { MongoMemoryServer } = await import('mongodb-memory-server');
-                memoryServer = await MongoMemoryServer.create();
-                const uri = memoryServer.getUri();
-                const conn = await mongoose.connect(uri);
-                console.log(`✅ MongoDB MemoryServer iniciado en: ${uri}`);
-                return;
-            } catch (memErr: any) {
-                console.error('❌ Error iniciando MongoMemoryServer:', memErr);
-                process.exit(1);
-            }
-        }
-        process.exit(1);
-    }
+  try {
+    const conn = await mongoose.connect(appConfig.mongoUri);
+    logger.info(`✅ MongoDB conectado: ${conn.connection.host}`);
+    return;
+  } catch (error) {
+    logger.error(`❌ Error de conexión a MongoDB: ${(error as Error).message}`);
+    if (appConfig.isProduction) throw error;
+  }
+
+  const { MongoMemoryServer } = await import('mongodb-memory-server');
+  const server = await MongoMemoryServer.create();
+  memoryServer = server;
+  const uri = server.getUri();
+  await mongoose.connect(uri);
+  logger.warn(`⚠️  Usando MongoDB en memoria (solo desarrollo): ${uri}`);
 };
 
-export const stopMemoryServer = async () => {
-    try {
-        if (memoryServer) await memoryServer.stop();
-    } catch (e) { /* noop */ }
+export const disconnectDB = async (): Promise<void> => {
+  await mongoose.disconnect();
+  await stopMemoryServer();
+};
+
+export const stopMemoryServer = async (): Promise<void> => {
+  try {
+    if (memoryServer) await memoryServer.stop();
+  } catch {
+    /* noop */
+  }
+  memoryServer = null;
 };

@@ -6,11 +6,10 @@ import {
   sendCustomerNotification as sendCustomerWhatsApp,
 } from '../modules/notifications/whatsapp.service';
 import { NotificationJob } from '../queue/notificationQueue';
+import logger from '../config/logger';
 
 if (!appConfig.redisUrl) {
-  console.error(
-    '❌ REDIS_URL no está configurado. El worker de notificaciones no puede iniciarse.',
-  );
+  logger.fatal('❌ REDIS_URL no está configurado. El worker de notificaciones no puede iniciarse.');
   process.exit(1);
 }
 
@@ -35,12 +34,12 @@ const worker = new Worker<NotificationJob>(
 );
 
 worker.on('completed', (job) => {
-  console.log(`✅ Notificación procesada: ${job.name} (#${job.id})`);
+  logger.info(`✅ Notificación procesada: ${job.name} (#${job.id})`);
 });
 
 worker.on('failed', (job, err) => {
-  console.error(`❌ Notificación fallida: ${job?.name} (#${job?.id})`, err);
+  logger.error({ msg: `❌ Notificación fallida: ${job?.name} (#${job?.id})`, err: err.message });
 });
 
-console.log('🚀 Worker de notificaciones WhatsApp iniciado');
+logger.info('🚀 Worker de notificaciones WhatsApp iniciado');
 

@@ -65,7 +65,7 @@ export class ProductRepository extends BaseRepository<IProduct> {
     return await this.model.findOneAndUpdate(
       query,
       { $inc: { stock: quantity } },
-      { new: true }
+      { returnDocument: 'after' }
     );
   }
 
@@ -121,7 +121,7 @@ export class ProductRepository extends BaseRepository<IProduct> {
     return await this.model.findOneAndUpdate(
       query,
       { $inc: { stock: -quantity } },
-      { new: true }
+      { returnDocument: 'after' }
     );
   }
 }

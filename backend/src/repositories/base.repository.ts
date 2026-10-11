@@ -33,8 +33,8 @@ export interface FindResult<T> {
 
 export abstract class BaseRepository<T extends Document> {
   protected model: any;
-  protected useCache: boolean = false;
-  protected cacheTTL: number = 300;
+  protected useCache = false;
+  protected cacheTTL = 300;
   protected collectionName: string;
 
   constructor(model: any, options?: { useCache?: boolean; cacheTTL?: number }) {
@@ -44,7 +44,7 @@ export abstract class BaseRepository<T extends Document> {
     if (options?.cacheTTL) this.cacheTTL = options.cacheTTL;
   }
 
-  protected buildCacheKey(operation: string, tenantId?: string, extra: string = ''): string {
+  protected buildCacheKey(operation: string, tenantId?: string, extra = ''): string {
     return cacheService.buildKey(this.collectionName, tenantId, operation, extra);
   }
 
@@ -178,7 +178,7 @@ export abstract class BaseRepository<T extends Document> {
     if (tenantId) {
       (query as any).tenantId = tenantId;
     }
-    const result = await this.model.findOneAndUpdate(query, data, { new: true });
+    const result = await this.model.findOneAndUpdate(query, data, { returnDocument: 'after' });
     if (this.useCache) {
       await cacheService.delPattern(`cache:${this.collectionName}:*`);
     }

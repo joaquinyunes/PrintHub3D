@@ -7,14 +7,14 @@ import { sendAdminNotification, sendCustomerNotification } from '../notification
 import { OrderService } from './order.service';
 import { appConfig } from '../../config';
 import Settings from '../settings/settings.model';
+import Order from './order.model';
+import Filament from '../filaments/filament.model';
+import Printer from '../printers/printer.model';
 import { findCustomVideoUrl } from '../../utils/customCodeVideoMatch';
 import { reqParam } from '../../utils/reqParam';
+import { AppError } from '../../utils/AppError';
 
-const getTenantId = (req: any): string => {
-  const tid = req.tenantId || req.user?.tenantId;
-  if (!tid) return '';
-  return Array.isArray(tid) ? (tid[0] || '') : (tid as string);
-};
+const getTenantId = (req: Request): string => req.tenantId || req.user?.tenantId || '';
 
 const orderRepository = new OrderRepository();
 const productRepository = new ProductRepository();
@@ -48,7 +48,7 @@ const buildTrackingUrl = (baseUrl: string, trackingCode: string) => {
 // ==========================================
 export const getOrders = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req) as string;
+        const tenantId = getTenantId(req);
         if (!tenantId) {
             return res.status(401).json({ message: 'No autorizado' });
         }
@@ -88,14 +88,14 @@ export const getOrders = async (req: Request, res: Response) => {
 // ==========================================
 export const createOrder = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req) as string;
+        const tenantId = getTenantId(req);
         if (!tenantId) {
             return res.status(401).json({ message: 'No autorizado' });
         }
 
         const { 
             clientName, origin, paymentMethod, deposit, 
-            notes, items, dueDate, files, customerContact 
+            notes, items, dueDate, files, customerContact, chatLink
         } = req.body;
 
         logger.info("Recibiendo pedido:", { clientName, dueDate, itemsLength: items?.length });
@@ -111,6 +111,7 @@ export const createOrder = async (req: Request, res: Response) => {
             dueDate,
             files,
             customerContact,
+            chatLink,
         });
 
         res.status(201).json(savedOrder);
@@ -141,12 +142,6 @@ export const createPublicOrder = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Datos inválidos' });
         }
 
-        // Calculate total
-        let total = 0;
-        items.forEach((i: any) => {
-            total += Number(i.price || 0) * Number(i.quantity || 1);
-        });
-
         const savedOrder = await OrderService.createOrder({
             tenantId: defaultTenantId,
             clientName,
@@ -154,6 +149,8 @@ export const createPublicOrder = async (req: Request, res: Response) => {
             paymentMethod: 'WhatsApp',
             deposit: 0,
             notes: notes || '',
+            // Visitante anónimo: el precio sale del catálogo, nunca del body.
+            trustClientPrices: false,
             items,
             dueDate: null,
             files: [],
@@ -163,16 +160,21 @@ export const createPublicOrder = async (req: Request, res: Response) => {
         // Return order with WhatsApp link
         const order = savedOrder as any;
         const phone = '5493794000000';
-        const waText = encodeURIComponent(`Hola! Acabo de hacer un pedido desde la web.\n\nCódigo: ${order.trackingCode}\nTotal: $${total}\n\nProductos:\n${items.map((i: any) => `- ${i.productName} x${i.quantity}`).join('\n')}`);
-        
+        const lines = (order.items as Array<{ productName: string; quantity: number }>)
+            .map((i) => `- ${i.productName} x${i.quantity}`)
+            .join('\n');
+        const waText = encodeURIComponent(`Hola! Acabo de hacer un pedido desde la web.\n\nCódigo: ${order.trackingCode}\nTotal: $${order.total}\n\nProductos:\n${lines}`);
+
         res.status(201).json({
-            ...order,
+            ...(typeof order.toObject === 'function' ? order.toObject() : order),
             whatsappUrl: `https://wa.me/${phone}?text=${waText}`,
-            total
         });
     } catch (error: any) {
         if (String(error?.message || '').startsWith('Stock insuficiente')) {
             return res.status(409).json({ message: error.message });
+        }
+        if (error instanceof AppError) {
+            return res.status(error.statusCode).json({ message: error.message });
         }
         logger.error("CRITICAL ERROR createPublicOrder:", error);
         res.status(500).json({ message: 'Error al crear pedido' });
@@ -185,19 +187,21 @@ export const createPublicOrder = async (req: Request, res: Response) => {
 export const updateOrder = async (req: Request, res: Response) => {
     try {
         const id = reqParam(req, 'id');
-        const tenantId = getTenantId(req) as string;
+        const tenantId = getTenantId(req);
         const { items } = req.body;
         
-        let updateData = { ...req.body };
+        const updateData = { ...req.body };
 
         // Recalcular total si cambian los items
         if (items && Array.isArray(items)) {
             let newTotal = 0;
-            items.forEach((i: any) => newTotal += Number(i.price || 0) * Number(i.quantity || 0));
+            items.forEach((i: { price?: number; quantity?: number }) => {
+                newTotal += Number(i.price || 0) * Number(i.quantity || 0);
+            });
             updateData.total = newTotal;
         }
 
-        const updatedOrder = await orderRepository.update(id, updateData as any, String(tenantId));
+        const updatedOrder = await orderRepository.update(id, updateData, tenantId);
 
         if (!updatedOrder) return res.status(404).json({ message: "Pedido no encontrado" });
         res.json(updatedOrder);
@@ -212,25 +216,24 @@ export const updateOrder = async (req: Request, res: Response) => {
 // ==========================================
 export const updateOrderStatus = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req) as string;
+        const tenantId = getTenantId(req);
         const id = reqParam(req, 'id');
         const { status, printTimeMinutes, printerId, filamentId, filamentGrams } = req.body;
         if (!status || !Object.keys(statusCopy).includes(String(status))) {
             return res.status(400).json({ message: 'Estado inválido' });
         }
 
-        const existingOrder: any = await orderRepository.findById(id, String(tenantId));
+        const existingOrder = await orderRepository.findById(id, tenantId);
         if (!existingOrder) {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
 
-        const updateData: any = { status };
+        const updateData: Record<string, unknown> = { status };
 
         // Descontar filamento consumido al arrancar la impresión
         if (status === 'in_progress' && filamentId && Number(filamentGrams) > 0) {
             try {
-                const Filament = require('../filaments/filament.model').default;
-                const fil: any = await Filament.findOne({ _id: filamentId, tenantId });
+                const fil = await Filament.findOne({ _id: filamentId, tenantId });
                 if (fil) {
                     fil.gramsRemaining = Math.max(0, fil.gramsRemaining - Number(filamentGrams));
                     await fil.save();
@@ -242,38 +245,37 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         }
 
         try {
-            const Printer = require('../printers/printer.model').default;
-            if (Printer) {
-                if (status === 'in_progress' && printerId) {
-                    updateData.startedAt = new Date();
-                    if (printTimeMinutes) updateData.printTimeMinutes = printTimeMinutes;
-                    await Printer.findByIdAndUpdate(printerId, { status: 'printing', currentOrderId: id });
-                }
+            if (status === 'in_progress' && printerId) {
+                updateData.startedAt = new Date();
+                if (printTimeMinutes) updateData.printTimeMinutes = printTimeMinutes;
+                await Printer.findByIdAndUpdate(printerId, { status: 'printing', currentOrderId: id });
+            }
 
-                if ((status === 'completed' || status === 'terminado')) {
-                    updateData.finishedAt = new Date();
-                    await Printer.updateMany({ currentOrderId: id }, { status: 'idle', $unset: { currentOrderId: "" } });
+            if (status === 'completed') {
+                updateData.finishedAt = new Date();
+                await Printer.updateMany({ currentOrderId: id }, { status: 'idle', $unset: { currentOrderId: "" } });
 
-                    const currentOrder: any = await orderRepository.findById(id, String(tenantId));
-                    if (currentOrder && !(currentOrder as any).adminNotified) {
-                        const itemNames = (currentOrder as any).items.map((i: any) => i.productName).join(', ');
-                        const msg = `✅ *IMPRESIÓN FINALIZADA*\n👤 ${currentOrder.clientName}\n📦 ${itemNames}\n🚀 Máquina liberada.`;
-                        if(typeof sendAdminNotification === 'function') await sendAdminNotification(msg);
-                        updateData.adminNotified = true;
-                    }
+                const currentOrder = await orderRepository.findById(id, tenantId);
+                if (currentOrder && !currentOrder.adminNotified) {
+                    const itemNames = currentOrder.items.map((i) => i.productName).join(', ');
+                    const msg = `✅ *IMPRESIÓN FINALIZADA*
+👤 ${currentOrder.clientName}
+📦 ${itemNames}
+🚀 Máquina liberada.`;
+                    await sendAdminNotification(msg);
+                    updateData.adminNotified = true;
                 }
             }
         } catch (printerError) {
             logger.error("Printer/Notification Warning:", printerError);
         }
 
-        const order = await orderRepository.update(id, updateData, String(tenantId));
+        const order = await orderRepository.update(id, updateData, tenantId);
 
-        if (order?.customerContact && typeof sendCustomerNotification === 'function') {
-            const Settings = require('../settings/settings.model').default;
+        if (order?.customerContact) {
             const settings = await Settings.findOne({ tenantId: order.tenantId || appConfig.defaultTenantId });
             const statusText = statusCopy[status] || status;
-            const trackingCode = (order as any).trackingCode || 'sin código';
+            const trackingCode = order.trackingCode || 'sin código';
             const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || 'http://localhost:3000/track', trackingCode);
             const templateKey = (status in statusCopy ? status : 'pending') as 'pending' | 'in_progress' | 'post_processing' | 'completed' | 'delivered' | 'cancelled';
             const template = settings?.customerMessageTemplates?.[templateKey]
@@ -287,7 +289,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 businessName: settings?.businessName || 'Global 3D',
             });
 
-            await sendCustomerNotification((order as any).customerContact, message);
+            await sendCustomerNotification(order.customerContact, message);
         }
 
         res.json(order);
@@ -302,7 +304,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 // ==========================================
 export const markOrderItemPrinted = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req) as string;
+        const tenantId = getTenantId(req);
         const id = reqParam(req, 'id');
         const { itemIndex } = req.body as { itemIndex: number };
 
@@ -313,17 +315,17 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'itemIndex requerido' });
         }
 
-        const order = await orderRepository.findById(id, String(tenantId));
+        const order = await orderRepository.findById(id, tenantId);
         if (!order) {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
 
         const index = Number(itemIndex);
-        if (!(order as any).items[index]) {
+        if (!order.items[index]) {
             return res.status(400).json({ message: 'Ítem inválido' });
         }
 
-        const item: any = (order as any).items[index];
+        const item = order.items[index];
         const qty = Number(item.quantity || 0);
         const alreadyPrinted = Number(item.printedQuantity || 0);
 
@@ -336,22 +338,19 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
 
         // 2️⃣ ¡CLAVE! Liberamos la impresora SIEMPRE que se termina una pieza
         try {
-            const Printer = require('../printers/printer.model').default;
-            if (Printer) {
-                await Printer.updateMany(
-                    { currentOrderId: id }, 
-                    { status: 'idle', $unset: { currentOrderId: 1 } }
-                );
-            }
+            await Printer.updateMany(
+                { currentOrderId: id },
+                { status: 'idle', $unset: { currentOrderId: 1 } }
+            );
         } catch (printerError) {
             logger.error("Printer Warning:", printerError);
         }
 
         // 3️⃣ Recalcular estado global del pedido según items impresos
-        const totalItems = (order as any).items.length;
+        const totalItems = order.items.length;
         let printedItems = 0;
 
-        (order as any).items.forEach((it: any) => {
+        order.items.forEach((it) => {
             const q = Number(it.quantity || 0);
             const printed = Number(it.printedQuantity || 0);
             if (q > 0 && printed >= q) printedItems += 1;
@@ -359,16 +358,16 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
 
         if (printedItems === totalItems && totalItems > 0) {
             // Si ya no falta nada, el pedido se completa
-            (order as any).status = 'completed';
-            (order as any).finishedAt = new Date();
+            order.status = 'completed';
+            order.finishedAt = new Date();
         } else {
             // Si faltan piezas, VUELVE A LA COLA y reseteamos el tiempo
-            (order as any).status = 'pending';
-            (order as any).startedAt = undefined;
-            (order as any).printTimeMinutes = undefined;
+            order.status = 'pending';
+            order.startedAt = undefined;
+            order.printTimeMinutes = undefined;
         }
 
-        await (order as any).save();
+        await order.save();
 
         return res.json(order);
     } catch (error) {
@@ -382,7 +381,7 @@ export const markOrderItemPrinted = async (req: Request, res: Response) => {
 // ==========================================
 export const registerOrderSale = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req) as string;
+        const tenantId = getTenantId(req);
         const id = reqParam(req, 'id');
         const { finalCost } = req.body;
 
@@ -426,10 +425,10 @@ export const getOrderByTrackingCode = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
 
-        const currentStep = Math.max(statusSteps.indexOf((order as any).status), 0);
+        const currentStep = Math.max(statusSteps.indexOf(order.status), 0);
         const progress = Math.round((currentStep / (statusSteps.length - 1)) * 100);
 
-        const statusLabel = statusCopy[(order as any).status] || (order as any).status;
+        const statusLabel = statusCopy[order.status] || order.status;
         const steps = statusSteps.map((s, i) => ({
             key: s,
             label: statusCopy[s] || s,
@@ -440,31 +439,31 @@ export const getOrderByTrackingCode = async (req: Request, res: Response) => {
 
         let customVideoUrl: string | null = null;
         try {
-            const tenantId = (order as any).tenantId || appConfig.defaultTenantId;
+            const tenantId = order.tenantId || appConfig.defaultTenantId;
             const settings = await Settings.findOne({ tenantId }).lean();
-            const raw = (settings as any)?.homepageSections?.customCodes;
+            const raw = (settings?.homepageSections as { customCodes?: unknown } | undefined)?.customCodes;
             const customCodes = Array.isArray(raw) ? raw : [];
-            customVideoUrl = findCustomVideoUrl(String(trackingCode), customCodes);
+            customVideoUrl = findCustomVideoUrl(String(trackingCode), customCodes as Parameters<typeof findCustomVideoUrl>[1]);
         } catch (lookupErr) {
             logger.error('getOrderByTrackingCode customVideo lookup:', lookupErr);
         }
 
         return res.json({
-            id: (order as any)._id,
-            trackingCode: (order as any).trackingCode,
+            id: order._id,
+            trackingCode: order.trackingCode,
             clientName: order.clientName,
-            status: (order as any).status,
+            status: order.status,
             statusLabel,
             progress,
-            dueDate: (order as any).dueDate,
+            dueDate: order.dueDate,
             createdAt: order.createdAt,
-            notes: (order as any).notes,
-            items: (order as any).items,
-            total: (order as any).total,
-            paymentMethod: (order as any).paymentMethod,
-            deposit: (order as any).deposit,
-            customerSatisfaction: (order as any).customerSatisfaction,
-            customerFeedback: (order as any).customerFeedback,
+            notes: order.notes,
+            items: order.items,
+            total: order.total,
+            paymentMethod: order.paymentMethod,
+            deposit: order.deposit,
+            customerSatisfaction: order.customerSatisfaction,
+            customerFeedback: order.customerFeedback,
             media: { message: 'Tu pedido está en producción' },
             statusSteps: steps,
             customVideoUrl,
@@ -493,13 +492,13 @@ export const submitOrderFeedback = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
 
-        if ((order as any).status !== 'delivered') {
+        if (order.status !== 'delivered') {
             return res.status(400).json({ message: 'Solo puedes valorar pedidos entregados' });
         }
 
-        (order as any).customerSatisfaction = parsedRating;
-        (order as any).customerFeedback = String(feedback || '').trim();
-        await (order as any).save();
+        order.customerSatisfaction = parsedRating;
+        order.customerFeedback = String(feedback || '').trim();
+        await order.save();
 
         return res.json({ message: 'Gracias por tu opinión', order });
     } catch (error) {
@@ -513,30 +512,29 @@ export const submitOrderFeedback = async (req: Request, res: Response) => {
 // ==========================================
 export const resendTrackingToCustomer = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req) as string;
+        const tenantId = getTenantId(req);
         const id = reqParam(req, 'id');
 
-        const order = await orderRepository.findById(id, String(tenantId));
+        const order = await orderRepository.findById(id, tenantId);
         if (!order) return res.status(404).json({ message: 'Pedido no encontrado' });
 
-        if (!(order as any).customerContact) {
+        if (!order.customerContact) {
             return res.status(400).json({ message: 'Este pedido no tiene contacto del cliente' });
         }
 
-        const Settings = require('../settings/settings.model').default;
         const settings = await Settings.findOne({ tenantId: tenantId || appConfig.defaultTenantId });
-        const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || 'http://localhost:3000/track', (order as any).trackingCode);
+        const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || 'http://localhost:3000/track', order.trackingCode);
         const template = settings?.customerMessageTemplates?.resendTracking
             || 'Hola {clientName} 👋 Aquí tienes nuevamente tu código de seguimiento: {trackingCode}. Consulta tu pedido en {trackingUrl}';
 
         const msg = fillTemplate(template, {
             clientName: order.clientName,
-            trackingCode: (order as any).trackingCode,
-            status: statusCopy[(order as any).status] || (order as any).status,
+            trackingCode: order.trackingCode,
+            status: statusCopy[order.status] || order.status,
             trackingUrl,
             businessName: settings?.businessName || 'Global 3D',
         });
-        const sent = await sendCustomerNotification((order as any).customerContact, msg);
+        const sent = await sendCustomerNotification(order.customerContact, msg);
 
         if (!sent) {
             return res.status(500).json({ message: 'No se pudo enviar el mensaje de seguimiento' });
@@ -554,7 +552,7 @@ export const resendTrackingToCustomer = async (req: Request, res: Response) => {
 // ==========================================
 export const getOrdersSummary = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req) as string;
+        const tenantId = getTenantId(req);
         const summary = await orderRepository.getOrdersSummary(tenantId);
         return res.json(summary);
     } catch (error) {
@@ -568,26 +566,26 @@ export const getOrdersSummary = async (req: Request, res: Response) => {
 // ==========================================
 export const getOrderTimeline = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req) as string;
+        const tenantId = getTenantId(req);
         const id = reqParam(req, 'id');
 
-        const order = await orderRepository.findById(id, String(tenantId));
+        const order = await orderRepository.findById(id, tenantId);
         if (!order) {
             return res.status(404).json({ message: 'Pedido no encontrado' });
         }
 
         const timeline = [
             { key: 'created', label: 'Pedido creado', date: order.createdAt },
-            { key: 'started', label: 'Producción iniciada', date: (order as any).startedAt || null },
-            { key: 'finished', label: 'Producción finalizada', date: (order as any).finishedAt || null },
-            { key: 'delivered', label: 'Pedido entregado', date: (order as any).status === 'delivered' ? (order as any).updatedAt : null },
+            { key: 'started', label: 'Producción iniciada', date: order.startedAt || null },
+            { key: 'finished', label: 'Producción finalizada', date: order.finishedAt || null },
+            { key: 'delivered', label: 'Pedido entregado', date: order.status === 'delivered' ? order.updatedAt : null },
         ];
 
         return res.json({
-            orderId: (order as any)._id,
-            trackingCode: (order as any).trackingCode,
-            status: (order as any).status,
-            dueDate: (order as any).dueDate || null,
+            orderId: order._id,
+            trackingCode: order.trackingCode,
+            status: order.status,
+            dueDate: order.dueDate || null,
             timeline,
         });
     } catch (error) {
@@ -601,8 +599,7 @@ export const getOrderTimeline = async (req: Request, res: Response) => {
 // ==========================================
 export const fixOrdersData = async (req: Request, res: Response) => {
     try {
-        const tenantId = getTenantId(req) as string;
-        const Order = require('./order.model').default;
+        const tenantId = getTenantId(req);
         await Order.collection.updateMany({ tenantId }, { $rename: { "customerName": "clientName" } });
         res.json({ message: "✅ ¡Base de datos reparada!" });
     } catch (error) {

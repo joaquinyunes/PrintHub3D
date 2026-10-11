@@ -5,6 +5,7 @@ import Sale from '../sales/sale.model';
 import Client from '../clients/client.model';
 import { InventoryService } from '../products/inventory.service';
 import InventoryMovement from '../inventory/inventory-movement.model';
+import { AppError } from '../../utils/AppError';
 
 const orderRepository = new OrderRepository();
 const productRepository = new ProductRepository();
@@ -30,6 +31,13 @@ export interface CreateOrderInput {
   dueDate?: string | Date | null;
   files?: Array<{ name: string; url: string }>;
   customerContact?: string;
+  chatLink?: string;
+  /**
+   * `false` para pedidos que vienen de un visitante anónimo (checkout web): el
+   * precio SIEMPRE sale del producto guardado en la base y no se aceptan ítems
+   * "personalizados" ni sin productId. Por defecto `true` (panel admin/staff).
+   */
+  trustClientPrices?: boolean;
 }
 
 export interface RegisterOrderSaleInput {
@@ -101,19 +109,34 @@ export const OrderService = {
       paymentMethod,
       deposit,
       notes,
-      items,
       dueDate,
       files,
       customerContact,
+      chatLink,
     } = input;
+    const trustClientPrices = input.trustClientPrices !== false;
 
     if (!tenantId) {
       throw new Error('TenantId requerido para crear pedido');
     }
 
-    if (!clientName || !Array.isArray(items) || items.length === 0) {
+    if (!clientName || !Array.isArray(input.items) || input.items.length === 0) {
       throw new Error('Datos de pedido incompletos');
     }
+
+    // Pedidos anónimos: el cliente solo elige producto y cantidad; el precio lo pone el servidor.
+    const items: OrderItemInput[] = trustClientPrices
+      ? input.items
+      : input.items.map((item) => {
+          if (!item.productId) {
+            throw new AppError('Cada producto del pedido debe estar en el catálogo', 400);
+          }
+          return {
+            ...item,
+            isCustom: false,
+            quantity: Math.min(1000, Math.max(1, Math.floor(Number(item.quantity) || 1))),
+          };
+        });
 
     let calculatedTotal = 0;
     let calculatedCost = 0;
@@ -142,7 +165,7 @@ export const OrderService = {
             return null;
           });
           if (!product) {
-            throw new Error('Uno de los productos del pedido ya no está disponible');
+            throw new AppError('Uno de los productos del pedido ya no está disponible', 409);
           }
           productCost = product.cost ?? 0;
           effectivePrice = product.price ?? 0;
@@ -180,6 +203,7 @@ export const OrderService = {
       notes,
       trackingCode,
       customerContact: customerContact || '',
+      chatLink: chatLink || '',
       items: enrichedItems,
       total: calculatedTotal,
       dueDate: dueDate ? new Date(dueDate) : null,
@@ -221,7 +245,7 @@ export const OrderService = {
     // Actualizar CRM de forma no bloqueante
     try {
       if (Client) {
-        let client = await Client.findOne({ name: clientName, tenantId });
+        const client = await Client.findOne({ name: clientName, tenantId });
         if (client) {
           client.totalSpent += calculatedTotal;
           client.orderCount += 1;

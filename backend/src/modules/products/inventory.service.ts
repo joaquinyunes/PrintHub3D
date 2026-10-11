@@ -66,7 +66,7 @@ export const InventoryService = {
       [];
 
     for (const item of items) {
-      let product = await Product.findOne({
+      const product = await Product.findOne({
         name: { $regex: new RegExp(`^${item.name}$`, 'i') },
         tenantId,
       });

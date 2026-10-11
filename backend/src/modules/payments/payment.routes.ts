@@ -7,6 +7,7 @@ import { enqueueNotification } from '../../queue/notificationQueue';
 import { paymentLimiter } from '../../middlewares/rateLimiter';
 import { appConfig } from '../../config';
 import logger from '../../config/logger';
+import { AppError } from '../../utils/AppError';
 
 const router = Router();
 
@@ -36,12 +37,13 @@ router.post('/create-preference', paymentLimiter, async (req: Request, res: Resp
         paymentMethod: 'MercadoPago',
         deposit: 0,
         notes: notes || '',
+        // Visitante anónimo: el precio se toma SIEMPRE del catálogo, nunca del body.
+        trustClientPrices: false,
         items: items.map((i: any) => ({
-          productId: i.productId,
-          productName: i.productName || i.name,
+          productId: i.productId ? String(i.productId) : undefined,
+          productName: String(i.productName || i.name || ''),
           quantity: Number(i.quantity) || 1,
-          price: Number(i.price) || 0,
-          isCustom: !!i.isCustom,
+          price: 0,
         })),
         dueDate: null,
         files: [],
@@ -82,6 +84,9 @@ router.post('/create-preference', paymentLimiter, async (req: Request, res: Resp
   } catch (error: any) {
     if (String(error?.message || '').startsWith('Stock insuficiente')) {
       return res.status(409).json({ message: error.message });
+    }
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).json({ message: error.message });
     }
     logger.error('Error creando preferencia MP:', error);
     res.status(500).json({ message: 'Error al crear preferencia de pago' });

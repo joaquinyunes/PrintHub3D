@@ -15,6 +15,8 @@ export const CreateOrderSchema = z.object({
     isCustom: z.boolean().optional(),
     productType: z.string().optional(),
     printTimeMinutes: z.number().min(0).optional(),
+    // Progreso de impresión: sin esto, editar un pedido lo reseteaba a 0 (zod descarta lo no declarado).
+    printedQuantity: z.number().min(0).optional(),
   })).min(1, 'Debe haber al menos un producto'),
   dueDate: z.union([z.string(), z.date(), z.null()]).optional(),
   files: z.array(z.object({
@@ -22,6 +24,7 @@ export const CreateOrderSchema = z.object({
     url: z.string(),
   })).optional(),
   customerContact: z.string().optional(),
+  chatLink: z.string().optional(),
 });
 
 // Schema para editar pedido (todos los campos opcionales: permite updates parciales

@@ -15,13 +15,13 @@ router.get('/status', protect, withTenant, adminOnly, (_req, res: Response) => {
 });
 
 // Listar comprobantes
-router.get('/', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.get('/', protect, withTenant, adminOnly, async (req, res) => {
   const items = await Invoice.find({ tenantId: req.tenantId }).sort({ createdAt: -1 }).limit(200);
   res.json({ items });
 });
 
 // Emitir factura de un pedido
-router.post('/order/:id', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.post('/order/:id', protect, withTenant, adminOnly, async (req, res) => {
   try {
     const order: any = await Order.findOne({ _id: reqParam(req, 'id'), tenantId: req.tenantId });
     if (!order) return res.status(404).json({ message: 'Pedido no encontrado' });

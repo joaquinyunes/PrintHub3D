@@ -12,7 +12,7 @@ const productRepository = new ProductRepository();
 ====================================================== */
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).user?.tenantId;
+    const tenantId = req.user?.tenantId;
 
     if (!tenantId) {
       return res.status(401).json({ message: "No autorizado" });
@@ -74,7 +74,7 @@ const sanitizeProductNumbers = (payload: any) => {
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).user?.tenantId;
+    const tenantId = req.user?.tenantId;
     if (!tenantId) return res.status(401).json({ message: "No autorizado" });
 
     const {
@@ -92,7 +92,7 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
     // 1. INTENTAR BUSCAR EXISTENTE (Por SKU o Por Nombre)
-    let product: any = await productRepository.findBySkuOrName(tenantId, sku, name);
+    const product: any = await productRepository.findBySkuOrName(tenantId, sku, name);
 
     if (product) {
       product.stock += numbers.stock;
@@ -138,7 +138,7 @@ export const createProduct = async (req: Request, res: Response) => {
 ====================================================== */
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).user?.tenantId;
+    const tenantId = req.user?.tenantId;
     const id = reqParam(req, 'id');
 
     const deleted = await productRepository.delete(id, tenantId as string);
@@ -158,7 +158,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
 ====================================================== */
 export const updateProduct = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).user?.tenantId;
+    const tenantId = req.user?.tenantId;
     const id = reqParam(req, 'id');
 
     const allowedFields = [
@@ -214,8 +214,8 @@ export const updateProduct = async (req: Request, res: Response) => {
 ====================================================== */
 export const quickSell = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
-        const user = (req as any).user;
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const user = req.user;
         if (!tenantId) {
             return res.status(401).json({ message: "No autorizado" });
         }
@@ -247,8 +247,8 @@ export const quickSell = async (req: Request, res: Response) => {
 export const bulkAddStock = async (req: Request, res: Response) => {
     try {
         const { items } = req.body;
-        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
-        const user = (req as any).user;
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const user = req.user;
 
         if (!tenantId) {
             return res.status(401).json({ message: "No autorizado" });
@@ -270,7 +270,7 @@ export const bulkAddStock = async (req: Request, res: Response) => {
 
 export const getProductsSummary = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).user?.tenantId;
+        const tenantId = req.user?.tenantId;
         if (!tenantId) return res.status(401).json({ message: 'No autorizado' });
 
         const summary = await productRepository.getProductsSummary(tenantId);

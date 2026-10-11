@@ -1,13 +1,13 @@
 import { Router, Request, Response } from 'express';
 import TenantSettings from './tenant.model';
-import { protect, adminOnly } from '../auth/auth.middleware';
+import { protect, adminOnly, authUser } from '../auth/auth.middleware';
 
 const router = Router();
 
 // Obtener configuración del tenant (requiere autenticación)
-router.get('/', protect, adminOnly, async (req: any, res) => {
+router.get('/', protect, adminOnly, async (req, res) => {
   try {
-    const tenantId = req.user.tenantId;
+    const tenantId = authUser(req).tenantId;
     let settings = await TenantSettings.findOne({ tenantId }).lean();
 
     if (!settings) {
@@ -23,9 +23,9 @@ router.get('/', protect, adminOnly, async (req: any, res) => {
 });
 
 // Actualizar configuración (solo admin)
-router.put('/', protect, adminOnly, async (req: any, res) => {
+router.put('/', protect, adminOnly, async (req, res) => {
   try {
-    const tenantId = req.user.tenantId;
+    const tenantId = authUser(req).tenantId;
     const { name, currency, locale, features } = req.body;
 
     const update: any = {};
@@ -37,7 +37,7 @@ router.put('/', protect, adminOnly, async (req: any, res) => {
     const settings = await TenantSettings.findOneAndUpdate(
       { tenantId },
       update,
-      { new: true, upsert: true },
+      { returnDocument: 'after', upsert: true },
     );
 
     res.json(settings);

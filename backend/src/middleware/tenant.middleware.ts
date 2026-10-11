@@ -9,15 +9,26 @@ declare global {
   }
 }
 
+/**
+ * Resuelve el tenant de la request.
+ *
+ * - Usuario autenticado: SIEMPRE el tenant de su token. El header `x-tenant-id`
+ *   se ignora, si no cualquier usuario podría leer datos de otro taller.
+ * - Sin usuario (solo desarrollo): header `x-tenant-id` o el tenant por defecto.
+ */
 export const withTenant = (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  const userTenantId = (req as any).user?.tenantId as string | undefined;
-  const headerTenantId = req.header('x-tenant-id') || undefined;
+  const user = req.user;
 
-  let tenantId = userTenantId || headerTenantId;
+  let tenantId: string | undefined;
+  if (user) {
+    tenantId = user.tenantId;
+  } else if (!appConfig.isProduction) {
+    tenantId = req.header('x-tenant-id') || undefined;
+  }
 
   if (!tenantId && !appConfig.isProduction) {
     // En desarrollo permitimos un tenant por defecto para no romper flujos actuales
@@ -31,4 +42,3 @@ export const withTenant = (
   req.tenantId = tenantId;
   next();
 };
-

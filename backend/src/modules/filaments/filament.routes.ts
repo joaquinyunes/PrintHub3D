@@ -7,7 +7,7 @@ import { reqParam } from '../../utils/reqParam';
 const router = Router();
 
 // Listar filamentos del tenant
-router.get('/', protect, withTenant, staffOrAdmin, async (req: any, res: Response) => {
+router.get('/', protect, withTenant, staffOrAdmin, async (req, res) => {
   try {
     const items = await Filament.find({ tenantId: req.tenantId }).sort({ material: 1, color: 1 });
     res.json({ items });
@@ -17,7 +17,7 @@ router.get('/', protect, withTenant, staffOrAdmin, async (req: any, res: Respons
 });
 
 // Crear
-router.post('/', protect, withTenant, staffOrAdmin, async (req: any, res: Response) => {
+router.post('/', protect, withTenant, staffOrAdmin, async (req, res) => {
   try {
     const { brand, material, color, costPerKg, gramsTotal, gramsRemaining, spools, lowThresholdGrams, notes } = req.body;
     if (!brand) return res.status(400).json({ message: 'La marca es obligatoria' });
@@ -42,7 +42,7 @@ router.post('/', protect, withTenant, staffOrAdmin, async (req: any, res: Respon
 });
 
 // Actualizar
-router.put('/:id', protect, withTenant, staffOrAdmin, async (req: any, res: Response) => {
+router.put('/:id', protect, withTenant, staffOrAdmin, async (req, res) => {
   try {
     const allowed = ['brand', 'material', 'color', 'costPerKg', 'gramsTotal', 'gramsRemaining', 'spools', 'lowThresholdGrams', 'notes'];
     const update: Record<string, unknown> = {};
@@ -51,7 +51,7 @@ router.put('/:id', protect, withTenant, staffOrAdmin, async (req: any, res: Resp
     const filament = await Filament.findOneAndUpdate(
       { _id: reqParam(req, 'id'), tenantId: req.tenantId },
       update,
-      { new: true },
+      { returnDocument: 'after' },
     );
     if (!filament) return res.status(404).json({ message: 'Filamento no encontrado' });
     res.json(filament);
@@ -61,7 +61,7 @@ router.put('/:id', protect, withTenant, staffOrAdmin, async (req: any, res: Resp
 });
 
 // Consumir gramos (descuento por trabajo / ajuste manual)
-router.post('/:id/consume', protect, withTenant, staffOrAdmin, async (req: any, res: Response) => {
+router.post('/:id/consume', protect, withTenant, staffOrAdmin, async (req, res) => {
   try {
     const grams = Number(req.body.grams);
     if (!Number.isFinite(grams) || grams <= 0) {
@@ -79,7 +79,7 @@ router.post('/:id/consume', protect, withTenant, staffOrAdmin, async (req: any, 
 });
 
 // Recargar bobina (suma gramos y opcionalmente una bobina)
-router.post('/:id/refill', protect, withTenant, staffOrAdmin, async (req: any, res: Response) => {
+router.post('/:id/refill', protect, withTenant, staffOrAdmin, async (req, res) => {
   try {
     const filament = await Filament.findOne({ _id: reqParam(req, 'id'), tenantId: req.tenantId });
     if (!filament) return res.status(404).json({ message: 'Filamento no encontrado' });
@@ -95,7 +95,7 @@ router.post('/:id/refill', protect, withTenant, staffOrAdmin, async (req: any, r
 });
 
 // Eliminar
-router.delete('/:id', protect, withTenant, staffOrAdmin, async (req: any, res: Response) => {
+router.delete('/:id', protect, withTenant, staffOrAdmin, async (req, res) => {
   try {
     const deleted = await Filament.findOneAndDelete({ _id: reqParam(req, 'id'), tenantId: req.tenantId });
     if (!deleted) return res.status(404).json({ message: 'Filamento no encontrado' });

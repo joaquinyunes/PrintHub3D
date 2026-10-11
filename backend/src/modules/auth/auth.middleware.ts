@@ -2,18 +2,43 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { appConfig } from '../../config';
 import logger from '../../config/logger';
+import { AppError } from '../../utils/AppError';
 import { body, validationResult } from 'express-validator';
+
+export type UserRole = 'admin' | 'staff' | 'client';
+
+/** Claims del JWT de sesión que `protect` deja en `req.user`. */
+export interface AuthUser {
+    id: string;
+    role: UserRole;
+    tenantId: string;
+    /** Opcional: el login actual no lo incluye en el token. */
+    name?: string;
+}
+
+/** Usuario autenticado de la request. Solo para handlers que ya pasaron por `protect`. */
+export const authUser = (req: Request): AuthUser => {
+    if (!req.user) throw new AppError('No autorizado', 401);
+    return req.user;
+};
+
+declare global {
+    namespace Express {
+        interface Request {
+            user?: AuthUser;
+        }
+    }
+}
 
 // 1. Verificar que esté logueado (Cualquiera)
 export const protect = (req: Request, res: Response, next: NextFunction) => {
     const token =
         req.header('Authorization')?.replace('Bearer ', '') ||
-        (req as any).cookies?.token;
+        req.cookies?.token;
     if (!token) return res.status(401).json({ message: 'No autorizado' });
 
     try {
-        const decoded = jwt.verify(token, appConfig.jwtSecret) as any;
-        (req as any).user = decoded; 
+        req.user = jwt.verify(token, appConfig.jwtSecret) as AuthUser;
         next();
     } catch (error) {
         logger.warn('Token inválido o expirado', { token: token.substring(0, 10) + '...' });
@@ -23,7 +48,7 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
 
 // 2. Verificar que sea ADMIN (Solo el jefe)
 export const adminOnly = (req: Request, res: Response, next: NextFunction) => {
-    if ((req as any).user && (req as any).user.role === 'admin') {
+    if (req.user?.role === 'admin') {
         next();
     } else {
         res.status(403).json({ message: 'Acceso denegado. Se requiere ser Admin.' });
@@ -32,7 +57,7 @@ export const adminOnly = (req: Request, res: Response, next: NextFunction) => {
 
 // 3. Permitir uno de varios roles (ej: operarios además del admin)
 export const allowRoles = (...roles: string[]) => (req: Request, res: Response, next: NextFunction) => {
-    const role = (req as any).user?.role;
+    const role = req.user?.role;
     if (role && roles.includes(role)) {
         next();
     } else {

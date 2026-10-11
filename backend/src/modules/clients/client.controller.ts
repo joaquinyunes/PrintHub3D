@@ -3,7 +3,7 @@ import Client from './client.model';
 
 export const getClients = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+        const tenantId = req.tenantId || req.user?.tenantId;
         if (!tenantId) {
             return res.status(401).json({ message: 'No autorizado' });
         }
@@ -59,7 +59,7 @@ export const getClients = async (req: Request, res: Response) => {
 
 export const updateClient = async (req: Request, res: Response) => {
     try {
-        const tenantId = (req as any).tenantId || (req as any).user?.tenantId;
+        const tenantId = req.tenantId || req.user?.tenantId;
         const { id } = req.params;
         
         if (!tenantId) {
@@ -69,7 +69,7 @@ export const updateClient = async (req: Request, res: Response) => {
         const client = await Client.findOneAndUpdate(
             { _id: id, tenantId },
             req.body,
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         if (!client) {

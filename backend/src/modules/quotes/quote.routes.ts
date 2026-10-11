@@ -68,18 +68,18 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // Admin: listar y actualizar estado
-router.get('/', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.get('/', protect, withTenant, adminOnly, async (req, res) => {
   const items = await Quote.find({ tenantId: req.tenantId }).sort({ createdAt: -1 }).limit(200);
   res.json({ items });
 });
 
-router.patch('/:id', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.patch('/:id', protect, withTenant, adminOnly, async (req, res) => {
   const allowed = ['nuevo', 'contactado', 'convertido', 'descartado'];
   if (!allowed.includes(req.body.status)) return res.status(400).json({ message: 'Estado inválido' });
   const q = await Quote.findOneAndUpdate(
     { _id: reqParam(req, 'id'), tenantId: req.tenantId },
     { status: req.body.status },
-    { new: true },
+    { returnDocument: 'after' },
   );
   if (!q) return res.status(404).json({ message: 'Cotización no encontrada' });
   res.json(q);

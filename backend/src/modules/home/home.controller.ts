@@ -5,7 +5,7 @@ import HomePrinter from '../../models/homePrinter.model';
 // Ideas
 export const getIdeas = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).tenantId || req.headers['x-tenant-id'] || 'global3d_hq';
+    const tenantId = req.tenantId || req.headers['x-tenant-id'] || 'global3d_hq';
     const ideas = await HomeIdea.find({ tenantId });
     res.json(ideas);
   } catch (e) {
@@ -15,7 +15,7 @@ export const getIdeas = async (req: Request, res: Response) => {
 
 export const createIdea = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).tenantId || 'global3d_hq';
+    const tenantId = req.tenantId || 'global3d_hq';
     const { name, image, downloads, link, price, category } = req.body;
     const idea = new (HomeIdea as any)({ name, image, downloads, link, price, category, tenantId });
     await idea.save();
@@ -29,7 +29,7 @@ export const updateIdea = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const update = req.body;
-    const idea = await HomeIdea.findByIdAndUpdate(id, update, { new: true });
+    const idea = await HomeIdea.findByIdAndUpdate(id, update, { returnDocument: 'after' });
     if (!idea) return res.status(404).json({ message: 'Idea no encontrada' });
     res.json(idea);
   } catch (e) {
@@ -51,7 +51,7 @@ export const deleteIdea = async (req: Request, res: Response) => {
 // Printers
 export const getPrinters = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).tenantId || req.headers['x-tenant-id'] || 'global3d_hq';
+    const tenantId = req.tenantId || req.headers['x-tenant-id'] || 'global3d_hq';
     const printers = await HomePrinter.find({ tenantId });
     res.json(printers);
   } catch (e) {
@@ -61,7 +61,7 @@ export const getPrinters = async (req: Request, res: Response) => {
 
 export const createPrinter = async (req: Request, res: Response) => {
   try {
-    const tenantId = (req as any).tenantId || 'global3d_hq';
+    const tenantId = req.tenantId || 'global3d_hq';
     const { name, price, imageUrl, link, description, category } = req.body;
     const printer = new (HomePrinter as any)({ name, price, imageUrl, link, description, category, tenantId });
     await printer.save();
@@ -75,7 +75,7 @@ export const updatePrinter = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const update = req.body;
-    const printer = await HomePrinter.findByIdAndUpdate(id, update, { new: true });
+    const printer = await HomePrinter.findByIdAndUpdate(id, update, { returnDocument: 'after' });
     if (!printer) return res.status(404).json({ message: 'Impresora no encontrada' });
     res.json(printer);
   } catch (e) {

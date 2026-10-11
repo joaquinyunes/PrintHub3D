@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isAdmin = role === "admin";
 
   // Rutas solo-admin: un operario que las tipee vuelve al dashboard (la API igual las bloquea).
-  const ADMIN_ONLY = ["/admin/expenses", "/admin/gastos", "/admin/analytics", "/admin/rentabilidad", "/admin/reports", "/admin/settings", "/admin/setup", "/admin/home", "/admin/usuarios", "/admin/sections", "/admin/social"];
+  const ADMIN_ONLY = ["/admin/expenses", "/admin/analytics", "/admin/rentabilidad", "/admin/reports", "/admin/settings", "/admin/setup", "/admin/home", "/admin/usuarios", "/admin/sections", "/admin/social"];
   useEffect(() => {
     if (isAuthorized && role === "staff" && ADMIN_ONLY.some((p) => pathname.startsWith(p))) {
       router.replace("/admin");
@@ -140,13 +140,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Links de Navegación */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
           <NavItem href="/admin" icon={<LayoutDashboard size={20} />} label="Dashboard" active={pathname === "/admin"} />
-          <NavItem href="/admin/orders" icon={<ShoppingCart size={20} />} label="Pedidos" active={pathname.includes("/orders") || pathname.includes("/pedidos")} />
-          <NavItem href="/admin/production" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/production") || pathname.includes("/produccion")} />
-          <NavItem href="/admin/products" icon={<Package size={20} />} label="Inventario" active={pathname.includes("/products") || pathname.includes("/productos")} />
+          <NavItem href="/admin/orders" icon={<ShoppingCart size={20} />} label="Pedidos" active={pathname.includes("/orders")} />
+          <NavItem href="/admin/production" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/production")} />
+          <NavItem href="/admin/products" icon={<Package size={20} />} label="Inventario" active={pathname.includes("/products")} />
           <NavItem href="/admin/filamento" icon={<Spool size={20} />} label="Filamento" active={pathname.includes("/filamento")} />
           {isAdmin && (
             <>
-              <NavItem href="/admin/expenses" icon={<Wallet size={20} />} label="Gastos" active={pathname.includes("/expenses") || pathname.includes("/gastos")} />
+              <NavItem href="/admin/expenses" icon={<Wallet size={20} />} label="Gastos" active={pathname.includes("/expenses")} />
               <NavItem href="/admin/analytics" icon={<BarChart3 size={20} />} label="Reportes" active={pathname.includes("/analytics")} />
               <NavItem href="/admin/rentabilidad" icon={<Percent size={20} />} label="Rentabilidad" active={pathname.includes("/rentabilidad")} />
             </>

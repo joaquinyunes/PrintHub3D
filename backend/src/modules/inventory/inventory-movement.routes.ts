@@ -1,23 +1,23 @@
 import { Router } from 'express';
 import InventoryMovement from './inventory-movement.model';
-import { protect, staffOrAdmin } from '../auth/auth.middleware';
+import { protect, staffOrAdmin, authUser } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
 
 const router = Router();
 
 // Obtener log de movimientos de inventario
-router.get('/movements', protect, withTenant, staffOrAdmin, async (req: any, res) => {
+router.get('/movements', protect, withTenant, staffOrAdmin, async (req, res) => {
   try {
     const { productId, type, from, to, page = 1, limit = 50 } = req.query;
-    const tenantId = req.user.tenantId;
+    const tenantId = authUser(req).tenantId;
 
     const filter: any = { tenantId };
     if (productId) filter.productId = productId;
     if (type) filter.type = type;
     if (from || to) {
       filter.createdAt = {};
-      if (from) filter.createdAt.$gte = new Date(from);
-      if (to) filter.createdAt.$lte = new Date(to);
+      if (from) filter.createdAt.$gte = new Date(String(from));
+      if (to) filter.createdAt.$lte = new Date(String(to));
     }
 
     const skip = (Number(page) - 1) * Number(limit);
@@ -46,10 +46,10 @@ router.get('/movements', protect, withTenant, staffOrAdmin, async (req: any, res
 });
 
 // Obtener resumen de un producto
-router.get('/movements/product/:productId', protect, withTenant, staffOrAdmin, async (req: any, res) => {
+router.get('/movements/product/:productId', protect, withTenant, staffOrAdmin, async (req, res) => {
   try {
     const { productId } = req.params;
-    const tenantId = req.user.tenantId;
+    const tenantId = authUser(req).tenantId;
 
     const movements = await InventoryMovement.find({ tenantId, productId })
       .sort({ createdAt: -1 })

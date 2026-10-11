@@ -1,15 +1,15 @@
 import { Router, Request, Response } from 'express';
 import ApiKey from './api-key.model';
 import crypto from 'crypto';
-import { protect, adminOnly } from '../auth/auth.middleware';
+import { protect, adminOnly, authUser } from '../auth/auth.middleware';
 
 const router = Router();
 
 // Listar API keys del tenant
-router.get('/', protect, adminOnly, async (req: any, res) => {
+router.get('/', protect, adminOnly, async (req, res) => {
   try {
     const keys = await ApiKey.find({
-      tenantId: req.user.tenantId,
+      tenantId: authUser(req).tenantId,
       active: true,
     }).select('-hashedKey -key').lean();
 
@@ -20,7 +20,7 @@ router.get('/', protect, adminOnly, async (req: any, res) => {
 });
 
 // Crear nueva API key
-router.post('/', protect, adminOnly, async (req: any, res) => {
+router.post('/', protect, adminOnly, async (req, res) => {
   try {
     const { name, scopes, expiresInDays } = req.body;
 
@@ -29,11 +29,11 @@ router.post('/', protect, adminOnly, async (req: any, res) => {
     }
 
     const apiKey = new ApiKey({
-      tenantId: req.user.tenantId,
+      tenantId: authUser(req).tenantId,
       name,
       scopes: scopes || ['orders:read', 'orders:write'],
       expiresAt: expiresInDays ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000) : undefined,
-      createdBy: req.user.id,
+      createdBy: authUser(req).id,
     });
 
     await apiKey.save();
@@ -57,12 +57,12 @@ router.post('/', protect, adminOnly, async (req: any, res) => {
 });
 
 // Revocar API key
-router.delete('/:id', protect, adminOnly, async (req: any, res) => {
+router.delete('/:id', protect, adminOnly, async (req, res) => {
   try {
     const result = await ApiKey.findOneAndUpdate(
-      { _id: req.params.id, tenantId: req.user.tenantId },
+      { _id: req.params.id, tenantId: authUser(req).tenantId },
       { active: false },
-      { new: true },
+      { returnDocument: 'after' },
     );
 
     if (!result) {

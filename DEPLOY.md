@@ -50,6 +50,12 @@ En el panel de MercadoPago configurá la URL de notificaciones:
 `MP_WEBHOOK_SECRET`. `auto_return` de MP no funciona con `localhost`: probá siempre
 con el dominio público.
 
+## Archivos subidos (imágenes y videos)
+Se guardan en MongoDB (GridFS), no en el disco del contenedor: no hay que montar
+ningún volumen extra y el `mongodump` diario ya los incluye. Las imágenes viejas
+que hubieran quedado en `backend/uploads/` se siguen sirviendo mientras existan,
+pero conviene volver a subirlas desde el panel para que queden persistidas.
+
 ## Operación
 
 ```bash

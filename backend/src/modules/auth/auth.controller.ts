@@ -146,7 +146,7 @@ export const login = async (req: Request, res: Response) => {
 // --- GET ME (Obtener usuario actual desde token) ---
 export const getMe = async (req: Request, res: Response) => {
     try {
-        const payload = (req as any).user;
+        const payload = req.user;
         if (!payload) return res.status(401).json({ message: 'No autorizado' });
 
         // Lookup fresco: refleja rol y estado actuales (una cuenta desactivada pierde acceso al panel).
@@ -172,7 +172,7 @@ export const getMe = async (req: Request, res: Response) => {
 // --- LOGOUT (limpia cookies y revoca el refresh token) ---
 export const logout = async (req: Request, res: Response) => {
     try {
-        const token = req.body?.refreshToken || (req as any).cookies?.refreshToken;
+        const token = req.body?.refreshToken || req.cookies?.refreshToken;
         if (token) {
             await RefreshToken.deleteOne({ token }).catch(() => undefined);
         }
@@ -196,7 +196,7 @@ const generateRefreshToken = async (userId: string) => {
 // Endpoint para refrescar tokens
 export const refreshToken = async (req: Request, res: Response) => {
   try {
-    const token = req.body?.token || (req as any).cookies?.refreshToken;
+    const token = req.body?.token || req.cookies?.refreshToken;
     if (!token) return res.status(400).json({ message: 'Refresh token requerido' });
     
     const rt = await RefreshToken.findOne({ token });

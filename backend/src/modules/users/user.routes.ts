@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import User from '../auth/user.model';
-import { protect, adminOnly } from '../auth/auth.middleware';
+import { protect, adminOnly, authUser } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
 import { reqParam } from '../../utils/reqParam';
 import logger from '../../config/logger';
@@ -21,7 +21,7 @@ const publicUser = (u: any) => ({
 });
 
 // Listar usuarios del panel (admin + staff)
-router.get('/', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.get('/', protect, withTenant, adminOnly, async (req, res) => {
   const users = await User.find({ tenantId: req.tenantId, role: panelRoleFilter })
     .select('name email role active createdAt')
     .sort({ createdAt: 1 })
@@ -30,7 +30,7 @@ router.get('/', protect, withTenant, adminOnly, async (req: any, res: Response) 
 });
 
 // Crear usuario del panel
-router.post('/', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.post('/', protect, withTenant, adminOnly, async (req, res) => {
   try {
     const { name, email, role, password } = req.body;
     if (!name || !email) return res.status(400).json({ message: 'Nombre y email son obligatorios' });
@@ -61,7 +61,7 @@ router.post('/', protect, withTenant, adminOnly, async (req: any, res: Response)
 });
 
 // Actualizar (rol / nombre / activo / reset de contraseña)
-router.patch('/:id', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.patch('/:id', protect, withTenant, adminOnly, async (req, res) => {
   try {
     const id = reqParam(req, 'id');
     const target = await User.findOne({ _id: id, tenantId: req.tenantId });
@@ -72,7 +72,7 @@ router.patch('/:id', protect, withTenant, adminOnly, async (req: any, res: Respo
     if (typeof req.body.active === 'boolean') target.active = req.body.active;
 
     // No permitir que el admin se quite a sí mismo el rol o se desactive
-    if (String(target._id) === String(req.user.id) && (target.role !== 'admin' || target.active === false)) {
+    if (String(target._id) === String(authUser(req).id) && (target.role !== 'admin' || target.active === false)) {
       return res.status(400).json({ message: 'No podés quitarte tu propio acceso de admin' });
     }
 
@@ -92,9 +92,9 @@ router.patch('/:id', protect, withTenant, adminOnly, async (req: any, res: Respo
   }
 });
 
-router.delete('/:id', protect, withTenant, adminOnly, async (req: any, res: Response) => {
+router.delete('/:id', protect, withTenant, adminOnly, async (req, res) => {
   const id = reqParam(req, 'id');
-  if (String(id) === String(req.user.id)) return res.status(400).json({ message: 'No podés eliminarte a vos mismo' });
+  if (String(id) === String(authUser(req).id)) return res.status(400).json({ message: 'No podés eliminarte a vos mismo' });
   const deleted = await User.findOneAndDelete({ _id: id, tenantId: req.tenantId, role: panelRoleFilter });
   if (!deleted) return res.status(404).json({ message: 'Usuario no encontrado' });
   res.json({ message: 'Usuario eliminado' });
