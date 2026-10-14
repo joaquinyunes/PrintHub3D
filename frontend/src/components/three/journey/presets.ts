@@ -107,7 +107,7 @@ export const PRINTER_JOURNEY: JourneyPreset = {
       text: 'PLA, PETG, ABS y TPU en bobinas de 1 kg.',
       tags: ['PLA', 'PETG', 'ABS', 'TPU'],
       image: '/demo/fil-pla.svg',
-      photo: '/photos/filamento.jpg',
+      photo: '/photos/filamento-pla.jpg',
     },
     {
       kind: 'nozzles',

@@ -16,6 +16,15 @@ const nextConfig: NextConfig = {
   // Evita que Next infiera la raíz del monorepo (hay dos lockfiles) y anide
   // el output de standalone bajo .next/standalone/frontend/.
   outputFileTracingRoot: path.join(__dirname),
+  // Fotos e ilustraciones casi no cambian: el navegador las reutiliza en vez de pedirlas en cada visita.
+  async headers() {
+    return [
+      {
+        source: "/:dir(photos|demo)/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+    ];
+  },
   async redirects() {
     return Object.entries(LEGACY_ADMIN_ROUTES).map(([source, destination]) => ({
       source,

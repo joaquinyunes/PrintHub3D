@@ -11,7 +11,7 @@ const PHOTOS: Record<string, string> = {
   'imp-x1c': 'impresora',
   'imp-p1s': 'p1s',
   'imp-a1mini': 'a1mini',
-  'fil-pla': 'filamento',
+  'fil-pla': 'filamento-pla',
   'fil-petg': 'petg',
   'fil-abs': 'abs',
   'fil-tpu': 'tpu',

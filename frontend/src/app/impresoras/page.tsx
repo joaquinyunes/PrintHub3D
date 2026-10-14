@@ -1,17 +1,18 @@
-"use client";
+import StoreSectionPage from "@/components/store/StoreSectionPage";
+import { fetchPublicSettings } from "@/lib/storeCatalogData";
 
-import CatalogPage from "@/components/store/CatalogPage";
-import { useStoreSection } from "@/lib/storeCatalog";
+// El catálogo se arma en el servidor y se renueva cada 60 s: la página llega completa
+// aunque el backend esté dormido.
+export const revalidate = 60;
 
-export default function ImpresorasPage() {
-  const { section, contact, loading } = useStoreSection("impresorasSection");
+export default async function ImpresorasPage() {
+  const settings = await fetchPublicSettings();
   return (
-    <CatalogPage
+    <StoreSectionPage
+      sectionKey="impresorasSection"
       kicker="Impresoras"
-      section={section}
-      contact={contact}
-      loading={loading}
       closing="¿Qué impresora te conviene? Te asesoramos según lo que vas a imprimir."
+      initial={settings && { impresorasSection: settings.impresorasSection, contactInfo: settings.contactInfo }}
     />
   );
 }

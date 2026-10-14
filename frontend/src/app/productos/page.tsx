@@ -1,17 +1,18 @@
-"use client";
+import StoreSectionPage from "@/components/store/StoreSectionPage";
+import { fetchPublicSettings } from "@/lib/storeCatalogData";
 
-import CatalogPage from "@/components/store/CatalogPage";
-import { useStoreSection } from "@/lib/storeCatalog";
+// El catálogo se arma en el servidor y se renueva cada 60 s: la página llega completa
+// aunque el backend esté dormido.
+export const revalidate = 60;
 
-export default function ProductosPage() {
-  const { section, contact, loading } = useStoreSection("productosSection");
+export default async function ProductosPage() {
+  const settings = await fetchPublicSettings();
   return (
-    <CatalogPage
+    <StoreSectionPage
+      sectionKey="productosSection"
       kicker="Productos"
-      section={section}
-      contact={contact}
-      loading={loading}
       closing="¿Tenés una idea? La diseñamos, la imprimimos y te la mandamos."
+      initial={settings && { productosSection: settings.productosSection, contactInfo: settings.contactInfo }}
     />
   );
 }
