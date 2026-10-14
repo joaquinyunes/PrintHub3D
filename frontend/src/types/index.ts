@@ -14,6 +14,8 @@ export interface Product {
   category: string;
   description?: string;
   stock?: number;
+  /** Viene del catálogo de la web (no de la base de productos): se coordina por WhatsApp */
+  catalog?: boolean;
 }
 
 export interface Idea {

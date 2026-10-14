@@ -10,7 +10,7 @@ export interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -25,6 +25,8 @@ const CART_STORAGE_KEY = "printhub_cart";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  // No guardar antes de leer: si no, el primer render pisa el carrito guardado con [].
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem(CART_STORAGE_KEY);
@@ -33,25 +35,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems(JSON.parse(stored));
       } catch {}
     }
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+    if (hydrated) localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  }, [items, hydrated]);
 
   const maxFor = (product: Product) =>
     typeof product.stock === "number" && product.stock > 0 ? product.stock : Infinity;
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, quantity = 1) => {
+    const n = Math.max(1, Math.floor(quantity));
     setItems(prev => {
       const existing = prev.find(item => item.product._id === product._id);
       if (existing) {
-        const next = Math.min(existing.quantity + 1, maxFor(product));
+        const next = Math.min(existing.quantity + n, maxFor(product));
         return prev.map(item =>
           item.product._id === product._id ? { ...item, quantity: next } : item
         );
       }
-      return [...prev, { product, quantity: Math.min(1, maxFor(product)) || 1 }];
+      return [...prev, { product, quantity: Math.min(n, maxFor(product)) || 1 }];
     });
   };
 

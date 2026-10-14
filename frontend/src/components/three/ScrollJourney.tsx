@@ -352,7 +352,7 @@ export default function ScrollJourney({
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
-                      className={`h-20 w-20 shrink-0 rounded-sm border-2 border-ink object-cover transition-all duration-700 sm:h-28 sm:w-28 md:h-40 md:w-40 ${
+                      className={`h-28 w-28 shrink-0 rounded-sm border-2 border-ink object-cover transition-all duration-700 sm:h-36 sm:w-36 md:h-52 md:w-52 lg:h-60 lg:w-60 ${
                         active === i ? 'scale-100 opacity-100 delay-700' : 'scale-90 opacity-0'
                       }`}
                     />

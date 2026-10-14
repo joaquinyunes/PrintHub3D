@@ -35,7 +35,11 @@ export default function CartPage() {
     const itemsList = items
       .map(
         (item) =>
-          `- ${item.product.name} x${item.quantity}: $${(item.product.price * item.quantity).toLocaleString('es-AR')}`,
+          `- ${item.product.name} x${item.quantity}: ${
+            item.product.price > 0
+              ? `$${(item.product.price * item.quantity).toLocaleString('es-AR')}`
+              : 'a consultar'
+          }`,
       )
       .join('\n');
 
@@ -81,14 +85,16 @@ export default function CartPage() {
                       ) : null}
                     </div>
 
-                    <div className="flex flex-1 flex-col">
+                    <div className="flex min-w-0 flex-1 flex-col">
                       <h3 className="font-display text-lg uppercase leading-tight">{item.product.name}</h3>
                       {item.product.category && (
                         <span className="tag-plain mt-1 self-start">{item.product.category}</span>
                       )}
-                      <div className="mt-auto flex items-center justify-between pt-3">
-                        <span className="font-extrabold">
-                          ${item.product.price.toLocaleString('es-AR')}
+                      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3">
+                        <span className="whitespace-nowrap font-extrabold">
+                          {item.product.price > 0
+                            ? `$${item.product.price.toLocaleString('es-AR')}`
+                            : 'A consultar'}
                         </span>
                         <div className="flex items-center gap-2">
                           <button

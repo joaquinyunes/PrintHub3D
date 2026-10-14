@@ -55,19 +55,16 @@ const layers = (x1, x2, ys) => ys.map((y) => line(`M${x1} ${y} H${x2}`, 3)).join
 
 /* ---------- objetos (centrados en 0,0; caben en ~440x440) ---------- */
 const spool = (fill = ACC, strand = true) => `
-  ${strand ? tube('M118 120 C 190 190, 262 150, 240 236', fill, 14) : ''}
-  ${circ(0, 0, 200, G1)}
-  ${circ(0, 0, 156, fill, 6)}
-  ${[138, 120, 102].map((r) => `<circle r="${r}" fill="none" stroke="${INK}" stroke-width="2.5" opacity=".55"/>`).join('')}
-  ${circ(0, 0, 76, CREAM, 6)}
-  ${[0, 120, 240]
-    .map((a) => {
-      const r = (a * Math.PI) / 180;
-      return line(`M${(Math.cos(r) * 40).toFixed(1)} ${(Math.sin(r) * 40).toFixed(1)} L${(Math.cos(r) * 70).toFixed(1)} ${(Math.sin(r) * 70).toFixed(1)}`, 3);
-    })
-    .join('')}
-  ${circ(0, 0, 30, INK, 5)}
-  ${hi('M-150 -116 A 190 190 0 0 1 -62 -176')}`;
+  ${strand ? tube('M84 150 C 160 205, 232 165, 232 226', fill, 14) : ''}
+  ${ell(-90, 0, 50, 200, G2)}
+  ${rect(-90, -158, 180, 316, fill, 0, 6)}
+  ${[-62, -34, -6, 22, 50, 74].map((x) => line(`M${x} -158 V158`, 2.5).replace('/>', ' opacity=".5"/>')).join('')}
+  ${ell(90, 0, 50, 200, G1)}
+  ${ell(90, 0, 38, 158, fill, 6)}
+  ${[30, 22].map((rx) => `<ellipse cx="90" cy="0" rx="${rx}" ry="${rx * 4.1}" fill="none" stroke="${INK}" stroke-width="2.5" opacity=".5"/>`).join('')}
+  ${ell(90, 0, 16, 62, CREAM, 6)}
+  ${ell(90, 0, 8, 30, INK, 4)}
+  ${hi('M-128 -120 C -122 -150 -112 -170 -100 -182')}`;
 
 const printerEnclosed = (variant) => `
   ${circ(0, -196, 46, G2)}${circ(0, -196, 16, INK, 5)}
@@ -322,19 +319,19 @@ files['fil-petg'] = svg(
   600,
   600,
   'Filamento PETG',
-  `<g transform="translate(290 300) scale(0.98)">${spool(CREAM)}${rect(-60, -226, 120, 34, ACC, 6)}</g>`,
+  `<g transform="translate(290 300) scale(0.98)">${spool(CREAM)}${rect(-34, -158, 68, 316, ACC, 0, 5)}</g>`,
 );
 files['fil-abs'] = svg(
   600,
   600,
   'Filamento ABS',
-  `<g transform="translate(290 300) scale(0.98)">${spool(INK)}${circ(0, 0, 30, ACC, 5)}</g>`,
+  `<g transform="translate(290 300) scale(0.98)">${spool(INK)}${ell(90, 0, 8, 30, ACC, 4)}</g>`,
 );
 files['fil-tpu'] = svg(
   600,
   600,
   'Filamento TPU',
-  `<g transform="translate(290 300) scale(0.98)">${spool(G3)}${shape('M-120 -20 C -70 -70 -40 30 0 -20 C 40 -70 70 30 120 -20', 'none', 7)}${circ(0, 0, 30, ACC, 5)}</g>`,
+  `<g transform="translate(290 300) scale(0.98)">${spool(G3)}${shape('M-80 -20 C -50 -70 -30 30 0 -20 C 30 -70 50 30 80 -20', 'none', 7)}${ell(90, 0, 8, 30, ACC, 4)}</g>`,
 );
 // Insumos
 single('ins-boquilla', 'Boquilla', 'nozzle', 1.0, 300);

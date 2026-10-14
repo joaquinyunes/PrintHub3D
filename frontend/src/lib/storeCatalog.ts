@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiUrl } from '@/lib/api';
+import { photoFor } from '@/lib/demoPhotos';
 
 export interface StoreProduct {
   id: string;
@@ -60,7 +61,7 @@ const p = (
   description,
   price: 0,
   imageUrl: `/demo/${image}.svg`,
-  imageHover: '',
+  imageHover: photoFor(`/demo/${image}.svg`),
   videoUrl: '',
 });
 
@@ -178,7 +179,7 @@ export function normalizeSection(raw: RawSection | undefined, key: SectionKey): 
         description: prod.name ? prod.description || '' : '',
         price: Number(prod.price) || 0,
         imageUrl: prod.imageUrl || '',
-        imageHover: prod.imageHover || '',
+        imageHover: prod.imageHover || photoFor(prod.imageUrl),
         videoUrl: prod.videoUrl || '',
         categoryId: catId,
         stock: prod.stock,

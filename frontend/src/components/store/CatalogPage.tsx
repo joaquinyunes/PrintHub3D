@@ -7,6 +7,9 @@ import Nav from '@/components/store/Nav';
 import Footer from '@/components/store/Footer';
 import { WHATSAPP_PHONE } from '@/lib/config';
 import { resolveMediaUrl } from '@/lib/api';
+import RevealImage from '@/components/store/RevealImage';
+import AddToCart from '@/components/store/AddToCart';
+import type { Product } from '@/types';
 import type { StoreContact, StoreProduct, StoreSection } from '@/lib/storeCatalog';
 
 interface Props {
@@ -19,35 +22,28 @@ interface Props {
 }
 
 const formatPrice = (n: number) => `$${n.toLocaleString('es-AR')}`;
-const isDrawing = (url: string) => url.endsWith('.svg');
 
-function ProductImage({ product, className = '' }: { product: StoreProduct; className?: string }) {
-  if (!product.imageUrl) {
-    return (
-      <div className={`grid place-items-center text-steel-300 ${className}`} aria-hidden>
-        <span className="text-xs font-extrabold uppercase tracking-widest">Sin imagen</span>
-      </div>
-    );
-  }
-  const url = resolveMediaUrl(product.imageUrl);
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={url}
-      alt={product.name}
-      loading="lazy"
-      className={`${className} ${isDrawing(url) ? 'object-contain p-5' : 'object-cover'}`}
-    />
-  );
-}
+/** Producto del catálogo web → ítem del carrito (se coordina por WhatsApp, no por MercadoPago). */
+const toCartProduct = (p: StoreProduct, sectionTitle: string, categoryName?: string): Product => ({
+  _id: `catalog:${sectionTitle}:${p.id}`,
+  name: p.name,
+  price: p.price,
+  imageUrl: p.imageUrl,
+  category: categoryName || '',
+  description: p.description,
+  stock: p.stock,
+  catalog: true,
+});
 
 function ProductModal({
   product,
+  cartProduct,
   categoryName,
   phone,
   onClose,
 }: {
   product: StoreProduct;
+  cartProduct: Product;
   categoryName?: string;
   phone: string;
   onClose: () => void;
@@ -71,7 +67,12 @@ function ProductModal({
           {product.videoUrl ? (
             <video src={resolveMediaUrl(product.videoUrl)} controls className="aspect-[4/3] w-full bg-ink object-cover" />
           ) : (
-            <ProductImage product={product} className="aspect-[4/3] w-full" />
+            <RevealImage
+              src={resolveMediaUrl(product.imageUrl)}
+              photo={product.imageHover ? resolveMediaUrl(product.imageHover) : ''}
+              alt={product.name}
+              className="aspect-[4/3] w-full"
+            />
           )}
           <button
             onClick={onClose}
@@ -91,11 +92,12 @@ function ProductModal({
             </span>
             {product.stock === 0 && <span className="tag-plain">Sin stock</span>}
           </div>
+          <AddToCart product={cartProduct} className="mt-6" />
           <a
             href={`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`}
             target="_blank"
             rel="noreferrer"
-            className="btn btn-signal mt-6 w-full"
+            className="btn btn-paper mt-3 w-full"
           >
             Consultar por WhatsApp
           </a>
@@ -107,11 +109,13 @@ function ProductModal({
 
 function ProductCard({
   product,
+  cartProduct,
   categoryName,
   phone,
   onOpen,
 }: {
   product: StoreProduct;
+  cartProduct: Product;
   categoryName?: string;
   phone: string;
   onOpen: () => void;
@@ -119,30 +123,36 @@ function ProductCard({
   const msg = `Hola, quiero consultar por: ${product.name}`;
   return (
     <article className="card-hard group flex flex-col overflow-hidden transition-transform duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg">
-      <button
-        onClick={onOpen}
-        className="relative block aspect-square w-full border-b-2 border-ink bg-paper-2 text-left"
-        aria-label={`Ver ${product.name}`}
+      <RevealImage
+        src={resolveMediaUrl(product.imageUrl)}
+        photo={product.imageHover ? resolveMediaUrl(product.imageHover) : ''}
+        alt={product.name}
+        onOpen={onOpen}
+        className="aspect-square w-full border-b-2 border-ink bg-paper-2"
       >
-        <ProductImage product={product} className="absolute inset-0 h-full w-full" />
-        {categoryName && <span className="tag-plain absolute left-3 top-3">{categoryName}</span>}
-        {product.stock === 0 && <span className="tag absolute right-3 top-3 !bg-white">Sin stock</span>}
-      </button>
+        {categoryName && <span className="tag-plain pointer-events-none absolute left-3 top-3">{categoryName}</span>}
+        {product.stock === 0 && (
+          <span className="tag pointer-events-none absolute right-3 top-3 !bg-white">Sin stock</span>
+        )}
+      </RevealImage>
       <div className="flex flex-1 flex-col gap-2 p-4">
         <h3 className="font-display text-lg uppercase leading-tight">{product.name}</h3>
         {product.description && (
           <p className="line-clamp-2 text-sm leading-snug text-ink-soft">{product.description}</p>
         )}
-        <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-          <span className="tag">{product.price > 0 ? formatPrice(product.price) : 'Consultar'}</span>
-          <a
-            href={`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-paper !px-3 !py-1.5 !text-xs"
-          >
-            WhatsApp
-          </a>
+        <div className="mt-auto space-y-3 pt-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="tag">{product.price > 0 ? formatPrice(product.price) : 'Consultar'}</span>
+            <a
+              href={`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-paper !px-3 !py-1.5 !text-xs"
+            >
+              WhatsApp
+            </a>
+          </div>
+          <AddToCart product={cartProduct} />
         </div>
       </div>
     </article>
@@ -287,6 +297,7 @@ export default function CatalogPage({ kicker, section, contact, loading, closing
               <ProductCard
                 key={p.id}
                 product={p}
+                cartProduct={toCartProduct(p, section.title, catName[p.categoryId])}
                 categoryName={catName[p.categoryId]}
                 phone={phone}
                 onOpen={() => setOpen(p)}
@@ -318,6 +329,7 @@ export default function CatalogPage({ kicker, section, contact, loading, closing
       {open && (
         <ProductModal
           product={open}
+          cartProduct={toCartProduct(open, section.title, catName[open.categoryId])}
           categoryName={catName[open.categoryId]}
           phone={phone}
           onClose={() => setOpen(null)}

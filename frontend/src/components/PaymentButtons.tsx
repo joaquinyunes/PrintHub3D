@@ -81,6 +81,12 @@ export default function PaymentButtons({
         Pedir por WhatsApp (seña 50%)
       </button>
 
+      {items.some((i) => i.product.catalog) ? (
+        <p className="rounded-sm border-2 border-ink bg-white px-3 py-2 text-center text-sm">
+          Estos productos se coordinan por WhatsApp: confirmamos stock y precio antes de cobrar.
+        </p>
+      ) : (
+        <>
       <p className="text-center text-xs font-extrabold uppercase tracking-widest text-ink-soft">
         o pagá online
       </p>
@@ -102,6 +108,9 @@ export default function PaymentButtons({
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
         Pagar total · ${total.toLocaleString("es-AR")}
       </button>
+
+        </>
+      )}
 
       {error && (
         <p role="alert" className="rounded-sm border-2 border-danger bg-white px-3 py-2 text-center text-sm font-bold text-danger">
