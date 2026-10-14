@@ -48,7 +48,7 @@
     "multer": "^2.1.1",
     "nodemailer": "^6.10.1",
     "pdfkit": "^0.18.0",
-    "pino": "^9.0.0",
+    "pino": "^10.4.0",
     "pino-pretty": "^11.0.0",
     "random-user-agent": "^1.0.0",
     "swagger-jsdoc": "^6.2.8",
