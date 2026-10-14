@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Placa de impresion">
+  <defs>
+  <filter id="sticker" x="-12%" y="-12%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="11" result="d"/>
+    <feGaussianBlur in="d" stdDeviation="4" result="b"/>
+    <feComponentTransfer in="b" result="round"><feFuncA type="linear" slope="24" intercept="-11"/></feComponentTransfer>
+    <feFlood flood-color="#f2efe8"/><feComposite in2="round" operator="in" result="border"/>
+    <feOffset in="round" dx="11" dy="13" result="o"/>
+    <feFlood flood-color="#0d0e0f"/><feComposite in2="o" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter></defs>
+  <g filter="url(#sticker)"><g transform="translate(300 290) rotate(0) scale(1)">
+  <rect x="-190" y="-190" width="380" height="380" rx="18" fill="#b4b9be" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-160" y="-160" width="320" height="320" rx="8" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M-80 -160 V160 M-160 -80 H160" fill="none" stroke="#0d0e0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 -160 V160 M-160 0 H160" fill="none" stroke="#0d0e0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M80 -160 V160 M-160 80 H160" fill="none" stroke="#0d0e0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="-160" cy="-160" r="18" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="6"/><circle cx="160" cy="-160" r="18" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="6"/><circle cx="-160" cy="160" r="18" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="6"/><circle cx="160" cy="160" r="18" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="6"/>
+  <rect x="-48" y="168" width="96" height="44" rx="8" fill="#ffd21f" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M-140 -140 H-70" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/></g></g>
+</svg>

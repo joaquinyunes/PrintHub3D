@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ShoppingCart, CreditCard, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import type { CartItem } from "@/context/CartContext";
 import { apiUrl } from "@/lib/api";
 import { MERCADO_PAGO_ALIAS } from "@/lib/config";
@@ -57,9 +57,13 @@ export default function PaymentButtons({
 
       // El carrito se limpia en /checkout/resultado tras confirmar el pago.
       window.location.href = url;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("MercadoPago error:", err);
-      setError(err.message || "Error al procesar el pago. Intentá de nuevo.");
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Error al procesar el pago. Intentá de nuevo.",
+      );
     } finally {
       setLoading(false);
     }
@@ -72,52 +76,43 @@ export default function PaymentButtons({
           if (validate()) onWhatsAppCheckout();
         }}
         disabled={loading}
-        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition shadow-lg shadow-green-600/30"
+        className="btn btn-signal w-full"
       >
-        <ShoppingCart className="w-5 h-5" />
-        Comprar por WhatsApp (Seña 50%)
+        Pedir por WhatsApp (seña 50%)
       </button>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-800"></div>
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="bg-gray-900 px-2 text-gray-500">o pagá con</span>
-        </div>
-      </div>
+      <p className="text-center text-xs font-extrabold uppercase tracking-widest text-ink-soft">
+        o pagá online
+      </p>
 
       <button
         onClick={() => handleMercadoPago(false)}
         disabled={loading}
-        className="w-full bg-[#009EE3] hover:bg-[#008BD0] text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition disabled:opacity-50"
+        className="btn btn-paper w-full disabled:opacity-50"
       >
-        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
-        Pagar Seña (50%) - ${depositTotal.toLocaleString("es-AR")}
+        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+        Pagar seña · ${depositTotal.toLocaleString("es-AR")}
       </button>
 
       <button
         onClick={() => handleMercadoPago(true)}
         disabled={loading}
-        className="w-full bg-[#009EE3] hover:bg-[#008BD0] text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition disabled:opacity-50"
+        className="btn btn-paper w-full disabled:opacity-50"
       >
-        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
-        Pagar Total - ${total.toLocaleString("es-AR")}
+        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+        Pagar total · ${total.toLocaleString("es-AR")}
       </button>
 
       {error && (
-        <p className="text-center text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg py-2 px-3">
+        <p role="alert" className="rounded-sm border-2 border-danger bg-white px-3 py-2 text-center text-sm font-bold text-danger">
           {error}
         </p>
       )}
 
       {MERCADO_PAGO_ALIAS && MERCADO_PAGO_ALIAS !== "TU_ALIAS_AQUI" && (
-        <div className="text-center text-xs text-gray-500 mt-2">
-          <p>
-            Alias para transferencia:{" "}
-            <span className="text-blue-400 font-mono">{MERCADO_PAGO_ALIAS}</span>
-          </p>
-        </div>
+        <p className="pt-1 text-center text-xs text-ink-soft">
+          Alias para transferencia: <span className="font-mono font-semibold text-ink">{MERCADO_PAGO_ALIAS}</span>
+        </p>
       )}
     </div>
   );

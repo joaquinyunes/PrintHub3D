@@ -23,16 +23,18 @@ module.exports = {
         popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
         card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
 
-        // --- Sistema PrintHub3D ("additive / taller digital") ---
-        ground: '#0a0a0c',
-        'ground-2': '#111114',
-        'ground-3': '#17171b',
-        ink: '#f4f2ee',
-        'ink-dim': '#9b9aa3',
-        flame: '#ff5c1a',
-        flare: '#ff2e88',
-        resin: '#14e0c8',
-        // Alias usados por el panel admin
+        // --- Identidad de la tienda: papel / tinta / un solo acento ---
+        paper: '#f2efe8',
+        'paper-2': '#e6e2d6',
+        ink: '#0d0e0f',
+        'ink-soft': '#3b3e42',
+        'steel-100': '#d7dbe0',
+        'steel-200': '#b4b9be',
+        'steel-300': '#9aa1a8',
+        signal: '#ffd21f',
+        'signal-dark': '#e8b900',
+        danger: '#d92d20',
+        // Alias usados por el panel admin (no tocar)
         'tone-red': '#ff5c1a',
         'tone-pink': '#ff2e88',
         'tone-amber': '#f5a524',
@@ -40,9 +42,14 @@ module.exports = {
         'tone-darker': '#0a0a0c',
       },
       fontFamily: {
-        display: ['var(--font-display)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-body)', 'system-ui', 'sans-serif'],
         sans: ['var(--font-body)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
+      },
+      boxShadow: {
+        hard: '4px 4px 0 0 #0d0e0f',
+        'hard-sm': '2px 2px 0 0 #0d0e0f',
+        'hard-lg': '8px 8px 0 0 #0d0e0f',
       },
       borderRadius: {
         lg: 'var(--radius)',

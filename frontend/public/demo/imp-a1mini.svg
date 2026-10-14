@@ -1,24 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800" role="img" aria-label="Bambu Lab A1 mini">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Impresora compacta">
   <defs>
-    <radialGradient id="glow" cx="50%" cy="42%" r="62%">
-      <stop offset="0%" stop-color="#3b82f6" stop-opacity=".26"/>
-      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
-    </radialGradient>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M40 0 H0 V40" fill="none" stroke="#ffffff" stroke-opacity=".04" stroke-width="1"/>
-    </pattern>
-  </defs>
-  <rect width="800" height="800" fill="#08080b"/>
-  <rect width="800" height="800" fill="url(#grid)"/>
-  <rect width="800" height="800" fill="url(#glow)"/>
-  <g transform="translate(400 360)">
-    <rect x="-160" y="-150" width="320" height="300" rx="14" fill="#3b82f6" fill-opacity=".07" stroke="#3b82f6" stroke-opacity=".85" stroke-width="4"/>
-    <path d="M-160 -96 L160 -96" stroke="#3b82f6" stroke-opacity=".5" stroke-width="3"/>
-    <rect x="-34" y="-58" width="68" height="30" rx="6" fill="#3b82f6" fill-opacity=".9"/>
-    <path d="M0 -28 L0 52" stroke="#3b82f6" stroke-opacity=".55" stroke-width="3" stroke-dasharray="7 7"/>
-    <path d="M-70 118 L0 78 L70 118 L0 158 Z" fill="#3b82f6" fill-opacity=".5" stroke="#3b82f6" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
-    <rect x="-118" y="120" width="236" height="14" rx="7" fill="#3b82f6" fill-opacity=".3"/></g>
-  <text x="400" y="704" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif,system-ui,Segoe UI,Arial" font-size="40" font-weight="800">Bambu Lab A1 mini</text>
-  <text x="400" y="746" text-anchor="middle" fill="#ffffff" fill-opacity=".45" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="21" letter-spacing="2">IMPRESORA</text>
-  <text x="774" y="780" text-anchor="end" fill="#3b82f6" fill-opacity=".5" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" letter-spacing="3">GLOBAL 3D</text>
+  <filter id="sticker" x="-12%" y="-12%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="11" result="d"/>
+    <feGaussianBlur in="d" stdDeviation="4" result="b"/>
+    <feComponentTransfer in="b" result="round"><feFuncA type="linear" slope="24" intercept="-11"/></feComponentTransfer>
+    <feFlood flood-color="#f2efe8"/><feComposite in2="round" operator="in" result="border"/>
+    <feOffset in="round" dx="11" dy="13" result="o"/>
+    <feFlood flood-color="#0d0e0f"/><feComposite in2="o" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter></defs>
+  <g filter="url(#sticker)"><g transform="translate(300 300) rotate(0) scale(1)">
+  <circle cx="-100" cy="-206" r="40" fill="#b4b9be" stroke="#0d0e0f" stroke-width="8"/><circle cx="-100" cy="-206" r="14" fill="#0d0e0f" stroke="#0d0e0f" stroke-width="5"/>
+  <rect x="-180" y="130" width="360" height="64" rx="12" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-160" y="-180" width="60" height="320" rx="10" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-160" y="-130" width="320" height="38" rx="10" fill="#b4b9be" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-34" y="-150" width="68" height="52" rx="6" fill="#ffd21f" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M-12 -98 L12 -98 L0 -72 Z" fill="#0d0e0f" stroke="#0d0e0f" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+  <rect x="-110" y="84" width="240" height="22" rx="6" fill="#b4b9be" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-34" y="26" width="68" height="58" rx="4" fill="#ffd21f" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M-34 42 H34" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-34 56 H34" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-34 70 H34" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="40" y="150" width="90" height="28" rx="6" fill="#0d0e0f" stroke="#0d0e0f" stroke-width="5" stroke-linejoin="round"/><circle cx="60" cy="164" r="6" fill="#ffd21f" stroke="#0d0e0f" stroke-width="3"/>
+  <path d="M-146 -160 V-60" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/></g></g>
 </svg>

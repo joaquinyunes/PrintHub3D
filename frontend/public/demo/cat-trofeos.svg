@@ -1,25 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800" role="img" aria-label="Trofeos y Copas">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Trofeos y copas">
   <defs>
-    <radialGradient id="glow" cx="50%" cy="42%" r="62%">
-      <stop offset="0%" stop-color="#f5a524" stop-opacity=".26"/>
-      <stop offset="100%" stop-color="#f5a524" stop-opacity="0"/>
-    </radialGradient>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M40 0 H0 V40" fill="none" stroke="#ffffff" stroke-opacity=".04" stroke-width="1"/>
-    </pattern>
-  </defs>
-  <rect width="800" height="800" fill="#08080b"/>
-  <rect width="800" height="800" fill="url(#grid)"/>
-  <rect width="800" height="800" fill="url(#glow)"/>
-  <g transform="translate(400 360)">
-    <path d="M0 -166.5 L150 -82.5 L0 1.5 L-150 -82.5 Z" fill="#f5a524" fill-opacity=".55"/>
-    <path d="M-150 -82.5 L0 1.5 L0 166.5 L-150 82.5 Z" fill="#f5a524" fill-opacity=".22"/>
-    <path d="M150 -82.5 L0 1.5 L0 166.5 L150 82.5 Z" fill="#f5a524" fill-opacity=".34"/>
-    <path d="M-150 -58.92857142857143 L0 25.071428571428573 L150 -58.92857142857143" fill="none" stroke="#f5a524" stroke-opacity=".16" stroke-width="2"/><path d="M-150 -35.357142857142854 L0 48.642857142857146 L150 -35.357142857142854" fill="none" stroke="#f5a524" stroke-opacity=".16" stroke-width="2"/><path d="M-150 -11.785714285714292 L0 72.21428571428571 L150 -11.785714285714292" fill="none" stroke="#f5a524" stroke-opacity=".16" stroke-width="2"/><path d="M-150 11.785714285714292 L0 95.78571428571429 L150 11.785714285714292" fill="none" stroke="#f5a524" stroke-opacity=".16" stroke-width="2"/><path d="M-150 35.35714285714286 L0 119.35714285714286 L150 35.35714285714286" fill="none" stroke="#f5a524" stroke-opacity=".16" stroke-width="2"/><path d="M-150 58.928571428571416 L0 142.92857142857142 L150 58.928571428571416" fill="none" stroke="#f5a524" stroke-opacity=".16" stroke-width="2"/>
-    <path d="M0 -166.5 L150 -82.5 L0 1.5 L-150 -82.5 Z" fill="none" stroke="#f5a524" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M-150 -82.5 L-150 82.5 L0 166.5 L150 82.5 L150 -82.5" fill="none" stroke="#f5a524" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M0 1.5 L0 166.5" fill="none" stroke="#f5a524" stroke-opacity=".9" stroke-width="3"/></g>
-  <text x="400" y="704" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif,system-ui,Segoe UI,Arial" font-size="40" font-weight="800">Trofeos y Copas</text>
-  <text x="400" y="746" text-anchor="middle" fill="#ffffff" fill-opacity=".45" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="21" letter-spacing="2">CATEGORIA</text>
-  <text x="774" y="780" text-anchor="end" fill="#f5a524" fill-opacity=".5" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" letter-spacing="3">GLOBAL 3D</text>
+  <filter id="sticker" x="-12%" y="-12%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="11" result="d"/>
+    <feGaussianBlur in="d" stdDeviation="4" result="b"/>
+    <feComponentTransfer in="b" result="round"><feFuncA type="linear" slope="24" intercept="-11"/></feComponentTransfer>
+    <feFlood flood-color="#f2efe8"/><feComposite in2="round" operator="in" result="border"/>
+    <feOffset in="round" dx="11" dy="13" result="o"/>
+    <feFlood flood-color="#0d0e0f"/><feComposite in2="o" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter></defs>
+  <g filter="url(#sticker)"><rect x="50" y="452" width="500" height="26" rx="6" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/><path d="M64 465 H536" fill="none" stroke="#0d0e0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(190 334.2) rotate(0) scale(0.62)">
+  <path d="M-100 -170 C -190 -170 -190 -70 -80 -66" fill="none" stroke="#0d0e0f" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/><path d="M-100 -170 C -190 -170 -190 -70 -80 -66" fill="none" stroke="#b4b9be" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M100 -170 C 190 -170 190 -70 80 -66" fill="none" stroke="#0d0e0f" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/><path d="M100 -170 C 190 -170 190 -70 80 -66" fill="none" stroke="#b4b9be" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M-110 -210 H110 C110 -100 70 -56 22 -44 L22 36 H74 V76 H-74 V36 H-22 L-22 -44 C-70 -56 -110 -100 -110 -210 Z" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M0.0 -170.0 L11.8 -142.2 L41.8 -139.6 L19.0 -119.8 L25.9 -90.4 L0.0 -106.0 L-25.9 -90.4 L-19.0 -119.8 L-41.8 -139.6 L-11.8 -142.2 Z" fill="#ffd21f" stroke="#0d0e0f" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <rect x="-100" y="76" width="200" height="40" rx="8" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-136" y="116" width="272" height="46" rx="8" fill="#0d0e0f" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-46" y="126" width="92" height="26" rx="4" fill="#ffd21f" stroke="#0d0e0f" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M-80 -190 C -80 -150 -66 -118 -40 -98" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/></g><g transform="translate(410 334.2) rotate(0) scale(0.62)">
+  <path d="M-118 -120 C -200 -120 -196 -10 -90 -10" fill="none" stroke="#0d0e0f" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/><path d="M-118 -120 C -200 -120 -196 -10 -90 -10" fill="none" stroke="#b4b9be" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M118 -120 C 200 -120 196 -10 90 -10" fill="none" stroke="#0d0e0f" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/><path d="M118 -120 C 200 -120 196 -10 90 -10" fill="none" stroke="#b4b9be" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M-128 -130 C -128 -10 -70 40 -22 52 L-22 100 H22 L22 52 C 70 40 128 -10 128 -130 Z" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M-128 -130 C -128 -230 128 -230 128 -130 Z" fill="#b4b9be" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="0" cy="-228" r="18" fill="#ffd21f" stroke="#0d0e0f" stroke-width="6"/>
+  <rect x="-92" y="100" width="184" height="36" rx="8" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-120" y="136" width="240" height="40" rx="8" fill="#0d0e0f" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M-128 -80 H128" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="-44" y="-70" width="88" height="26" rx="4" fill="#ffd21f" stroke="#0d0e0f" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M-100 -150 C -100 -110 -86 -70 -56 -40" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/></g></g>
 </svg>

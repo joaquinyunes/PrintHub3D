@@ -1,19 +1,24 @@
 "use client";
 
-import { ShoppingCart } from "lucide-react";
+import Link from "next/link";
+import { ShoppingBasket } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 export default function CartIcon() {
   const { itemCount } = useCart();
 
   return (
-    <a href="/cart" className="relative p-2 text-ink-dim transition hover:text-ink" aria-label="Carrito">
-      <ShoppingCart className="h-5 w-5" />
+    <Link
+      href="/cart"
+      className="relative grid h-10 w-10 place-items-center rounded-md border-2 border-ink bg-white text-ink shadow-hard-sm transition-transform hover:-translate-y-px"
+      aria-label={`Carrito${itemCount > 0 ? `, ${itemCount} productos` : ""}`}
+    >
+      <ShoppingBasket className="h-5 w-5" strokeWidth={2.4} />
       {itemCount > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-flame px-1 font-mono text-[10px] font-bold leading-none text-white">
+        <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-sm border-2 border-ink bg-signal px-1 text-[11px] font-extrabold leading-none text-ink">
           {itemCount > 99 ? "99" : itemCount}
         </span>
       )}
-    </a>
+    </Link>
   );
 }

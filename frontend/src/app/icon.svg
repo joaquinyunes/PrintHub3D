@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Global 3D">
+  <g stroke="#0d0e0f" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M10 18 L32 30 L32 58 L10 46 Z" fill="#d7dbe0"/>
+    <path d="M54 18 L32 30 L32 58 L54 46 Z" fill="#9aa1a8"/>
+    <path d="M32 6 L54 18 L32 30 L10 18 Z" fill="#ffd21f"/>
+  </g>
+  <g stroke="#0d0e0f" stroke-width="1.6" stroke-linecap="round" fill="none">
+    <path d="M10 27.3 L32 39.3 M10 36.7 L32 48.7"/>
+    <path d="M54 27.3 L32 39.3 M54 36.7 L32 48.7"/>
+  </g>
+  <path d="M20 15.5 L31 9.8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".75" fill="none"/>
+</svg>

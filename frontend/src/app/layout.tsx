@@ -1,23 +1,19 @@
 import type { Metadata } from 'next';
-import { Bricolage_Grotesque, Instrument_Sans, JetBrains_Mono } from 'next/font/google';
+import { Archivo, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
 import CartProviderWrapper from '@/components/CartProviderWrapper';
 import SmoothScroll from '@/components/motion/SmoothScroll';
-import Cursor from '@/components/motion/Cursor';
 
-const display = Bricolage_Grotesque({
+// Una sola familia con eje de ancho: titulares anchos y pesados, texto normal.
+const archivo = Archivo({
   subsets: ['latin'],
-  variable: '--font-display',
-  weight: ['400', '600', '700', '800'],
-  display: 'swap',
-});
-const body = Instrument_Sans({
-  subsets: ['latin'],
+  axes: ['wdth'],
   variable: '--font-body',
   display: 'swap',
 });
-const mono = JetBrains_Mono({
+const mono = IBM_Plex_Mono({
   subsets: ['latin'],
+  weight: ['400', '500', '600'],
   variable: '--font-mono',
   display: 'swap',
 });
@@ -25,7 +21,7 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Global 3D Corrientes — Impresión 3D a medida',
   description:
-    'Impresión 3D de alta precisión en Corrientes. Vasos, trofeos, llaveros y piezas personalizadas. Cotizá tu idea en segundos.',
+    'Impresión 3D en Corrientes: productos personalizados, impresoras Bambu Lab, filamentos e insumos. Cotizá tu pieza online.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -33,10 +29,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="es"
       suppressHydrationWarning
-      className={`${display.variable} ${body.variable} ${mono.variable}`}
+      className={`${archivo.variable} ${mono.variable}`}
     >
       <body className="antialiased" suppressHydrationWarning>
-        <Cursor />
         <SmoothScroll>
           <CartProviderWrapper>{children}</CartProviderWrapper>
         </SmoothScroll>

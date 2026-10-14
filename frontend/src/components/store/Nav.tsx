@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, LogOut } from 'lucide-react';
 import CartIcon from '@/components/CartIcon';
-import Magnetic from '@/components/motion/Magnetic';
+import Logo from '@/components/brand/Logo';
 
 const links = [
   { href: '/productos', label: 'Productos' },
@@ -17,16 +17,9 @@ const links = [
 
 export default function Nav({ onQuote }: { onQuote?: () => void }) {
   const router = useRouter();
-  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   useEffect(() => {
     try {
@@ -45,116 +38,91 @@ export default function Nav({ onQuote }: { onQuote?: () => void }) {
   const goQuote = onQuote || (() => router.push('/cotizar'));
 
   return (
-    <header
-      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        scrolled
-          ? 'border-b border-white/10 bg-ground/80 backdrop-blur-xl'
-          : 'border-b border-transparent'
-      }`}
-    >
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
-        <Link href="/" className="flex items-center gap-2.5">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-flux font-display text-sm text-white">
-            3D
-          </span>
-          <span className="font-display text-lg tracking-tight text-ink">
-            GLOBAL<span className="text-flame">3D</span>
-          </span>
-        </Link>
+    <header className="store sticky top-0 z-50 border-b-2 border-ink bg-paper">
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
+        <Logo />
 
-        <div className="hidden items-center gap-8 md:flex">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="group relative font-mono text-xs uppercase tracking-[0.15em] text-ink-dim transition hover:text-ink"
-            >
-              {l.label}
-              <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-flame transition-all duration-300 group-hover:w-full" />
-            </Link>
-          ))}
+        <div className="hidden items-center gap-1 md:flex">
+          {links.map((l) => {
+            const active = pathname === l.href;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                aria-current={active ? 'page' : undefined}
+                className={`rounded-sm px-3 py-2 text-sm font-extrabold uppercase tracking-wide transition-colors ${
+                  active ? 'bg-ink text-paper' : 'text-ink hover:bg-signal'
+                }`}
+              >
+                {l.label}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-3">
           <CartIcon />
-          <Magnetic className="hidden md:block">
-            <button
-              onClick={goQuote}
-              className="rounded-full bg-flux px-5 py-2 font-mono text-xs uppercase tracking-[0.12em] text-white shadow-lg shadow-flare/25 transition hover:brightness-110"
-            >
-              Cotizar
-            </button>
-          </Magnetic>
+          <button onClick={goQuote} className="btn btn-signal hidden !py-2 md:inline-flex">
+            Cotizar
+          </button>
           {isAdmin ? (
             <div className="hidden items-center gap-1.5 md:flex">
-              <Link
-                href="/admin"
-                className="rounded-full bg-flame px-4 py-2 font-mono text-xs uppercase tracking-[0.12em] text-white transition hover:brightness-110"
-              >
+              <Link href="/admin" className="btn btn-paper !py-2">
                 Admin
               </Link>
               <button
                 onClick={handleLogout}
-                className="rounded-full p-2 text-ink-dim transition hover:bg-flame/10 hover:text-flame"
+                className="rounded-sm p-2 text-ink transition hover:bg-signal"
                 aria-label="Cerrar sesión"
               >
-                <LogOut size={16} />
+                <LogOut size={18} />
               </button>
             </div>
           ) : (
             <Link
               href="/admin/login"
-              className="hidden rounded-full border border-white/10 px-4 py-2 font-mono text-xs uppercase tracking-[0.12em] text-ink-dim transition hover:border-white/25 hover:text-ink md:block"
+              className="hidden text-sm font-bold uppercase tracking-wide text-ink-soft underline-offset-4 hover:underline md:block"
             >
               Ingresar
             </Link>
           )}
           <button
-            className="md:hidden text-ink"
+            className="grid h-10 w-10 place-items-center rounded-md border-2 border-ink bg-white md:hidden"
             onClick={() => setOpen((v) => !v)}
-            aria-label="Menú"
+            aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
+            aria-expanded={open}
           >
-            {open ? <X size={22} /> : <Menu size={22} />}
+            {open ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </nav>
 
       {open && (
-        <div className="border-t border-white/10 bg-ground/95 px-4 py-4 md:hidden">
+        <div className="border-t-2 border-ink bg-paper px-4 py-4 md:hidden">
           <div className="flex flex-col gap-1">
             {links.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-3 font-mono text-sm uppercase tracking-[0.12em] text-ink-dim hover:bg-white/5 hover:text-ink"
+                className="rounded-sm px-3 py-3 text-base font-extrabold uppercase tracking-wide hover:bg-signal"
               >
                 {l.label}
               </Link>
             ))}
-            {isAdmin ? (
-              <Link
-                href="/admin"
-                onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-3 font-mono text-sm uppercase tracking-[0.12em] text-ink-dim hover:bg-white/5 hover:text-ink"
-              >
-                Admin
-              </Link>
-            ) : (
-              <Link
-                href="/admin/login"
-                onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-3 font-mono text-sm uppercase tracking-[0.12em] text-ink-dim hover:bg-white/5 hover:text-ink"
-              >
-                Ingresar
-              </Link>
-            )}
+            <Link
+              href={isAdmin ? '/admin' : '/admin/login'}
+              onClick={() => setOpen(false)}
+              className="rounded-sm px-3 py-3 text-base font-bold uppercase tracking-wide text-ink-soft hover:bg-signal"
+            >
+              {isAdmin ? 'Admin' : 'Ingresar'}
+            </Link>
             <button
               onClick={() => {
                 setOpen(false);
                 goQuote();
               }}
-              className="mt-2 rounded-full bg-flux px-5 py-3 font-mono text-sm uppercase tracking-[0.12em] text-white"
+              className="btn btn-signal mt-3"
             >
               Cotizar mi pieza
             </button>

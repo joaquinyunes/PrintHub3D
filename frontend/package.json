@@ -9,21 +9,18 @@
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css}\"",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "photos": "node scripts/gen-photos.mjs"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.8",
-    "@react-three/fiber": "^9.7.0",
     "@studio-freight/lenis": "^1.0.42",
     "@vercel/blob": "^2.3.3",
     "date-fns": "^4.1.0",
-    "framer-motion": "^12.38.0",
     "gsap": "^3.15.0",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-parallax-tilt": "^1.7.327",
     "recharts": "^3.6.0",
     "three": "^0.171.0",
     "xlsx": "^0.18.5"
@@ -32,6 +29,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.171.0",
     "autoprefixer": "^10.4.23",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",

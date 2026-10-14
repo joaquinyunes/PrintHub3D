@@ -1,48 +1,72 @@
-import React from "react";
-import { ShoppingCart, Plus, Box } from "lucide-react";
+"use client";
+
+import React, { useState } from "react";
+import { Plus, Check } from "lucide-react";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
+import { resolveMediaUrl } from "@/lib/api";
 
 interface ProductCardProps {
   product: Product;
   handleWhatsAppBuy: (item: Product) => void;
-  idx: number;
 }
 
-export default function ProductCard({ product, handleWhatsAppBuy, idx }: ProductCardProps) {
+/** Tarjeta de producto de la tienda: papel, borde de tinta, sombra dura y etiqueta de precio. */
+export default function ProductCard({ product, handleWhatsAppBuy }: ProductCardProps) {
   const { addToCart } = useCart();
+  const [added, setAdded] = useState(false);
+
+  const add = () => {
+    addToCart(product);
+    setAdded(true);
+    window.setTimeout(() => setAdded(false), 1200);
+  };
+
+  const url = product.imageUrl ? resolveMediaUrl(product.imageUrl) : "";
+  const drawing = url.endsWith(".svg");
 
   return (
-    <div
-      className="relative group overflow-hidden bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl hover:scale-[1.06] hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300"
-    >
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition duration-1000" />
+    <article className="card-hard flex h-full flex-col overflow-hidden transition-transform duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg">
+      <div className="relative aspect-square border-b-2 border-ink bg-paper-2">
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={url}
+            alt={product.name}
+            loading="lazy"
+            className={`absolute inset-0 h-full w-full ${drawing ? "object-contain p-5" : "object-cover"}`}
+          />
+        ) : (
+          <div className="absolute inset-0 grid place-items-center text-xs font-extrabold uppercase tracking-widest text-steel-300">
+            Sin imagen
+          </div>
+        )}
+        {product.category && <span className="tag-plain absolute left-3 top-3">{product.category}</span>}
       </div>
-      <div className="aspect-square bg-gray-800/50 overflow-hidden">
-        {product.imageUrl ?
-          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" /> :
-          <div className="w-full h-full flex items-center justify-center text-gray-700"><Box className="w-16 h-16" /></div>
-        }
-        <div className="absolute top-2 right-2">
-          <span className="px-2 py-1 bg-black/60 backdrop-blur rounded-lg text-xs text-gray-300">{product.category}</span>
-        </div>
-      </div>
-      <div className="p-4">
-        <h3 className="font-bold truncate mb-1">{product.name}</h3>
-        <p className="text-xs text-gray-500 line-clamp-2">{product.description || "Personalizado"}</p>
-        <div className="flex justify-between items-center mt-3 gap-2">
-          <span className="text-xl font-bold text-blue-400">${product.price}</span>
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <h3 className="font-display text-lg uppercase leading-tight">{product.name}</h3>
+        {product.description && (
+          <p className="line-clamp-2 text-sm leading-snug text-ink-soft">{product.description}</p>
+        )}
+        <div className="mt-auto flex items-center justify-between gap-2 pt-3">
+          <span className="tag !text-sm">${product.price.toLocaleString("es-AR")}</span>
           <div className="flex gap-2">
-            <button onClick={() => addToCart(product)} className="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-xl transition" title="Agregar al carrito">
-              <Plus size={18} />
+            <button
+              onClick={add}
+              aria-label={`Agregar ${product.name} al carrito`}
+              className="grid h-9 w-9 place-items-center rounded-md border-2 border-ink bg-white transition-colors hover:bg-signal"
+            >
+              {added ? <Check size={16} strokeWidth={3} /> : <Plus size={16} strokeWidth={3} />}
             </button>
-            <button onClick={() => handleWhatsAppBuy(product)} className="bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90 shadow-lg shadow-green-500/30 text-white p-2 rounded-xl transition" title="Comprar por WhatsApp">
-              <ShoppingCart size={18} />
+            <button
+              onClick={() => handleWhatsAppBuy(product)}
+              className="btn btn-paper !px-3 !py-1.5 !text-xs"
+            >
+              Comprar
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

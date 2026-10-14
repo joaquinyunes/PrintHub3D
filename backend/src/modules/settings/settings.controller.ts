@@ -18,29 +18,36 @@ export const uploadHomeImage = [
 
 const DEFAULT_HOMEPAGE_SECTIONS = {
     heroTitle: 'Global 3D',
-    heroSubtitle: 'Transformamos tus ideas en objetos reales.',
-    heroDescription: 'Impresión 3D de alta calidad en Corrientes',
-    heroBadge: 'Envíos gratis en pedidos mayores a $50.000',
-    heroStats: { reviews: '4.9', reviewsCount: '200+ reseñas', orders: '500+', delivery: '24-72h' },
-    heroFeatures: ['Impresión rápida', 'Calidad premium', 'Envío rápido', 'Soporte 24/7'],
+    heroSubtitle: 'Impresión 3D en Corrientes',
+    heroDescription: '',
+    heroBadge: '',
+    heroStats: { reviews: '', reviewsCount: '', orders: '', delivery: '' },
+    heroFeatures: [] as string[],
     productStar: {
-        enabled: true,
-        title: 'Vaso Personalizado River Plate',
-        subtitle: 'Impresión 3D de alta calidad con el escudo de tu equipo favorito.',
-        badge: '🔥 #1 MÁS VENDIDO',
-        price: '$3.500',
-        originalPrice: '$4.500',
-        teams: ['Boca', 'Racing', 'Independiente', 'Huracán']
+        enabled: false,
+        title: '',
+        subtitle: '',
+        badge: '',
+        price: '',
+        originalPrice: '',
+        teams: [] as string[]
     },
+    // La tienda ya no usa frames: los pasillos 3D se dibujan en vivo.
     copaAnimation: {
         enabled: true,
-        title: 'Copa de la Liga',
-        subtitle: 'Diseño 3D de alta calidad con detalles premium',
-        badge: '🏆 TROFEO PREMIUM',
-        price: '$12.500',
-        accentColor: '#f59e0b',
-        framesDir: '/frames-copakling/',
-        totalFrames: 73
+        title: '',
+        subtitle: '',
+        badge: '',
+        price: '',
+        accentColor: '#ffd21f'
+    },
+    impresoraAnimation: {
+        enabled: true,
+        title: '',
+        subtitle: '',
+        badge: '',
+        price: '',
+        accentColor: '#ffd21f'
     },
 };
 
@@ -50,7 +57,7 @@ function mergeSettings(settings: any) {
             enabled: true,
             title: 'Rastreá tu Pedido',
             subtitle: 'Ingresá tu código y seguí tu pedido en tiempo real',
-            badge: '📦 RASTREO',
+            badge: 'RASTREO',
             categories: [],
             customVideos: [],
             ...(settings?.rastreoSection || {})
@@ -58,7 +65,7 @@ function mergeSettings(settings: any) {
         productosSection: {
             enabled: true,
             title: 'Productos Personalizados',
-            subtitle: 'Vasos, llaveros, trofeos y más - Personalizados a tu gusto',
+            subtitle: 'Vasos, llaveros, trofeos y más, personalizados a tu gusto',
             categories: [],
             allProductsSearch: { enabled: true, placeholder: 'Buscar productos...' },
             ...(settings?.productosSection || {})
@@ -66,16 +73,14 @@ function mergeSettings(settings: any) {
         impresorasSection: {
             enabled: true,
             title: 'Impresoras 3D',
-            subtitle: 'Bambu Lab y más - Precisión y velocidad',
+            subtitle: 'Equipos Bambu Lab, repuestos y accesorios',
             animation: {
                 enabled: true,
-                title: 'Impresora 3D Bambu Lab X1C',
-                subtitle: 'La nueva generación de precisión y velocidad',
-                badge: '🖨️ PROFESIONAL',
-                price: '$469.000',
-                accentColor: '#3b82f6',
-                framesDir: '/frames-mp/',
-                totalFrames: 192,
+                title: '',
+                subtitle: '',
+                badge: '',
+                price: '',
+                accentColor: '#ffd21f',
                 ...(settings?.impresorasSection?.animation || {})
             },
             categories: [],
@@ -84,7 +89,7 @@ function mergeSettings(settings: any) {
         filamentosSection: {
             enabled: true,
             title: 'Filamentos y Materiales',
-            subtitle: 'PLA, PETG, ABS y más - Todos los colores',
+            subtitle: 'PLA, PETG, ABS y TPU en bobinas listas para imprimir',
             categories: [],
             ...(settings?.filamentosSection || {})
         },

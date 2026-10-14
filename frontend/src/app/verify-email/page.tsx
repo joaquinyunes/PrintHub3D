@@ -3,8 +3,9 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, XCircle, Loader2, ArrowRight } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { apiUrl } from "@/lib/api";
+import AuthShell from "@/components/store/AuthShell";
 
 type State = "loading" | "ok" | "error";
 
@@ -33,10 +34,10 @@ function VerifyInner() {
         if (!res.ok) throw new Error(data.message || "No se pudo verificar la cuenta.");
         setState("ok");
         setMessage(data.message || "Email verificado correctamente.");
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (cancelled) return;
         setState("error");
-        setMessage(err.message || "El enlace es inválido o expiró.");
+        setMessage(err instanceof Error && err.message ? err.message : "El enlace es inválido o expiró.");
       }
     })();
     return () => {
@@ -45,55 +46,30 @@ function VerifyInner() {
   }, [token]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-tone-darker relative overflow-hidden font-mono">
-      <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]" />
-      <div className="absolute h-96 w-96 bg-tone-red/10 rounded-full blur-[128px] -top-20 -left-20" />
-
-      <div className="relative z-10 w-full max-w-md p-8">
-        <div className="bg-tone-dark/60 border border-white/5 rounded-2xl p-8 text-center">
-          {state === "loading" && (
-            <>
-              <Loader2 className="w-12 h-12 text-tone-red animate-spin mx-auto mb-4" />
-              <h1 className="text-xl font-bold text-white">Verificando tu cuenta…</h1>
-            </>
-          )}
-
-          {state === "ok" && (
-            <>
-              <CheckCircle2 className="w-14 h-14 text-green-400 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold text-white mb-2">Cuenta verificada</h1>
-              <p className="text-tone-amber mb-6">{message}</p>
-              <Link href="/login" className="inline-flex items-center gap-2 text-tone-red hover:text-tone-red/80">
-                Iniciar sesión <ArrowRight className="w-4 h-4" />
-              </Link>
-            </>
-          )}
-
-          {state === "error" && (
-            <>
-              <XCircle className="w-14 h-14 text-tone-red mx-auto mb-4" />
-              <h1 className="text-2xl font-bold text-white mb-2">No se pudo verificar</h1>
-              <p className="text-gray-400 mb-6">{message}</p>
-              <Link href="/login" className="inline-flex items-center gap-2 text-tone-red hover:text-tone-red/80">
-                Volver a iniciar sesión <ArrowRight className="w-4 h-4" />
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
+    <AuthShell
+      title={
+        state === "loading" ? "Verificando tu cuenta" : state === "ok" ? "Cuenta verificada" : "No se pudo verificar"
+      }
+    >
+      {state === "loading" ? (
+        <p className="flex items-center gap-3 font-bold">
+          <Loader2 className="h-5 w-5 animate-spin" /> Un momento…
+        </p>
+      ) : (
+        <>
+          <p className="text-ink-soft">{message}</p>
+          <Link href="/login" className="btn btn-signal mt-6 w-full">
+            Ingresar
+          </Link>
+        </>
+      )}
+    </AuthShell>
   );
 }
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-tone-darker flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-tone-red animate-spin" />
-        </div>
-      }
-    >
+    <Suspense fallback={<div className="store grid min-h-screen place-items-center font-bold">Cargando…</div>}>
       <VerifyInner />
     </Suspense>
   );

@@ -1,25 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800" role="img" aria-label="Figuras y Deco">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Figuras y deco">
   <defs>
-    <radialGradient id="glow" cx="50%" cy="42%" r="62%">
-      <stop offset="0%" stop-color="#a855f7" stop-opacity=".26"/>
-      <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
-    </radialGradient>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M40 0 H0 V40" fill="none" stroke="#ffffff" stroke-opacity=".04" stroke-width="1"/>
-    </pattern>
-  </defs>
-  <rect width="800" height="800" fill="#08080b"/>
-  <rect width="800" height="800" fill="url(#grid)"/>
-  <rect width="800" height="800" fill="url(#glow)"/>
-  <g transform="translate(400 360)">
-    <path d="M0 -166.5 L150 -82.5 L0 1.5 L-150 -82.5 Z" fill="#a855f7" fill-opacity=".55"/>
-    <path d="M-150 -82.5 L0 1.5 L0 166.5 L-150 82.5 Z" fill="#a855f7" fill-opacity=".22"/>
-    <path d="M150 -82.5 L0 1.5 L0 166.5 L150 82.5 Z" fill="#a855f7" fill-opacity=".34"/>
-    <path d="M-150 -58.92857142857143 L0 25.071428571428573 L150 -58.92857142857143" fill="none" stroke="#a855f7" stroke-opacity=".16" stroke-width="2"/><path d="M-150 -35.357142857142854 L0 48.642857142857146 L150 -35.357142857142854" fill="none" stroke="#a855f7" stroke-opacity=".16" stroke-width="2"/><path d="M-150 -11.785714285714292 L0 72.21428571428571 L150 -11.785714285714292" fill="none" stroke="#a855f7" stroke-opacity=".16" stroke-width="2"/><path d="M-150 11.785714285714292 L0 95.78571428571429 L150 11.785714285714292" fill="none" stroke="#a855f7" stroke-opacity=".16" stroke-width="2"/><path d="M-150 35.35714285714286 L0 119.35714285714286 L150 35.35714285714286" fill="none" stroke="#a855f7" stroke-opacity=".16" stroke-width="2"/><path d="M-150 58.928571428571416 L0 142.92857142857142 L150 58.928571428571416" fill="none" stroke="#a855f7" stroke-opacity=".16" stroke-width="2"/>
-    <path d="M0 -166.5 L150 -82.5 L0 1.5 L-150 -82.5 Z" fill="none" stroke="#a855f7" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M-150 -82.5 L-150 82.5 L0 166.5 L150 82.5 L150 -82.5" fill="none" stroke="#a855f7" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M0 1.5 L0 166.5" fill="none" stroke="#a855f7" stroke-opacity=".9" stroke-width="3"/></g>
-  <text x="400" y="704" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif,system-ui,Segoe UI,Arial" font-size="40" font-weight="800">Figuras y Deco</text>
-  <text x="400" y="746" text-anchor="middle" fill="#ffffff" fill-opacity=".45" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="21" letter-spacing="2">CATEGORIA</text>
-  <text x="774" y="780" text-anchor="end" fill="#a855f7" fill-opacity=".5" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" letter-spacing="3">GLOBAL 3D</text>
+  <filter id="sticker" x="-12%" y="-12%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="11" result="d"/>
+    <feGaussianBlur in="d" stdDeviation="4" result="b"/>
+    <feComponentTransfer in="b" result="round"><feFuncA type="linear" slope="24" intercept="-11"/></feComponentTransfer>
+    <feFlood flood-color="#f2efe8"/><feComposite in2="round" operator="in" result="border"/>
+    <feOffset in="round" dx="11" dy="13" result="o"/>
+    <feFlood flood-color="#0d0e0f"/><feComposite in2="o" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter></defs>
+  <g filter="url(#sticker)"><rect x="50" y="452" width="500" height="26" rx="6" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/><path d="M64 465 H536" fill="none" stroke="#0d0e0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(190 334.2) rotate(0) scale(0.62)">
+  <path d="M0 -200 V-160" fill="none" stroke="#0d0e0f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="0" cy="-210" r="14" fill="#ffd21f" stroke="#0d0e0f" stroke-width="6"/>
+  <rect x="-90" y="-160" width="180" height="130" rx="28" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <circle cx="-34" cy="-98" r="18" fill="#0d0e0f" stroke="#0d0e0f" stroke-width="5"/><circle cx="34" cy="-98" r="18" fill="#0d0e0f" stroke="#0d0e0f" stroke-width="5"/>
+  <path d="M-30 -56 H30" fill="none" stroke="#0d0e0f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="-70" y="-30" width="140" height="160" rx="18" fill="#b4b9be" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-34" y="8" width="68" height="52" rx="8" fill="#ffd21f" stroke="#0d0e0f" stroke-width="6" stroke-linejoin="round"/>
+  <rect x="-128" y="-20" width="44" height="120" rx="16" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/><rect x="84" y="-20" width="44" height="120" rx="16" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-60" y="130" width="50" height="70" rx="12" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/><rect x="10" y="130" width="50" height="70" rx="12" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M-72 -140 H-44" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/></g><g transform="translate(410 334.2) rotate(0) scale(0.62)">
+  <path d="M-14 -40 C -10 -130 -60 -190 -120 -210 C -110 -140 -70 -80 -14 -40 Z" fill="#b4b9be" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M14 -40 C 20 -150 70 -200 130 -220 C 140 -150 90 -80 14 -40 Z" fill="#ffd21f" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M0 -40 C -4 -120 0 -170 0 -230" fill="none" stroke="#0d0e0f" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M-140 -50 H140 L106 150 H-106 Z" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M-92 -50 L-60 150 M0 -50 V150 M92 -50 L60 150" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="-130" y="150" width="260" height="34" rx="8" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M-120 -36 L-96 100" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/></g></g>
 </svg>

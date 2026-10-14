@@ -1,25 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800" role="img" aria-label="Llaveros">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Llaveros">
   <defs>
-    <radialGradient id="glow" cx="50%" cy="42%" r="62%">
-      <stop offset="0%" stop-color="#ff5c1a" stop-opacity=".26"/>
-      <stop offset="100%" stop-color="#ff5c1a" stop-opacity="0"/>
-    </radialGradient>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M40 0 H0 V40" fill="none" stroke="#ffffff" stroke-opacity=".04" stroke-width="1"/>
-    </pattern>
-  </defs>
-  <rect width="800" height="800" fill="#08080b"/>
-  <rect width="800" height="800" fill="url(#grid)"/>
-  <rect width="800" height="800" fill="url(#glow)"/>
-  <g transform="translate(400 360)">
-    <path d="M0 -166.5 L150 -82.5 L0 1.5 L-150 -82.5 Z" fill="#ff5c1a" fill-opacity=".55"/>
-    <path d="M-150 -82.5 L0 1.5 L0 166.5 L-150 82.5 Z" fill="#ff5c1a" fill-opacity=".22"/>
-    <path d="M150 -82.5 L0 1.5 L0 166.5 L150 82.5 Z" fill="#ff5c1a" fill-opacity=".34"/>
-    <path d="M-150 -58.92857142857143 L0 25.071428571428573 L150 -58.92857142857143" fill="none" stroke="#ff5c1a" stroke-opacity=".16" stroke-width="2"/><path d="M-150 -35.357142857142854 L0 48.642857142857146 L150 -35.357142857142854" fill="none" stroke="#ff5c1a" stroke-opacity=".16" stroke-width="2"/><path d="M-150 -11.785714285714292 L0 72.21428571428571 L150 -11.785714285714292" fill="none" stroke="#ff5c1a" stroke-opacity=".16" stroke-width="2"/><path d="M-150 11.785714285714292 L0 95.78571428571429 L150 11.785714285714292" fill="none" stroke="#ff5c1a" stroke-opacity=".16" stroke-width="2"/><path d="M-150 35.35714285714286 L0 119.35714285714286 L150 35.35714285714286" fill="none" stroke="#ff5c1a" stroke-opacity=".16" stroke-width="2"/><path d="M-150 58.928571428571416 L0 142.92857142857142 L150 58.928571428571416" fill="none" stroke="#ff5c1a" stroke-opacity=".16" stroke-width="2"/>
-    <path d="M0 -166.5 L150 -82.5 L0 1.5 L-150 -82.5 Z" fill="none" stroke="#ff5c1a" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M-150 -82.5 L-150 82.5 L0 166.5 L150 82.5 L150 -82.5" fill="none" stroke="#ff5c1a" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M0 1.5 L0 166.5" fill="none" stroke="#ff5c1a" stroke-opacity=".9" stroke-width="3"/></g>
-  <text x="400" y="704" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif,system-ui,Segoe UI,Arial" font-size="40" font-weight="800">Llaveros</text>
-  <text x="400" y="746" text-anchor="middle" fill="#ffffff" fill-opacity=".45" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="21" letter-spacing="2">CATEGORIA</text>
-  <text x="774" y="780" text-anchor="end" fill="#ff5c1a" fill-opacity=".5" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" letter-spacing="3">GLOBAL 3D</text>
+  <filter id="sticker" x="-12%" y="-12%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="11" result="d"/>
+    <feGaussianBlur in="d" stdDeviation="4" result="b"/>
+    <feComponentTransfer in="b" result="round"><feFuncA type="linear" slope="24" intercept="-11"/></feComponentTransfer>
+    <feFlood flood-color="#f2efe8"/><feComposite in2="round" operator="in" result="border"/>
+    <feOffset in="round" dx="11" dy="13" result="o"/>
+    <feFlood flood-color="#0d0e0f"/><feComposite in2="o" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter></defs>
+  <g filter="url(#sticker)"><rect x="50" y="452" width="500" height="26" rx="6" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/><path d="M64 465 H536" fill="none" stroke="#0d0e0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(190 334.2) rotate(0) scale(0.62)">
+  <path d="M-168 0 m-50 0 a50 50 0 1 0 100 0 a50 50 0 1 0 -100 0" fill="none" stroke="#0d0e0f" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/><path d="M-168 0 m-50 0 a50 50 0 1 0 100 0 a50 50 0 1 0 -100 0" fill="none" stroke="#b4b9be" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="-170" y="-100" width="330" height="200" rx="44" fill="#ffd21f" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <circle cx="-110" cy="0" r="20" fill="#f2efe8" stroke="#0d0e0f" stroke-width="6"/>
+  <path d="M52.0 -62.0 L68.5 -22.7 L111.0 -19.2 L78.6 8.7 L88.4 50.2 L52.0 28.0 L15.6 50.2 L25.4 8.7 L-7.0 -19.2 L35.5 -22.7 Z" fill="#f2efe8" stroke="#0d0e0f" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M-130 -72 H140" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-130 72 H140" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M-130 -76 H-40" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/></g><g transform="translate(410 357) rotate(0) scale(0.5)">
+  <path d="M-168 0 m-50 0 a50 50 0 1 0 100 0 a50 50 0 1 0 -100 0" fill="none" stroke="#0d0e0f" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/><path d="M-168 0 m-50 0 a50 50 0 1 0 100 0 a50 50 0 1 0 -100 0" fill="none" stroke="#b4b9be" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="-170" y="-100" width="330" height="200" rx="44" fill="#ffd21f" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <circle cx="-110" cy="0" r="20" fill="#f2efe8" stroke="#0d0e0f" stroke-width="6"/>
+  <path d="M52.0 -62.0 L68.5 -22.7 L111.0 -19.2 L78.6 8.7 L88.4 50.2 L52.0 28.0 L15.6 50.2 L25.4 8.7 L-7.0 -19.2 L35.5 -22.7 Z" fill="#f2efe8" stroke="#0d0e0f" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M-130 -72 H140" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-130 72 H140" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M-130 -76 H-40" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/></g></g>
 </svg>

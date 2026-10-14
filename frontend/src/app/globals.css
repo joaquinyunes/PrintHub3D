@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* shadcn tokens (usados por el panel admin) — Industrial Dark */
+    /* shadcn tokens (usados por el panel admin) */
     --background: 240 10% 4%;
     --foreground: 40 16% 94%;
     --card: 240 8% 6%;
@@ -26,10 +26,10 @@
     --ring: 18 100% 55%;
     --radius: 0.75rem;
 
-    --flame: #ff5c1a;
-    --flare: #ff2e88;
-    --resin: #14e0c8;
-    --ground: #0a0a0c;
+    /* identidad de la tienda */
+    --paper: #f2efe8;
+    --ink: #0d0e0f;
+    --signal: #ffd21f;
   }
 
   * {
@@ -50,13 +50,76 @@
     overflow: clip;
   }
   body {
-    @apply bg-ground text-ink font-sans antialiased;
-    font-feature-settings: "ss01" 1, "cv01" 1, "calt" 1;
+    @apply bg-tone-darker text-white font-sans antialiased;
     overflow-x: hidden;
   }
-  ::selection {
-    background: var(--flame);
-    color: #0a0a0c;
+  /* La tienda es de papel: que el rebote de scroll tampoco muestre negro. */
+  html:has(.store),
+  body:has(.store) {
+    background: var(--paper);
+  }
+  .store ::selection {
+    background: var(--signal);
+    color: var(--ink);
+  }
+  .store :focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Contenedor de página de la tienda */
+  .store {
+    @apply bg-paper font-sans text-ink;
+  }
+
+  /* Tarjeta: papel blanco, borde de tinta, sombra dura sin desenfoque */
+  .card-hard {
+    @apply rounded-md border-2 border-ink bg-white shadow-hard;
+  }
+
+  /* Botones */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border-2 border-ink px-5 py-3 text-sm font-extrabold uppercase tracking-wide text-ink shadow-hard transition-transform;
+  }
+  .btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 0 var(--ink);
+  }
+  .btn:active {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0 0 var(--ink);
+  }
+  .btn-signal {
+    @apply bg-signal;
+  }
+  .btn-paper {
+    @apply bg-white;
+  }
+  .btn-ink {
+    @apply bg-ink text-paper;
+  }
+
+  /* Etiqueta tipo precio de góndola */
+  .tag {
+    @apply inline-flex items-center rounded-sm border-2 border-ink bg-signal px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wider text-ink;
+  }
+  .tag-plain {
+    @apply inline-flex items-center rounded-sm border-2 border-ink bg-white px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-ink;
+  }
+
+  .field {
+    @apply w-full rounded-md border-2 border-ink bg-white px-4 py-3 text-sm text-ink placeholder:text-steel-300 focus:outline-none;
+  }
+  .field:focus {
+    box-shadow: 4px 4px 0 0 var(--ink);
+  }
+
+  /* Calcomanía: borde crema + sombra dura, aplicado con drop-shadow para que siga la silueta */
+  .sticker {
+    filter: drop-shadow(2px 0 0 #f2efe8) drop-shadow(-2px 0 0 #f2efe8) drop-shadow(0 2px 0 #f2efe8)
+      drop-shadow(0 -2px 0 #f2efe8) drop-shadow(5px 6px 0 #0d0e0f);
   }
 }
 
@@ -68,42 +131,20 @@
     text-wrap: pretty;
   }
   .font-display {
-    font-family: var(--font-display), system-ui, sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-family: var(--font-body), system-ui, sans-serif;
+    font-weight: 900;
+    font-stretch: 112%;
+    letter-spacing: -0.015em;
   }
-  /* Gradiente "filamento fundido": naranja → magenta */
-  .text-flux {
-    background: linear-gradient(100deg, var(--flame) 0%, var(--flare) 60%, var(--resin) 130%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .scrollbar-hide {
+    scrollbar-width: none;
   }
-  .bg-flux {
-    background: linear-gradient(100deg, var(--flame), var(--flare));
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
-  .ring-flux {
-    box-shadow: 0 0 0 1px rgba(255, 92, 26, 0.4), 0 20px 60px -20px rgba(255, 46, 136, 0.35);
-  }
-  /* Líneas de capa (layer lines) como textura de fondo */
-  .layer-lines {
-    background-image: repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.035) 0px,
-      rgba(255, 255, 255, 0.035) 1px,
-      transparent 1px,
-      transparent 7px
-    );
-  }
-  .grain::after {
-    content: "";
-    position: absolute;
-    inset: -50%;
-    pointer-events: none;
-    opacity: 0.4;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-    animation: grain-shift 8s steps(6) infinite;
-    mix-blend-mode: overlay;
+  /* Subrayado de marcador amarillo detrás del texto */
+  .marker {
+    background-image: linear-gradient(transparent 58%, var(--signal) 58%, var(--signal) 92%, transparent 92%);
   }
 }
 
@@ -115,20 +156,4 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-}
-
-/* Compat: animación heredada usada por algunas tarjetas de contacto */
-@keyframes fadeSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.contact-card {
-  opacity: 0;
-  animation: fadeSlideUp 0.6s ease forwards;
 }

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Boquilla">
+  <defs>
+  <filter id="sticker" x="-12%" y="-12%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="11" result="d"/>
+    <feGaussianBlur in="d" stdDeviation="4" result="b"/>
+    <feComponentTransfer in="b" result="round"><feFuncA type="linear" slope="24" intercept="-11"/></feComponentTransfer>
+    <feFlood flood-color="#f2efe8"/><feComposite in2="round" operator="in" result="border"/>
+    <feOffset in="round" dx="11" dy="13" result="o"/>
+    <feFlood flood-color="#0d0e0f"/><feComposite in2="o" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter></defs>
+  <g filter="url(#sticker)"><g transform="translate(300 300) rotate(0) scale(1)">
+  <rect x="-60" y="-210" width="120" height="40" rx="8" fill="#b4b9be" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-100" y="-170" width="200" height="14" rx="4" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="5" stroke-linejoin="round"/><rect x="-100" y="-148" width="200" height="14" rx="4" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="5" stroke-linejoin="round"/><rect x="-100" y="-126" width="200" height="14" rx="4" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="5" stroke-linejoin="round"/><rect x="-100" y="-104" width="200" height="14" rx="4" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="5" stroke-linejoin="round"/><rect x="-100" y="-82" width="200" height="14" rx="4" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M-90 -60 L-50 -102 H50 L90 -60 L50 -18 H-50 Z" fill="#ffd21f" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+  <rect x="-56" y="-18" width="112" height="80" rx="8" fill="#b4b9be" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M-56 62 L56 62 L16 156 H-16 Z" fill="#ffd21f" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+  <rect x="-16" y="156" width="32" height="36" rx="6" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M-56 8 H56 M-56 36 H56" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M-72 -62 L-48 -88" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/></g></g>
+</svg>

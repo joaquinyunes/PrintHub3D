@@ -1,25 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800" role="img" aria-label="Mate Impreso 3D">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Mate">
   <defs>
-    <radialGradient id="glow" cx="50%" cy="42%" r="62%">
-      <stop offset="0%" stop-color="#22c55e" stop-opacity=".26"/>
-      <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
-    </radialGradient>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M40 0 H0 V40" fill="none" stroke="#ffffff" stroke-opacity=".04" stroke-width="1"/>
-    </pattern>
-  </defs>
-  <rect width="800" height="800" fill="#08080b"/>
-  <rect width="800" height="800" fill="url(#grid)"/>
-  <rect width="800" height="800" fill="url(#glow)"/>
-  <g transform="translate(400 360)">
-    <path d="M0 -166.5 L150 -82.5 L0 1.5 L-150 -82.5 Z" fill="#22c55e" fill-opacity=".55"/>
-    <path d="M-150 -82.5 L0 1.5 L0 166.5 L-150 82.5 Z" fill="#22c55e" fill-opacity=".22"/>
-    <path d="M150 -82.5 L0 1.5 L0 166.5 L150 82.5 Z" fill="#22c55e" fill-opacity=".34"/>
-    <path d="M-150 -58.92857142857143 L0 25.071428571428573 L150 -58.92857142857143" fill="none" stroke="#22c55e" stroke-opacity=".16" stroke-width="2"/><path d="M-150 -35.357142857142854 L0 48.642857142857146 L150 -35.357142857142854" fill="none" stroke="#22c55e" stroke-opacity=".16" stroke-width="2"/><path d="M-150 -11.785714285714292 L0 72.21428571428571 L150 -11.785714285714292" fill="none" stroke="#22c55e" stroke-opacity=".16" stroke-width="2"/><path d="M-150 11.785714285714292 L0 95.78571428571429 L150 11.785714285714292" fill="none" stroke="#22c55e" stroke-opacity=".16" stroke-width="2"/><path d="M-150 35.35714285714286 L0 119.35714285714286 L150 35.35714285714286" fill="none" stroke="#22c55e" stroke-opacity=".16" stroke-width="2"/><path d="M-150 58.928571428571416 L0 142.92857142857142 L150 58.928571428571416" fill="none" stroke="#22c55e" stroke-opacity=".16" stroke-width="2"/>
-    <path d="M0 -166.5 L150 -82.5 L0 1.5 L-150 -82.5 Z" fill="none" stroke="#22c55e" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M-150 -82.5 L-150 82.5 L0 166.5 L150 82.5 L150 -82.5" fill="none" stroke="#22c55e" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M0 1.5 L0 166.5" fill="none" stroke="#22c55e" stroke-opacity=".9" stroke-width="3"/></g>
-  <text x="400" y="704" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif,system-ui,Segoe UI,Arial" font-size="40" font-weight="800">Mate Impreso 3D</text>
-  <text x="400" y="746" text-anchor="middle" fill="#ffffff" fill-opacity=".45" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="21" letter-spacing="2">PRODUCTO</text>
-  <text x="774" y="780" text-anchor="end" fill="#22c55e" fill-opacity=".5" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" letter-spacing="3">GLOBAL 3D</text>
+  <filter id="sticker" x="-12%" y="-12%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="11" result="d"/>
+    <feGaussianBlur in="d" stdDeviation="4" result="b"/>
+    <feComponentTransfer in="b" result="round"><feFuncA type="linear" slope="24" intercept="-11"/></feComponentTransfer>
+    <feFlood flood-color="#f2efe8"/><feComposite in2="round" operator="in" result="border"/>
+    <feOffset in="round" dx="11" dy="13" result="o"/>
+    <feFlood flood-color="#0d0e0f"/><feComposite in2="o" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter></defs>
+  <g filter="url(#sticker)"><g transform="translate(300 310) rotate(0) scale(1.08)">
+  <path d="M34 -78 C 70 -150 120 -190 150 -250" fill="none" stroke="#0d0e0f" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M34 -78 C 70 -150 120 -190 150 -250" fill="none" stroke="#9aa1a8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="150" cy="-250" r="14" fill="#b4b9be" stroke="#0d0e0f" stroke-width="5"/>
+  <path d="M-112 -76 C -156 40 -104 172 0 172 C 104 172 156 40 112 -76 Z" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M-112 -76 C -116 -20 -90 -4 0 -4 C 90 -4 116 -20 112 -76 Z" fill="#ffd21f" stroke="#0d0e0f" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="0" cy="-76" rx="112" ry="30" fill="#0d0e0f" stroke="#0d0e0f" stroke-width="8"/>
+  <path d="M-70 60 H70" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-70 90 H70" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-70 120 H70" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M-92 -10 C -120 50 -96 120 -50 150" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/></g></g>
 </svg>

@@ -120,49 +120,41 @@ export default function HomeSettingsPage() {
   const [activeTab, setActiveTab] = useState<'inicio' | 'rastreo' | 'productos' | 'impresoras' | 'filamentos' | 'contacto'>('inicio');
   const [sections, setSections] = useState<HomeSections>({
     heroTitle: 'Global 3D',
-    heroSubtitle: 'Transformamos tus ideas en objetos reales.',
-    heroDescription: 'Impresión 3D de alta calidad en Corrientes',
-    heroBadge: 'Envíos gratis en pedidos mayores a $50.000',
-    heroStats: { reviews: '4.9', reviewsCount: '200+ reseñas', orders: '500+', delivery: '24-72h' },
-    heroFeatures: ['Impresión rápida', 'Calidad premium', 'Envío rápido', 'Soporte 24/7'],
-    productStar: {
-      enabled: true,
-      title: 'Vaso Personalizado River Plate',
-      subtitle: 'Impresión 3D de alta calidad con el escudo de tu equipo favorito.',
-      badge: '🔥 #1 MÁS VENDIDO',
-      price: '$3.500',
-      originalPrice: '$4.500',
-      teams: ['Boca', 'Racing', 'Independiente', 'Huracán']
-    },
+    heroSubtitle: 'Impresión 3D en Corrientes',
+    heroDescription: '',
+    heroBadge: '',
+    heroStats: { reviews: '', reviewsCount: '', orders: '', delivery: '' },
+    heroFeatures: [],
+    productStar: { enabled: false, title: '', subtitle: '', badge: '', price: '', originalPrice: '', teams: [] },
     copaAnimation: {
       enabled: true,
-      title: 'Copa de la Liga',
-      subtitle: 'Diseño 3D de alta calidad con detalles premium',
+      title: '',
+      subtitle: '',
       badge: '',
-      price: '$12.500',
-      accentColor: '#f59e0b',
-      framesDir: '/frames-copakling/',
-      totalFrames: 73
+      price: '',
+      accentColor: '#ffd21f',
+      framesDir: '',
+      totalFrames: 0
     },
     impresoraAnimation: {
       enabled: true,
-      title: 'Impresora 3D Bambu Lab X1C',
-      subtitle: 'La nueva generación de precisión y velocidad',
+      title: '',
+      subtitle: '',
       badge: '',
-      price: '$469.000',
-      accentColor: '#3b82f6',
-      framesDir: '/frames-mp/',
-      totalFrames: 192
+      price: '',
+      accentColor: '#ffd21f',
+      framesDir: '',
+      totalFrames: 0
     },
     printers: [],
     printersTitle: 'Impresoras 3D',
     printersSubtitle: 'Vendemos impresoras Bambu Lab y accesorios',
     productCategories: [],
-    rastreoSection: { enabled: true, title: 'Rastreá tu Pedido', subtitle: 'Ingresá tu código y seguí tu pedido en tiempo real', badge: '📦 RASTREO', categories: [], customVideos: [] },
-    productosSection: { enabled: true, title: 'Productos Personalizados', subtitle: 'Vasos, llaveros, trofeos y más', badge: '🏆 PRODUCTOS', heroImage: '', categories: [], allProductsSearch: { enabled: true, placeholder: 'Buscar productos...', sortOptions: ['price_asc', 'price_desc', 'name_asc', 'name_desc', 'newest'], filterOptions: ['searchByName', 'searchByDescription', 'filterByPrice'] } },
-    impresorasSection: { enabled: true, title: 'Impresoras 3D', subtitle: 'Bambu Lab y más', badge: '🖨️ IMPRESORAS', heroImage: '', categories: [], animation: { enabled: true, title: 'Impresora 3D Bambu Lab X1C', subtitle: 'La nueva generación', badge: '', price: '$469.000', accentColor: '#3b82f6', framesDir: '/frames-mp/', totalFrames: 192 } },
-    filamentosSection: { enabled: true, title: 'Filamentos y Materiales', subtitle: 'PLA, PETG, ABS y más', badge: '🧵 FILAMENTOS', heroImage: '', categories: [] },
-    contactoSection: { enabled: true, title: 'Contactanos', subtitle: 'Estamos para ayudarte', badge: '📩 CONTACTO' },
+    rastreoSection: { enabled: true, title: 'Rastreá tu Pedido', subtitle: 'Ingresá tu código y seguí tu pedido en tiempo real', badge: 'RASTREO', categories: [], customVideos: [] },
+    productosSection: { enabled: true, title: 'Productos Personalizados', subtitle: 'Vasos, llaveros, trofeos y más', badge: 'PRODUCTOS', heroImage: '', categories: [], allProductsSearch: { enabled: true, placeholder: 'Buscar productos...', sortOptions: ['price_asc', 'price_desc', 'name_asc', 'name_desc', 'newest'], filterOptions: ['searchByName', 'searchByDescription', 'filterByPrice'] } },
+    impresorasSection: { enabled: true, title: 'Impresoras 3D', subtitle: 'Bambu Lab y más', badge: 'IMPRESORAS', heroImage: '', categories: [], animation: { enabled: false, title: '', subtitle: '', badge: '', price: '', accentColor: '#ffd21f', framesDir: '', totalFrames: 0 } },
+    filamentosSection: { enabled: true, title: 'Filamentos y Materiales', subtitle: 'PLA, PETG, ABS y más', badge: 'FILAMENTOS', heroImage: '', categories: [] },
+    contactoSection: { enabled: true, title: 'Contactanos', subtitle: 'Estamos para ayudarte', badge: 'CONTACTO' },
 contactInfo: {
       whatsapp: '',
       whatsappDisplay: '',
@@ -595,95 +587,21 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
         {activeTab === 'inicio' && (
           <div className="space-y-6">
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-xl font-bold mb-4">Sección Hero</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-gray-500 block mb-1">Título principal</label><input type="text" value={sections.heroTitle} onChange={e => setSections(prev => ({ ...prev, heroTitle: e.target.value }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.heroSubtitle} onChange={e => setSections(prev => ({ ...prev, heroSubtitle: e.target.value }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Descripción</label><input type="text" value={sections.heroDescription} onChange={e => setSections(prev => ({ ...prev, heroDescription: e.target.value }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Badge</label><input type="text" value={sections.heroBadge} onChange={e => setSections(prev => ({ ...prev, heroBadge: e.target.value }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+              <h2 className="text-xl font-bold mb-2">Pasillos 3D del inicio</h2>
+              <p className="text-sm text-gray-400 mb-5">
+                La portada y los textos de los pasillos están definidos en la tienda. Desde acá solo se
+                prenden o apagan.
+              </p>
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 text-sm">
+                  <input type="checkbox" checked={sections.copaAnimation?.enabled !== false} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, enabled: e.target.checked } }))} className="w-5 h-5 rounded" />
+                  <span>Pasillo 1: Productos 3D</span>
+                </label>
+                <label className="flex items-center gap-3 text-sm">
+                  <input type="checkbox" checked={sections.impresoraAnimation?.enabled !== false} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, enabled: e.target.checked } }))} className="w-5 h-5 rounded" />
+                  <span>Pasillo 2: Impresoras e insumos</span>
+                </label>
               </div>
-              <div className="grid grid-cols-4 gap-4 mt-4">
-                <div><label className="text-xs text-gray-500 block mb-1">Reviews</label><input type="text" value={sections.heroStats?.reviews} onChange={e => setSections(prev => ({ ...prev, heroStats: { ...prev.heroStats, reviews: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Reviews count</label><input type="text" value={sections.heroStats?.reviewsCount} onChange={e => setSections(prev => ({ ...prev, heroStats: { ...prev.heroStats, reviewsCount: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Pedidos</label><input type="text" value={sections.heroStats?.orders} onChange={e => setSections(prev => ({ ...prev, heroStats: { ...prev.heroStats, orders: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Entrega</label><input type="text" value={sections.heroStats?.delivery} onChange={e => setSections(prev => ({ ...prev, heroStats: { ...prev.heroStats, delivery: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-              </div>
-              <div className="grid grid-cols-4 gap-4 mt-4">
-                {[0,1,2,3].map(i => (
-                  <div key={i}><label className="text-xs text-gray-500 block mb-1">Feature {i+1}</label><input type="text" value={sections.heroFeatures?.[i] || ''} onChange={e => setSections(prev => ({ ...prev, heroFeatures: prev.heroFeatures.map((f, idx) => idx === i ? e.target.value : f) }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Producto Estrella</h2>
-                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={sections.productStar?.enabled} onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /><span className="text-gray-400">Mostrar</span></label>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-gray-500 block mb-1">Título</label><input type="text" value={sections.productStar?.title || ''} onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.productStar?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Badge</label><input type="text" value={sections.productStar?.badge || ''} onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Precio</label><input type="text" value={sections.productStar?.price || ''} onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, price: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Precio Original</label><input type="text" value={sections.productStar?.originalPrice || ''} onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, originalPrice: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Equipos</label><input type="text" value={sections.productStar?.teams?.join(', ') || ''} onChange={e => setSections(prev => ({ ...prev, productStar: { ...prev.productStar, teams: e.target.value.split(',').map(s => s.trim()) } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-              </div>
-            </div>
-
-            <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Copa Animation</h2>
-                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={sections.copaAnimation?.enabled} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /><span className="text-gray-400">Mostrar</span></label>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-gray-500 block mb-1">Título</label><input type="text" value={sections.copaAnimation?.title || ''} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.copaAnimation?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Precio</label><input type="text" value={sections.copaAnimation?.price || ''} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, price: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Color acento</label><input type="text" value={sections.copaAnimation?.accentColor || ''} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, accentColor: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Carpeta frames</label><input type="text" value={sections.copaAnimation?.framesDir || ''} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, framesDir: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Total frames</label><input type="number" value={sections.copaAnimation?.totalFrames || 0} onChange={e => setSections(prev => ({ ...prev, copaAnimation: { ...prev.copaAnimation, totalFrames: parseInt(e.target.value) || 0 } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-              </div>
-            </div>
-
-            <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Impresora Animation</h2>
-                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={sections.impresoraAnimation?.enabled} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /><span className="text-gray-400">Mostrar</span></label>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-gray-500 block mb-1">Título</label><input type="text" value={sections.impresoraAnimation?.title || ''} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.impresoraAnimation?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Precio</label><input type="text" value={sections.impresoraAnimation?.price || ''} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, price: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Color acento</label><input type="text" value={sections.impresoraAnimation?.accentColor || ''} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, accentColor: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Carpeta frames</label><input type="text" value={sections.impresoraAnimation?.framesDir || ''} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, framesDir: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Total frames</label><input type="number" value={sections.impresoraAnimation?.totalFrames || 0} onChange={e => setSections(prev => ({ ...prev, impresoraAnimation: { ...prev.impresoraAnimation, totalFrames: parseInt(e.target.value) || 0 } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-              </div>
-            </div>
-
-            <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">Explorá - Nuestras Categorías</h2>
-                <p className="text-sm text-zinc-400">Categorías que aparecen en la sección «Explorá» del inicio</p>
-              </div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-gray-400">{sections.productCategories?.length || 0} categorías</span>
-                <button onClick={() => setSections(prev => ({ ...prev, productCategories: [...(prev.productCategories || []), { id: Date.now().toString(), name: '', icon: '📦', subCategories: [] }] }))} className="flex items-center gap-1 text-sm text-blue-400"><Plus className="w-4 h-4" /> Agregar</button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {(sections.productCategories || []).map((cat: any, i: number) => (
-                  <div key={cat.id} className="bg-black/40 border border-white/10 rounded-xl p-4">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-2">
-                        <input type="text" value={cat.icon} onChange={e => { const newCats = [...sections.productCategories]; newCats[i] = {...newCats[i], icon: e.target.value}; setSections(prev => ({...prev, productCategories: newCats})) }} className="w-14 bg-zinc-800 rounded-lg py-2 px-2 text-center text-xl" placeholder="Icono" />
-                        <input type="text" value={cat.name} onChange={e => { const newCats = [...sections.productCategories]; newCats[i] = {...newCats[i], name: e.target.value}; setSections(prev => ({...prev, productCategories: newCats})) }} className="flex-1 bg-zinc-800 rounded-lg py-2 px-3" placeholder="Nombre" />
-                      </div>
-                      <input type="text" value={cat.description || ''} onChange={e => { const newCats = [...sections.productCategories]; newCats[i] = {...newCats[i], description: e.target.value}; setSections(prev => ({...prev, productCategories: newCats})) }} className="w-full bg-zinc-800 rounded-lg py-2 px-3 text-sm" placeholder="Descripción" />
-                      <button onClick={() => { const newCats = [...sections.productCategories]; newCats.splice(i, 1); setSections(prev => ({...prev, productCategories: newCats})) }} className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1"><Trash2 className="w-4 h-4" /> Eliminar</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {(sections.productCategories?.length || 0) === 0 && <p className="text-gray-500 text-center py-4">No hay categorías. Agregá una para mostrar en la web.</p>}
             </div>
           </div>
         )}

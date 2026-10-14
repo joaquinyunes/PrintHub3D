@@ -1,24 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800" role="img" aria-label="Bambu Lab P1S">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Impresora cerrada">
   <defs>
-    <radialGradient id="glow" cx="50%" cy="42%" r="62%">
-      <stop offset="0%" stop-color="#3b82f6" stop-opacity=".26"/>
-      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
-    </radialGradient>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M40 0 H0 V40" fill="none" stroke="#ffffff" stroke-opacity=".04" stroke-width="1"/>
-    </pattern>
-  </defs>
-  <rect width="800" height="800" fill="#08080b"/>
-  <rect width="800" height="800" fill="url(#grid)"/>
-  <rect width="800" height="800" fill="url(#glow)"/>
-  <g transform="translate(400 360)">
-    <rect x="-160" y="-150" width="320" height="300" rx="14" fill="#3b82f6" fill-opacity=".07" stroke="#3b82f6" stroke-opacity=".85" stroke-width="4"/>
-    <path d="M-160 -96 L160 -96" stroke="#3b82f6" stroke-opacity=".5" stroke-width="3"/>
-    <rect x="-34" y="-58" width="68" height="30" rx="6" fill="#3b82f6" fill-opacity=".9"/>
-    <path d="M0 -28 L0 52" stroke="#3b82f6" stroke-opacity=".55" stroke-width="3" stroke-dasharray="7 7"/>
-    <path d="M-70 118 L0 78 L70 118 L0 158 Z" fill="#3b82f6" fill-opacity=".5" stroke="#3b82f6" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>
-    <rect x="-118" y="120" width="236" height="14" rx="7" fill="#3b82f6" fill-opacity=".3"/></g>
-  <text x="400" y="704" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif,system-ui,Segoe UI,Arial" font-size="40" font-weight="800">Bambu Lab P1S</text>
-  <text x="400" y="746" text-anchor="middle" fill="#ffffff" fill-opacity=".45" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="21" letter-spacing="2">IMPRESORA</text>
-  <text x="774" y="780" text-anchor="end" fill="#3b82f6" fill-opacity=".5" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" letter-spacing="3">GLOBAL 3D</text>
+  <filter id="sticker" x="-12%" y="-12%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="11" result="d"/>
+    <feGaussianBlur in="d" stdDeviation="4" result="b"/>
+    <feComponentTransfer in="b" result="round"><feFuncA type="linear" slope="24" intercept="-11"/></feComponentTransfer>
+    <feFlood flood-color="#f2efe8"/><feComposite in2="round" operator="in" result="border"/>
+    <feOffset in="round" dx="11" dy="13" result="o"/>
+    <feFlood flood-color="#0d0e0f"/><feComposite in2="o" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter></defs>
+  <g filter="url(#sticker)"><g transform="translate(300 306) scale(0.98)">
+  <circle cx="0" cy="-196" r="46" fill="#b4b9be" stroke="#0d0e0f" stroke-width="8"/><circle cx="0" cy="-196" r="16" fill="#0d0e0f" stroke="#0d0e0f" stroke-width="5"/>
+  <rect x="-210" y="170" width="420" height="50" rx="12" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-190" y="-170" width="380" height="350" rx="20" fill="#d7dbe0" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-190" y="-170" width="380" height="40" rx="20" fill="#b4b9be" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-150" y="-112" width="300" height="240" rx="12" fill="#f2efe8" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-150" y="-60" width="300" height="18" rx="4" fill="#9aa1a8" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-36" y="-76" width="72" height="48" rx="6" fill="#ffd21f" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M-14 -28 L14 -28 L0 -2 Z" fill="#0d0e0f" stroke="#0d0e0f" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+  <rect x="-120" y="66" width="240" height="22" rx="6" fill="#b4b9be" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-44" y="4" width="88" height="62" rx="4" fill="#ffd21f" stroke="#0d0e0f" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M-44 20 H44" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-44 36 H44" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-44 52 H44" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M-128 -92 L-66 -92" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/>
+  <path d="M-128 -70 L-100 -70" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".7"/>
+  <path d="M-190 -150 H190" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-168 60 H-150" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-168 74 H-150" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-168 88 H-150" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M-168 102 H-150" fill="none" stroke="#0d0e0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <rect x="100" y="138" width="70" height="30" rx="6" fill="#0d0e0f" stroke="#0d0e0f" stroke-width="5" stroke-linejoin="round"/><circle cx="122" cy="153" r="6" fill="#ffd21f" stroke="#0d0e0f" stroke-width="3"/></g></g>
 </svg>

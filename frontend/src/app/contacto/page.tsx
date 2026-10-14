@@ -1,326 +1,186 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
-import { ChevronLeft, MessageCircle, MapPin, Mail, Loader2, Phone, Instagram } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MessageCircle, MapPin, Mail, Phone, Instagram } from 'lucide-react';
 import { apiUrl } from '@/lib/api';
-import { motion } from 'framer-motion';
-import GradientField from '@/components/motion/GradientField';
-import Magnetic from '@/components/motion/Magnetic';
+import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/config';
+import Nav from '@/components/store/Nav';
+import Footer from '@/components/store/Footer';
 
-function useScrollReveal(threshold = 0.15) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [threshold]);
-
-  return { ref, visible };
+interface Contact {
+  whatsapp: string;
+  whatsappDisplay: string;
+  instagram: string;
+  instagramUrl: string;
+  location: string;
+  email: string;
 }
 
-function RevealSection({
-  children,
-  delay = 0,
-  className = '',
-}: {
-  children: React.ReactNode;
-  delay?: number;
-  className?: string;
-}) {
-  const { ref, visible } = useScrollReveal();
-  return (
-    <div ref={ref} className={className}>
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-        transition={{ duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-      >
-        {children}
-      </motion.div>
-    </div>
-  );
-}
-
-const DEFAULT_CONTACT = {
-  whatsapp: '5493794000000',
-  whatsappDisplay: '+54 9379 4000000',
+const DEFAULT_CONTACT: Contact = {
+  whatsapp: WHATSAPP_PHONE,
+  whatsappDisplay: WHATSAPP_DISPLAY,
   instagram: 'global3dcorrientes',
   instagramUrl: 'https://instagram.com/global3dcorrientes',
   location: 'Corrientes, Argentina',
-  email: 'contacto@global3d.com',
+  email: '',
 };
 
 export default function ContactoPage() {
-  const [contact, setContact] = useState(DEFAULT_CONTACT);
-  const [loaded, setLoaded] = useState(false);
+  const [contact, setContact] = useState<Contact>(DEFAULT_CONTACT);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
-  const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    fetch(apiUrl('/api/settings/public'))
+    const ctrl = new AbortController();
+    fetch(apiUrl('/api/settings/public'), { signal: ctrl.signal })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data?.contactInfo) {
-          setContact({ ...DEFAULT_CONTACT, ...data.contactInfo });
+          const c = data.contactInfo as Partial<Contact>;
+          setContact({
+            whatsapp: c.whatsapp || DEFAULT_CONTACT.whatsapp,
+            whatsappDisplay: c.whatsappDisplay || DEFAULT_CONTACT.whatsappDisplay,
+            instagram: c.instagram || DEFAULT_CONTACT.instagram,
+            instagramUrl: c.instagramUrl || DEFAULT_CONTACT.instagramUrl,
+            location: c.location || DEFAULT_CONTACT.location,
+            email: c.email || '',
+          });
         }
       })
-      .catch(() => {})
-      .finally(() => setLoaded(true));
+      .catch(() => {});
+    return () => ctrl.abort();
   }, []);
 
-  const handleWhatsApp = () => {
-    const text = `Hola!${formData.name ? ` Soy ${formData.name}.` : ''}${
-      formData.email ? ` (${formData.email})` : ''
-    }${formData.message ? `\n${formData.message}` : ''}`;
-    window.open(`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(text)}`, '_blank');
-  };
-
-  // No hay backend de email: el "envío" abre WhatsApp con el mensaje ya redactado,
+  // No hay backend de email: el envío abre WhatsApp con el mensaje ya redactado,
   // que es el canal real por el que el negocio responde.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.message.trim()) return;
-    setSending(true);
-    handleWhatsApp();
-    setTimeout(() => {
-      setSending(false);
-      setSent(true);
-      setTimeout(() => setSent(false), 4000);
-    }, 400);
+    const text = `Hola!${formData.name ? ` Soy ${formData.name}.` : ''}${
+      formData.email ? ` (${formData.email})` : ''
+    }\n${formData.message}`;
+    window.open(
+      `https://wa.me/${contact.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`,
+      '_blank',
+      'noopener',
+    );
+    setSent(true);
+    window.setTimeout(() => setSent(false), 4000);
   };
 
-  const contactCards = [
+  const cards = [
     {
-      icon: <Phone className="w-6 h-6" />,
+      icon: <Phone className="h-6 w-6" strokeWidth={2.5} />,
       label: 'WhatsApp',
       value: contact.whatsappDisplay,
-      action: { label: 'Escribir', onClick: handleWhatsApp },
-      accent: '#22c55e',
-      bgGlow: 'rgba(34,197,94,0.08)',
+      href: `https://wa.me/${contact.whatsapp.replace(/\D/g, '')}`,
+      action: 'Escribir',
     },
     {
-      icon: <Instagram className="w-6 h-6" />,
+      icon: <Instagram className="h-6 w-6" strokeWidth={2.5} />,
       label: 'Instagram',
-      value: `@${contact.instagram}`,
-      action: { label: 'Seguir', href: contact.instagramUrl },
-      accent: '#e94c89',
-      bgGlow: 'rgba(233,76,137,0.08)',
+      value: `@${contact.instagram.replace('@', '')}`,
+      href: contact.instagramUrl,
+      action: 'Seguir',
     },
     {
-      icon: <MapPin className="w-6 h-6" />,
+      icon: <MapPin className="h-6 w-6" strokeWidth={2.5} />,
       label: 'Ubicación',
       value: contact.location,
-      accent: '#f59e0b',
-      bgGlow: 'rgba(245,158,11,0.08)',
     },
-    {
-      icon: <Mail className="w-6 h-6" />,
-      label: 'Email',
-      value: contact.email,
-      action: { label: 'Enviar', href: `mailto:${contact.email}` },
-      accent: '#3b82f6',
-      bgGlow: 'rgba(59,130,246,0.08)',
-    },
+    ...(contact.email
+      ? [
+          {
+            icon: <Mail className="h-6 w-6" strokeWidth={2.5} />,
+            label: 'Email',
+            value: contact.email,
+            href: `mailto:${contact.email}`,
+            action: 'Enviar',
+          },
+        ]
+      : []),
   ];
 
-  const renderCard = (card: (typeof contactCards)[0], delay: number, extraClass = '') => (
-    <motion.div
-      key={card.label}
-      initial={{ opacity: 0, y: 30 }}
-      animate={loaded ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className={`group relative bg-tone-dark/60 border border-white/5 rounded-xl p-6 hover:border-white/10 transition-all duration-500 ${extraClass}`}
-    >
-      <div
-        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
-        style={{
-          background: `radial-gradient(600px circle at 50% 50%, ${card.bgGlow}, transparent 70%)`,
-        }}
-      />
-      <div className="relative z-10 flex items-start gap-4">
-        <div
-          className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: `${card.accent}15`, color: card.accent }}
-        >
-          {card.icon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-600 uppercase tracking-widest mb-1">{card.label}</p>
-          <p className="text-white font-medium truncate">{card.value}</p>
-        </div>
-        {card.action &&
-          ('onClick' in card.action ? (
-            <button
-              onClick={card.action.onClick}
-              className="flex-shrink-0 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-gray-400 hover:text-white transition-all border border-white/5 hover:border-white/10"
-            >
-              {card.action.label}
-            </button>
-          ) : (
-            <a
-              href={card.action.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-gray-400 hover:text-white transition-all border border-white/5 hover:border-white/10"
-            >
-              {card.action.label}
-            </a>
-          ))}
-      </div>
-    </motion.div>
-  );
-
   return (
-    <div className="relative min-h-screen bg-tone-darker font-mono">
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <GradientField />
-      </div>
+    <div className="store min-h-screen">
+      <Nav />
 
-      <div className="fixed top-0 left-0 right-0 z-50 bg-tone-darker/90 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-gray-600 hover:text-white transition-colors text-sm"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Volver
-          </Link>
-          <span className="text-xs text-gray-600 uppercase tracking-widest">Contacto</span>
-          <div className="w-20" />
-        </div>
-      </div>
+      <main className="mx-auto max-w-5xl px-4 py-12 md:px-6 md:py-16">
+        <span className="tag">Contacto</span>
+        <h1 className="font-display mt-4 text-[clamp(2.4rem,6vw,4.5rem)] uppercase leading-[0.95]">
+          Hablemos<span className="marker">.</span>
+        </h1>
+        <p className="mt-4 max-w-lg text-lg text-ink-soft">Respondemos en el día.</p>
 
-      <main className="pt-32 pb-24 px-4">
-        <div className="max-w-6xl mx-auto">
-          <RevealSection>
-            <div className="text-center mb-16">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-tone-red/30 bg-tone-red/10 text-tone-red text-xs tracking-[0.15em] uppercase mb-6"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-tone-red animate-pulse" />
-                Contacto
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.6 }}
-                className="text-4xl md:text-6xl font-bold text-white mb-4"
-              >
-                Hablemos
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25, duration: 0.6 }}
-                className="text-gray-500 text-lg max-w-xl mx-auto"
-              >
-                Respondemos en el día
-              </motion.p>
-            </div>
-          </RevealSection>
-
-          <div className="flex flex-col gap-4 mb-16">
-            <div className="grid md:grid-cols-3 gap-4">
-              {contactCards.slice(0, 3).map((card, i) => renderCard(card, 0.3 + i * 0.1))}
-            </div>
-            {renderCard(contactCards[3], 0.6, 'max-w-md mx-auto w-full')}
-          </div>
-
-          <RevealSection delay={0.2}>
-            <div className="bg-tone-dark/60 border border-white/5 rounded-xl p-8 md:p-10">
-              <div className="max-w-xl mx-auto">
-                <h2 className="text-xl font-bold text-white mb-2 text-center">Mensaje directo</h2>
-                <p className="text-gray-600 text-sm text-center mb-8">
-                  Te respondemos a la brevedad
-                </p>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Nombre"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-tone-darker/80 border border-white/5 rounded-lg px-4 py-3 text-white text-sm placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40 focus:bg-tone-darker transition-all"
-                    />
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full bg-tone-darker/80 border border-white/5 rounded-lg px-4 py-3 text-white text-sm placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40 focus:bg-tone-darker transition-all"
-                    />
-                  </div>
-
-                  <textarea
-                    placeholder="Mensaje"
-                    rows={5}
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full bg-tone-darker/80 border border-white/5 rounded-lg px-4 py-3 text-white text-sm placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40 focus:bg-tone-darker transition-all resize-none"
-                  />
-
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <Magnetic strength={0.2} className="flex-1">
-                      <button
-                        type="submit"
-                        disabled={sending || !formData.message.trim()}
-                        className="w-full flex items-center justify-center gap-2 bg-tone-red hover:bg-tone-red/90 disabled:bg-gray-800 disabled:text-gray-600 text-white py-3 px-6 rounded-lg text-sm font-medium transition-all"
-                      >
-                        {sending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" /> Abriendo WhatsApp
-                          </>
-                        ) : (
-                          <>
-                            <MessageCircle className="w-4 h-4" /> Enviar por WhatsApp
-                          </>
-                        )}
-                      </button>
-                    </Magnetic>
-
-                    <a
-                      href={`mailto:${contact.email}`}
-                      className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white py-3 px-6 rounded-lg text-sm font-medium transition-all border border-white/5 hover:border-white/10"
-                    >
-                      <Mail className="w-4 h-4" /> Email
-                    </a>
-                  </div>
-
-                  {sent && (
-                    <motion.p
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-center text-sm text-tone-amber pt-2"
-                    >
-                      Te abrimos WhatsApp con tu mensaje listo para enviar
-                    </motion.p>
-                  )}
-                </form>
+        <div className="mt-10 grid gap-6 sm:grid-cols-2">
+          {cards.map((c) => (
+            <div key={c.label} className="card-hard flex items-start gap-4 p-5">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-sm border-2 border-ink bg-signal">
+                {c.icon}
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-ink-soft">{c.label}</p>
+                <p className="mt-0.5 truncate font-bold">{c.value}</p>
+              </div>
+              {c.href && c.action && (
+                <a
+                  href={c.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-paper shrink-0 !px-3 !py-1.5 !text-xs"
+                >
+                  {c.action}
+                </a>
+              )}
             </div>
-          </RevealSection>
+          ))}
         </div>
+
+        <section className="card-hard mt-12 p-6 md:p-10">
+          <h2 className="font-display text-2xl uppercase">Escribinos</h2>
+          <p className="mt-1 text-ink-soft">El mensaje se abre en WhatsApp, listo para enviar.</p>
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="block">
+                <span className="mb-1 block text-xs font-extrabold uppercase tracking-wider">Nombre</span>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="field"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-extrabold uppercase tracking-wider">Email</span>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="field"
+                />
+              </label>
+            </div>
+            <label className="block">
+              <span className="mb-1 block text-xs font-extrabold uppercase tracking-wider">Mensaje</span>
+              <textarea
+                rows={5}
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                className="field resize-none"
+              />
+            </label>
+            <div className="flex flex-wrap items-center gap-4">
+              <button type="submit" disabled={!formData.message.trim()} className="btn btn-signal disabled:opacity-50">
+                <MessageCircle className="h-4 w-4" strokeWidth={3} /> Enviar por WhatsApp
+              </button>
+              {sent && <p className="text-sm font-bold">Se abrió WhatsApp con tu mensaje.</p>}
+            </div>
+          </form>
+        </section>
       </main>
+
+      <Footer contact={contact} />
     </div>
   );
 }

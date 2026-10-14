@@ -6,7 +6,7 @@ import Settings from '../modules/settings/settings.model';
  *
  * Las imagenes apuntan a /demo/*.svg, que viven en frontend/public/demo y se
  * versionan con el repo. A diferencia de /uploads, no se borran en cada deploy
- * de Render. Se regeneran con: node scripts/gen-placeholders.mjs
+ * de Render. Se regeneran con: node scripts/gen-illustrations.mjs (en frontend/)
  */
 
 const img = (n: string) => `/demo/${n}.svg`;
@@ -39,43 +39,18 @@ const categoria = (
   subCategories: [{ id: id(), name: subName, products }],
 });
 
-// --- Home (hero + animaciones de scroll) ---
+// --- Home ---
+// El hero y los pasillos 3D llevan su texto en el frontend; aca solo se prenden o apagan.
 const homepageSections = {
   heroTitle: 'Global 3D',
-  heroSubtitle: 'Transformamos tus ideas en objetos reales.',
-  heroDescription: 'Impresion 3D de alta calidad en Corrientes',
-  heroBadge: 'Envios gratis en pedidos mayores a $50.000',
-  heroStats: { reviews: '4.8', reviewsCount: '200+ resenas', orders: '500+', delivery: '48-72h' },
-  heroFeatures: ['Impresion rapida', 'Calidad premium', 'Envio a todo el pais', 'Asesoramiento tecnico'],
-  productStar: {
-    enabled: true,
-    title: 'Vaso Personalizado',
-    subtitle: 'Impresion 3D de alta calidad con el escudo de tu equipo favorito.',
-    badge: '',
-    price: '$8.900',
-    originalPrice: '$11.500',
-    teams: ['Boca', 'River', 'Racing', 'Independiente'],
-  },
-  copaAnimation: {
-    enabled: true,
-    title: 'Copa de la Liga',
-    subtitle: 'Diseno 3D de alta calidad con detalles premium',
-    badge: '',
-    price: '$15.900',
-    accentColor: '#f5a524',
-    framesDir: '/frames-copakling/',
-    totalFrames: 73,
-  },
-  impresoraAnimation: {
-    enabled: true,
-    title: 'Impresora 3D Bambu Lab X1C',
-    subtitle: 'La nueva generacion de precision y velocidad',
-    badge: '',
-    price: '$469.000',
-    accentColor: '#14e0c8',
-    framesDir: '/frames-mp/',
-    totalFrames: 192,
-  },
+  heroSubtitle: 'Impresion 3D en Corrientes',
+  heroDescription: '',
+  heroBadge: '',
+  heroStats: { reviews: '', reviewsCount: '', orders: '', delivery: '' },
+  heroFeatures: [] as string[],
+  productStar: { enabled: false, title: '', subtitle: '', badge: '', price: '', originalPrice: '', teams: [] as string[] },
+  copaAnimation: { enabled: true, title: '', subtitle: '', badge: '', price: '', accentColor: '#ffd21f' },
+  impresoraAnimation: { enabled: true, title: '', subtitle: '', badge: '', price: '', accentColor: '#ffd21f' },
 };
 
 // --- Seccion Productos ---
@@ -112,16 +87,7 @@ const impresorasSection = {
   subtitle: 'Vendemos equipos Bambu Lab, repuestos y accesorios',
   badge: 'IMPRESORAS',
   heroImage: img('hero-impresoras'),
-  animation: {
-    enabled: true,
-    title: 'Impresora 3D Bambu Lab X1C',
-    subtitle: 'La nueva generacion de precision y velocidad',
-    badge: '',
-    price: '$469.000',
-    accentColor: '#3b82f6',
-    framesDir: '/frames-mp/',
-    totalFrames: 192,
-  },
+  animation: { enabled: false, title: '', subtitle: '', badge: '', price: '', accentColor: '#ffd21f' },
   categories: [
     categoria('Bambu Lab', 'imp-x1c', 'Equipos de alta velocidad con sistema multicolor', 'Linea completa', [
       producto('Bambu Lab X1 Carbon', 469000, 'imp-x1c', 'Tope de gama. Sensor de flujo, camara y AMS compatible.'),

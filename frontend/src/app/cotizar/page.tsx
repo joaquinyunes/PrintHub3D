@@ -1,13 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Loader2, Check, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, Check } from "lucide-react";
 import { apiUrl } from "@/lib/api";
 import { WHATSAPP_PHONE } from "@/lib/config";
-import GradientField from "@/components/motion/GradientField";
-import Reveal from "@/components/motion/Reveal";
+import Nav from "@/components/store/Nav";
+import Footer from "@/components/store/Footer";
 
 const MATERIALS = [
   { id: "PLA", label: "PLA", hint: "Uso general, económico" },
@@ -33,6 +31,10 @@ interface Estimate {
 }
 
 const money = (n: number) => "$" + Math.round(n).toLocaleString("es-AR");
+
+function Label({ children }: { children: React.ReactNode }) {
+  return <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.18em]">{children}</p>;
+}
 
 export default function CotizarPage() {
   const [form, setForm] = useState({
@@ -117,8 +119,8 @@ export default function CotizarPage() {
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "No se pudo enviar");
       setSent(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "No se pudo enviar");
     } finally {
       setSending(false);
     }
@@ -133,78 +135,76 @@ export default function CotizarPage() {
     return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(t)}`;
   };
 
-  const pill = (active: boolean) =>
-    `rounded-xl border px-3 py-2.5 text-left transition ${
-      active ? "border-flame bg-flame/10 text-ink" : "border-white/10 bg-white/5 text-ink-dim hover:border-white/25"
+  const choice = (active: boolean) =>
+    `rounded-md border-2 border-ink px-3 py-2.5 text-left transition-colors ${
+      active ? "bg-signal shadow-hard-sm" : "bg-white hover:bg-paper-2"
     }`;
 
   return (
-    <div className="min-h-screen bg-ground text-ink">
-      <div className="relative overflow-hidden border-b border-white/10">
-        <GradientField />
-        <div className="relative mx-auto max-w-5xl px-4 pb-8 pt-24 md:px-6">
-          <Link href="/" className="mb-6 inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.15em] text-ink-dim hover:text-flame">
-            <ArrowLeft className="h-4 w-4" /> Volver
-          </Link>
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-flame">Cotizador</p>
-          <h1 className="mt-2 font-display text-[clamp(2.2rem,5vw,3.6rem)] leading-[0.95]">
-            Precio y plazo, <span className="text-flux">al instante</span>
+    <div className="store min-h-screen">
+      <Nav />
+
+      <div className="border-b-2 border-ink">
+        <div className="mx-auto max-w-5xl px-4 py-10 md:px-6 md:py-14">
+          <span className="tag">Cotizador</span>
+          <h1 className="font-display mt-4 text-[clamp(2.2rem,5.5vw,4rem)] uppercase leading-[0.95]">
+            Precio y plazo <span className="marker">al instante</span>
           </h1>
-          <p className="mt-3 max-w-lg text-ink-dim">
+          <p className="mt-4 max-w-lg text-ink-soft">
             Estimación automática por material, tamaño y solidez. Es orientativa: confirmamos al ver tu archivo.
           </p>
         </div>
       </div>
 
       <div className="mx-auto grid max-w-5xl gap-8 px-4 py-12 md:grid-cols-[1.3fr_1fr] md:px-6">
-        {/* ── Formulario ── */}
+        {/* Formulario */}
         <form onSubmit={send} className="space-y-8">
-          <Reveal>
-            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.18em] text-ink-dim">Material</p>
+          <div>
+            <Label>Material</Label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {MATERIALS.map((m) => (
-                <button type="button" key={m.id} onClick={() => set({ material: m.id })} className={pill(form.material === m.id)}>
-                  <span className="block font-display text-sm">{m.label}</span>
-                  <span className="block text-[11px] text-ink-dim">{m.hint}</span>
+                <button type="button" key={m.id} onClick={() => set({ material: m.id })} className={choice(form.material === m.id)}>
+                  <span className="block text-sm font-extrabold">{m.label}</span>
+                  <span className="block text-xs text-ink-soft">{m.hint}</span>
                 </button>
               ))}
             </div>
-          </Reveal>
+          </div>
 
-          <Reveal>
-            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.18em] text-ink-dim">Medidas aproximadas (mm)</p>
+          <div>
+            <Label>Medidas aproximadas (mm)</Label>
             <div className="grid grid-cols-3 gap-2">
               {(["x", "y", "z"] as const).map((k) => (
-                <div key={k}>
-                  <label className="mb-1 block text-[11px] uppercase text-ink-dim">
+                <label key={k} className="block">
+                  <span className="mb-1 block text-xs uppercase text-ink-soft">
                     {({ x: "Ancho", y: "Profundidad", z: "Alto" } as const)[k]}
-                  </label>
+                  </span>
                   <input
                     type="number"
                     min={1}
                     value={form[k]}
-                    onChange={(e) => set({ [k]: e.target.value } as any)}
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 font-mono text-sm text-ink focus:border-flame/50 focus:outline-none"
+                    onChange={(e) => set({ [k]: e.target.value } as Partial<typeof form>)}
+                    className="field !py-2.5"
                   />
-                </div>
+                </label>
               ))}
             </div>
-          </Reveal>
+          </div>
 
-          <Reveal>
-            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.18em] text-ink-dim">Solidez</p>
+          <div>
+            <Label>Solidez</Label>
             <div className="grid grid-cols-3 gap-2">
               {SOLIDITY.map((s) => (
-                <button type="button" key={s.id} onClick={() => set({ solidity: s.id })} className={pill(form.solidity === s.id)}>
-                  <span className="block font-display text-sm">{s.label}</span>
-                  <span className="block text-[11px] text-ink-dim">{s.hint}</span>
+                <button type="button" key={s.id} onClick={() => set({ solidity: s.id })} className={choice(form.solidity === s.id)}>
+                  <span className="block text-sm font-extrabold">{s.label}</span>
+                  <span className="block text-xs text-ink-soft">{s.hint}</span>
                 </button>
               ))}
             </div>
-            <div className="mt-4">
-              <div className="flex items-center justify-between text-[11px] uppercase text-ink-dim">
+            <div className="mt-5">
+              <div className="flex items-center justify-between text-xs font-extrabold uppercase tracking-wider">
                 <span>Relleno</span>
-                <span className="font-mono text-flame">{form.infill}%</span>
+                <span>{form.infill}%</span>
               </div>
               <input
                 type="range"
@@ -213,89 +213,94 @@ export default function CotizarPage() {
                 step={5}
                 value={form.infill}
                 onChange={(e) => set({ infill: Number(e.target.value) })}
-                className="mt-2 w-full accent-flame"
+                className="mt-2 w-full accent-ink"
+                aria-label="Relleno"
               />
             </div>
-          </Reveal>
+          </div>
 
-          <Reveal>
+          <div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1 block text-[11px] uppercase text-ink-dim">Cantidad</label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-extrabold uppercase tracking-wider">Cantidad</span>
                 <input
                   type="number"
                   min={1}
                   value={form.quantity}
                   onChange={(e) => set({ quantity: Math.max(1, Number(e.target.value) || 1) })}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 font-mono text-sm text-ink focus:border-flame/50 focus:outline-none"
+                  className="field !py-2.5"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-[11px] uppercase text-ink-dim">Terminación</label>
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-extrabold uppercase tracking-wider">Terminación</span>
                 <select
                   value={form.finish}
                   onChange={(e) => set({ finish: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-ink focus:border-flame/50 focus:outline-none [&>option]:bg-ground-2"
+                  className="field !py-2.5"
                 >
                   <option value="estandar">Estándar</option>
                   <option value="premium">Premium (lijado/pintado)</option>
                 </select>
-              </div>
+              </label>
             </div>
-            <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-3">
-              <input type="checkbox" checked={form.rush} onChange={(e) => set({ rush: e.target.checked })} className="h-4 w-4 accent-flame" />
-              <span className="text-sm">
-                Urgente <span className="text-ink-dim">— prioridad en la cola (+40%)</span>
+            <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-md border-2 border-ink bg-white px-3 py-3">
+              <input
+                type="checkbox"
+                checked={form.rush}
+                onChange={(e) => set({ rush: e.target.checked })}
+                className="h-4 w-4 accent-ink"
+              />
+              <span className="text-sm font-bold">
+                Urgente <span className="font-normal text-ink-soft">— prioridad en la cola (+40%)</span>
               </span>
             </label>
-          </Reveal>
+          </div>
 
-          <Reveal className="space-y-3 rounded-2xl border border-white/10 bg-ground-2 p-5">
-            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-dim">Tus datos</p>
+          <div className="card-hard space-y-3 p-5">
+            <Label>Tus datos</Label>
             <input
               placeholder="Nombre"
+              aria-label="Nombre"
               value={form.clientName}
               onChange={(e) => set({ clientName: e.target.value })}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-ink placeholder:text-ink-dim/60 focus:border-flame/50 focus:outline-none"
+              className="field"
             />
             <input
               placeholder="WhatsApp o email"
+              aria-label="WhatsApp o email"
               value={form.contact}
               onChange={(e) => set({ contact: e.target.value })}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-ink placeholder:text-ink-dim/60 focus:border-flame/50 focus:outline-none"
+              className="field"
             />
             <textarea
               placeholder="Contanos qué necesitás (opcional)"
+              aria-label="Notas"
               value={form.notes}
               onChange={(e) => set({ notes: e.target.value })}
               rows={3}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-ink placeholder:text-ink-dim/60 focus:border-flame/50 focus:outline-none"
+              className="field resize-none"
             />
-            {error && <p className="text-sm text-flame">{error}</p>}
-          </Reveal>
+            {error && (
+              <p role="alert" className="text-sm font-bold text-danger">
+                {error}
+              </p>
+            )}
+          </div>
         </form>
 
-        {/* ── Resultado (sticky) ── */}
+        {/* Resultado */}
         <div className="md:sticky md:top-24 md:self-start">
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-ground-2 ring-flux">
-            <div className="grain relative border-b border-white/10 bg-flux/10 p-6">
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-dim">Estimado</p>
-              <div className="mt-1 flex items-end gap-2">
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={est?.total ?? 0}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    className="font-display text-4xl text-flux"
-                  >
-                    {est ? money(est.total) : "—"}
-                  </motion.span>
-                </AnimatePresence>
-                {calc && <Loader2 className="mb-2 h-4 w-4 animate-spin text-ink-dim" />}
+          <div className="card-hard overflow-hidden">
+            <div className="border-b-2 border-ink bg-signal p-6">
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em]">Estimado</p>
+              <div className="mt-1 flex items-end gap-3">
+                <span className="font-display text-5xl leading-none">{est ? money(est.total) : "—"}</span>
+                {calc && <Loader2 className="mb-1 h-5 w-5 animate-spin" />}
               </div>
               {est && form.quantity > 1 && (
-                <p className="mt-1 text-xs text-ink-dim">{money(est.unitPrice)} por unidad · {form.quantity} unidades</p>
+                <p className="mt-2 text-sm font-bold">
+                  {money(est.unitPrice)} por unidad · {form.quantity} unidades
+                </p>
               )}
             </div>
 
@@ -309,40 +314,33 @@ export default function CotizarPage() {
                   <Row k="Preparación + posproceso" v={money(est.laborCost)} />
                 </>
               ) : (
-                <p className="text-ink-dim">Completá las medidas para ver el estimado.</p>
+                <p className="text-ink-soft">Completá las medidas para ver el estimado.</p>
               )}
             </div>
 
-            <div className="space-y-2 border-t border-white/10 p-6">
+            <div className="space-y-3 border-t-2 border-ink p-6">
               {sent ? (
-                <div className="flex items-center gap-2 rounded-xl border border-resin/30 bg-resin/10 px-4 py-3 text-sm text-resin">
-                  <Check className="h-4 w-4" /> Cotización enviada. Te contactamos pronto.
+                <div className="flex items-center gap-2 rounded-md border-2 border-ink bg-paper-2 px-4 py-3 text-sm font-bold">
+                  <Check className="h-4 w-4" strokeWidth={3} /> Cotización enviada. Te contactamos pronto.
                 </div>
               ) : (
-                <button
-                  onClick={send}
-                  disabled={sending}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-flux px-6 py-3.5 font-mono text-xs uppercase tracking-[0.14em] text-white shadow-lg shadow-flare/25 transition hover:brightness-110 disabled:opacity-50"
-                >
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                <button onClick={send} disabled={sending} className="btn btn-signal w-full disabled:opacity-50">
+                  {sending && <Loader2 className="h-4 w-4 animate-spin" />}
                   Enviar cotización
                 </button>
               )}
-              <a
-                href={waLink()}
-                target="_blank"
-                rel="noreferrer"
-                className="block rounded-full border border-white/15 px-6 py-3 text-center font-mono text-xs uppercase tracking-[0.14em] text-ink-dim transition hover:border-resin/50 hover:text-ink"
-              >
+              <a href={waLink()} target="_blank" rel="noreferrer" className="btn btn-paper w-full">
                 Enviar por WhatsApp
               </a>
             </div>
           </div>
-          <p className="mt-3 px-1 text-[11px] leading-relaxed text-ink-dim/70">
+          <p className="mt-3 px-1 text-xs leading-relaxed text-ink-soft">
             El estimado es orientativo. El precio final se confirma al revisar el archivo o la pieza.
           </p>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }
@@ -350,8 +348,8 @@ export default function CotizarPage() {
 function Row({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-ink-dim">{k}</span>
-      <span className="font-mono text-ink">{v}</span>
+      <span className="text-ink-soft">{k}</span>
+      <span className="font-bold">{v}</span>
     </div>
   );
 }

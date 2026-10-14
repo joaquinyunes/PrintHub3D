@@ -1,58 +1,53 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { Search, ArrowRight, Package, Instagram, MapPin, Phone, Mail, X } from 'lucide-react';
+import { Search, Instagram, MapPin, Phone, Mail, MessageCircle } from 'lucide-react';
 import { WHATSAPP_PHONE, WHATSAPP_DISPLAY } from '@/lib/config';
 import { apiUrl } from '@/lib/api';
 import HeroSection from '@/components/HeroSection';
 import ProductCard from '@/components/ProductCard';
-import ScrollSequence from '@/components/ScrollSequence';
-import GsapReveal from '@/components/motion/GsapReveal';
-import GradientField from '@/components/motion/GradientField';
-import Marquee from '@/components/motion/Marquee';
 import Nav from '@/components/store/Nav';
 import Footer from '@/components/store/Footer';
+import { PRINTER_JOURNEY, PRODUCT_JOURNEY } from '@/components/three/journey/presets';
 import type { Product } from '@/types';
 
-const Hero3D = dynamic(() => import('@/components/three/Hero3D'), { ssr: false });
+// Pasillos 3D. Mientras carga reserva la misma altura para que no salte la página.
+const ScrollJourney = dynamic(() => import('@/components/three/ScrollJourney'), {
+  ssr: false,
+  loading: () => <div style={{ height: '670vh' }} className="bg-paper" />,
+});
 
-const MARQUEE_ITEMS = [
-  'PLA',
-  'PETG',
-  'ABS',
-  'TPU flexible',
-  'Resina alta definición',
-  'Envíos a todo el país',
-  'Bambu Lab X1C',
-  '+500 pedidos entregados',
-  'Garantía de calidad',
-  'Cotización al instante',
+const SECTIONS = [
+  {
+    href: '/productos',
+    title: 'Productos personalizados',
+    text: 'Trofeos, vasos, llaveros y figuras hechos a medida.',
+    image: '/demo/cat-trofeos.svg',
+  },
+  {
+    href: '/impresoras',
+    title: 'Impresoras 3D',
+    text: 'Equipos Bambu Lab, repuestos y accesorios.',
+    image: '/demo/imp-x1c.svg',
+  },
+  {
+    href: '/filamentos',
+    title: 'Filamentos e insumos',
+    text: 'PLA, PETG, ABS, TPU y resinas.',
+    image: '/demo/fil-pla.svg',
+  },
 ];
 
-interface ShowcaseProduct {
-  id: string;
-  name: string;
-  price: number;
-  imageUrl?: string;
-  description?: string;
-  videoUrl?: string;
-}
-
-interface ShowcaseSubCategory {
-  id: string;
-  name: string;
-  products: ShowcaseProduct[];
-}
-
-interface ShowcaseCategory {
-  id: string;
-  name: string;
-  icon?: string;
-  imageUrl?: string;
-  subCategories: ShowcaseSubCategory[];
+interface ContactInfo {
+  whatsapp?: string;
+  whatsappDisplay?: string;
+  instagram?: string;
+  instagramUrl?: string;
+  location?: string;
+  email?: string;
 }
 
 export default function HomePage() {
@@ -60,36 +55,17 @@ export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
-
   const [trackingCode, setTrackingCode] = useState('');
-
-  // Dynamic home sections from admin
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [homeSections, setHomeSections] = useState<Record<string, any> | null>(null);
-  const [openShowcaseCategory, setOpenShowcaseCategory] = useState<ShowcaseCategory | null>(null);
-
-  const resolveMediaUrl = (path?: string) => {
-    if (!path) return '';
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    // Solo /uploads lo sirve el backend; el resto vive en public/ del frontend.
-    if (path.startsWith('/uploads')) return apiUrl(path);
-    return path.startsWith('/') ? path : `/${path}`;
-  };
-
-  const displayProducts = products;
-
-  const filteredProducts = displayProducts.filter((p) => {
-    const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchCategory = filterCategory === 'all' || p.category === filterCategory;
-    return matchSearch && matchCategory;
-  });
-
-  const categories = [...new Set(displayProducts.map((p) => p.category).filter(Boolean))];
+  const [contact, setContact] = useState<ContactInfo | undefined>();
+  const [journeysOn, setJourneysOn] = useState({ products: true, printers: true });
 
   useEffect(() => {
-    const loadData = async () => {
+    const ctrl = new AbortController();
+    (async () => {
       try {
-        const res = await fetch(apiUrl('/api/products/public?tenantId=global3d_hq'));
+        const res = await fetch(apiUrl('/api/products/public?tenantId=global3d_hq'), {
+          signal: ctrl.signal,
+        });
         if (res.ok) {
           const data = await res.json();
           setProducts(Array.isArray(data) ? data : []);
@@ -97,29 +73,30 @@ export default function HomePage() {
       } catch {
         /* sin productos si falla la API */
       }
-    };
-    loadData();
-
-    // Load settings from admin
-    const loadSettings = async () => {
       try {
-        const res = await fetch(apiUrl('/api/settings/public'));
-        if (res.ok) {
-          const data = await res.json();
-          if (data.homepageSections) setHomeSections(data.homepageSections);
-        } else {
-          console.error('Error loading settings:', res.status);
+        const res = await fetch(apiUrl('/api/settings/public'), { signal: ctrl.signal });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.contactInfo) setContact(data.contactInfo);
+        const h = data.homepageSections;
+        if (h) {
+          setJourneysOn({
+            products: h.copaAnimation?.enabled !== false,
+            printers: h.impresoraAnimation?.enabled !== false,
+          });
         }
-      } catch (e) {
-        console.error('Error loading settings:', e);
+      } catch {
+        /* se usan los datos por defecto */
       }
-    };
-    loadSettings();
+    })();
+    return () => ctrl.abort();
   }, []);
 
+  const phone = (contact?.whatsapp || WHATSAPP_PHONE).replace(/\D/g, '');
+
   const handleWhatsAppBuy = (item: { name: string; price: number }) => {
-    const text = `Hola! 👋 Quiero comprar: *${item.name}* ($${item.price}).`;
-    window.open(`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`, '_blank');
+    const text = `Hola, quiero comprar: ${item.name} ($${item.price.toLocaleString('es-AR')}).`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   };
 
   const handleTrackOrder = (e: React.FormEvent) => {
@@ -129,456 +106,230 @@ export default function HomePage() {
     router.push(`/track?code=${encodeURIComponent(code)}`);
   };
 
-  return (
-    <div className="min-h-screen bg-tone-darker text-white font-mono">
-      {/* Background effects */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <GradientField />
-      </div>
+  const categories = useMemo(
+    () => [...new Set(products.map((p) => p.category).filter(Boolean))],
+    [products],
+  );
+  const filtered = useMemo(
+    () =>
+      products.filter((p) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          p.name.toLowerCase().includes(q) && (filterCategory === 'all' || p.category === filterCategory)
+        );
+      }),
+    [products, searchQuery, filterCategory],
+  );
 
+  return (
+    <div className="store min-h-screen">
       <Nav onQuote={() => router.push('/cotizar')} />
 
-      {/* 1. 📦 RASTREO */}
-      <section id="rastreo" className="pt-28 pb-12 px-4">
-        <div className="max-w-xl mx-auto">
-          <div className="bg-tone-dark/60 border border-white/5 rounded-xl p-6 md:p-8">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Package className="h-7 w-7 text-tone-red" />
-              <h2 className="text-xl md:text-2xl font-bold text-white">Rastrear Mi Pedido</h2>
-            </div>
-            <p className="text-gray-600 text-center mb-6 text-sm">
-              Ingresá el código para ver el estado de producción
-            </p>
-            <form onSubmit={handleTrackOrder} className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-700" />
-                <input
-                  type="text"
-                  value={trackingCode}
-                  onChange={(e) => setTrackingCode(e.target.value)}
-                  placeholder="Ej: joaquin-vasoboca-17032026"
-                  className="w-full bg-tone-darker/80 border border-white/5 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40"
+      <HeroSection />
+
+      {/* Rastreo */}
+      <section id="rastreo" className="border-b-2 border-ink bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 md:flex-row md:items-center md:justify-between md:px-6">
+          <div>
+            <h2 className="font-display text-xl uppercase">¿Ya hiciste un pedido?</h2>
+            <p className="text-sm text-ink-soft">Ingresá tu código para ver en qué estado está.</p>
+          </div>
+          <form onSubmit={handleTrackOrder} className="flex w-full flex-col gap-3 sm:flex-row md:max-w-xl">
+            <label className="relative flex-1">
+              <span className="sr-only">Código de seguimiento</span>
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                strokeWidth={3}
+              />
+              <input
+                type="text"
+                value={trackingCode}
+                onChange={(e) => setTrackingCode(e.target.value)}
+                placeholder="Ej: joaquin-vasoboca-17032026"
+                className="field pl-10"
+              />
+            </label>
+            <button type="submit" disabled={!trackingCode.trim()} className="btn btn-signal disabled:opacity-50">
+              Rastrear
+            </button>
+          </form>
+        </div>
+      </section>
+
+      {/* Pasillo 1 */}
+      {journeysOn.products && (
+        <ScrollJourney
+          sectionId="pasillo-productos"
+          aisle={PRODUCT_JOURNEY.aisle}
+          aisleTitle={PRODUCT_JOURNEY.aisleTitle}
+          titleLines={PRODUCT_JOURNEY.titleLines}
+          intro={PRODUCT_JOURNEY.intro}
+          items={PRODUCT_JOURNEY.items}
+          outroTitle={PRODUCT_JOURNEY.outroTitle}
+          outroText={PRODUCT_JOURNEY.outroText}
+          ctas={PRODUCT_JOURNEY.ctas}
+        />
+      )}
+
+      {/* Secciones */}
+      <section id="categorias" className="px-4 py-16 md:px-6">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="font-display text-4xl uppercase md:text-5xl">
+            Elegí tu <span className="marker">sección</span>
+          </h2>
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {SECTIONS.map((s) => (
+              <Link
+                key={s.href}
+                href={s.href}
+                className="card-hard group flex flex-col overflow-hidden transition-transform duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={s.image}
+                  alt=""
+                  loading="lazy"
+                  className="aspect-[4/3] w-full border-b-2 border-ink bg-paper-2 object-contain p-4"
                 />
-              </div>
-              <button
-                type="submit"
-                disabled={!trackingCode.trim()}
-                className="bg-tone-red hover:bg-tone-red/90 disabled:bg-gray-800 disabled:text-gray-600 text-white px-6 py-3 rounded-xl font-medium transition flex items-center justify-center gap-2"
-              >
-                Rastrear <ArrowRight className="h-4 w-4" />
-              </button>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. 🏠 HERO */}
-      <div className="relative">
-        <div className="pointer-events-none absolute inset-0 -z-10 hidden opacity-80 mix-blend-screen md:block">
-          <Hero3D />
-        </div>
-        <HeroSection
-          heroData={{
-            title: homeSections?.heroTitle || 'Global 3D',
-            subtitle: homeSections?.heroSubtitle || 'Transformamos tus ideas en objetos reales.',
-            description:
-              homeSections?.heroDescription || 'Impresión 3D de alta calidad en Corrientes',
-            badge: homeSections?.heroBadge || 'Envíos gratis en pedidos mayores a $50.000',
-            stats: homeSections?.heroStats || {
-              reviews: '4.9',
-              reviewsCount: '200+ reseñas',
-              orders: '500+',
-              delivery: '24-72h',
-            },
-            features: homeSections?.heroFeatures || [
-              'Impresión rápida',
-              'Calidad premium',
-              'Envío rápido',
-              'Soporte 24/7',
-            ],
-          }}
-        />
-      </div>
-
-      {/* Franja de confianza */}
-      <div className="border-y border-white/5 bg-white/[0.02] py-4">
-        <Marquee duration={28}>
-          {MARQUEE_ITEMS.map((item, i) => (
-            <span
-              key={i}
-              className="flex items-center gap-6 font-mono text-xs uppercase tracking-[0.2em] text-gray-500"
-            >
-              {item}
-              <span className="text-tone-red">✦</span>
-            </span>
-          ))}
-        </Marquee>
-      </div>
-
-      {/* 3. ⭐ PRODUCTO ESTRELLA */}
-      {homeSections?.productStar?.enabled !== false && (
-        <section id="producto-estrella" className="py-20 px-4">
-          <GsapReveal className="max-w-4xl mx-auto text-center" selector="[data-reveal]">
-            <span
-              data-reveal
-              className="inline-block px-4 py-1.5 rounded-full border border-tone-amber/30 bg-tone-amber/10 text-tone-amber text-xs tracking-[0.15em] uppercase mb-4"
-            >
-              Destacado
-            </span>
-            <h2 data-reveal className="text-4xl md:text-5xl font-black text-white">
-              Producto Estrella
-            </h2>
-          </GsapReveal>
-        </section>
-      )}
-
-      {/* 4. 🏆 SECUENCIA 1: COPA (scroll estilo Apple) */}
-      {homeSections?.copaAnimation?.enabled !== false && (
-        <ScrollSequence
-          framesDir="/frames-copakling/"
-          frameCount={73}
-          nativeWidth={744}
-          nativeHeight={1232}
-          scrollVh={4}
-          emoji="🏆"
-          title={homeSections?.copaAnimation?.title || 'Copa de la Liga'}
-          subtitle={
-            homeSections?.copaAnimation?.subtitle ||
-            'Diseño 3D de alta calidad con detalles premium'
-          }
-          price={homeSections?.copaAnimation?.price || '$12.500'}
-          accentColor={homeSections?.copaAnimation?.accentColor || '#f5a524'}
-          sectionId="scroll-animation-copa"
-        />
-      )}
-
-      {/* 5. 📂 CATEGORÍAS */}
-      <section id="categorias" className="py-20 px-4">
-        <div className="max-w-5xl mx-auto">
-          <GsapReveal className="text-center mb-12" selector="[data-reveal]">
-            <span
-              data-reveal
-              className="inline-block px-4 py-1.5 rounded-full border border-tone-red/30 bg-tone-red/10 text-tone-red text-xs tracking-[0.15em] uppercase mb-4"
-            >
-              Explorá
-            </span>
-            <h2 data-reveal className="text-4xl md:text-5xl font-black text-white mt-2">
-              Nuestras Categorías
-            </h2>
-            <p data-reveal className="text-gray-600 mt-3 text-sm max-w-xl mx-auto">
-              Elegí una sección para ver todos nuestros productos
-            </p>
-          </GsapReveal>
-          <GsapReveal
-            className="grid grid-cols-1 md:grid-cols-3 gap-5"
-            selector="a"
-            y={56}
-            stagger={0.12}
-          >
-            <Link
-              href="/productos"
-              className="group text-left relative bg-tone-dark/60 border border-white/5 rounded-xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-tone-red/40 transition-all duration-300 shadow-lg"
-            >
-              <div className="text-5xl mb-4">🏆</div>
-              <h3 className="font-bold text-white text-xl leading-tight">
-                Productos Personalizados
-              </h3>
-              <p className="text-sm text-gray-500 mt-3">Vasos, trofeos, llaveros y más</p>
-            </Link>
-            <Link
-              href="/impresoras"
-              className="group text-left relative bg-tone-dark/60 border border-white/5 rounded-xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-tone-red/40 transition-all duration-300 shadow-lg"
-            >
-              <div className="text-5xl mb-4">🖨️</div>
-              <h3 className="font-bold text-white text-xl leading-tight">Impresoras 3D</h3>
-              <p className="text-sm text-gray-500 mt-3">Bambu Lab y más modelos</p>
-            </Link>
-            <Link
-              href="/filamentos"
-              className="group text-left relative bg-tone-dark/60 border border-white/5 rounded-xl p-8 hover:scale-[1.02] hover:-translate-y-1 hover:border-tone-red/40 transition-all duration-300 shadow-lg"
-            >
-              <div className="text-5xl mb-4">🧵</div>
-              <h3 className="font-bold text-white text-xl leading-tight">Filamentos</h3>
-              <p className="text-sm text-gray-500 mt-3">PLA, PETG, ABS y materiales</p>
-            </Link>
-          </GsapReveal>
-        </div>
-      </section>
-
-      {openShowcaseCategory && (
-        <div
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="category-modal-title"
-          onClick={() => setOpenShowcaseCategory(null)}
-        >
-          <div
-            className="w-full sm:max-w-lg bg-zinc-950 border border-white/20 sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl shadow-black/60"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-start gap-3 p-5 border-b border-white/10 bg-zinc-900/90 shrink-0">
-              <h3
-                id="category-modal-title"
-                className="text-xl sm:text-2xl font-black text-white leading-tight pr-2"
-              >
-                <span className="mr-2" aria-hidden>
-                  {openShowcaseCategory.icon || '📦'}
-                </span>
-                {openShowcaseCategory.name}
-              </h3>
-              <button
-                type="button"
-                className="shrink-0 rounded-xl p-2 text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
-                onClick={() => setOpenShowcaseCategory(null)}
-                aria-label="Cerrar"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="overflow-y-auto p-5 space-y-8 flex-1">
-              {(openShowcaseCategory.subCategories || []).length === 0 ? (
-                <p className="text-zinc-200 font-medium text-center py-6">
-                  Todavía no hay subcategorías cargadas. Configuralas en{' '}
-                  <span className="text-white font-bold">
-                    Admin → Inicio web → Categorías de productos
+                <div className="flex flex-1 flex-col gap-1 p-5">
+                  <h3 className="font-display text-xl uppercase">{s.title}</h3>
+                  <p className="text-sm text-ink-soft">{s.text}</p>
+                  <span className="mt-3 text-sm font-extrabold uppercase tracking-wide underline-offset-4 group-hover:underline">
+                    Ver sección →
                   </span>
-                  .
-                </p>
-              ) : (
-                openShowcaseCategory.subCategories.map((sub) => (
-                  <div key={sub.id}>
-                    <h4 className="text-xs font-black text-blue-400 uppercase tracking-[0.2em] mb-3 border-b border-blue-500/30 pb-2">
-                      {String(sub.name || '').trim() || 'Sin nombre'}
-                    </h4>
-                    <div className="space-y-4">
-                      {(sub.products || []).length === 0 ? (
-                        <p className="text-zinc-300 text-sm font-medium">
-                          Sin productos en esta subcategoría.
-                        </p>
-                      ) : (
-                        (sub.products || []).map((p) => (
-                          <div
-                            key={p.id}
-                            className="bg-zinc-900/90 rounded-xl p-4 border border-white/10 space-y-3"
-                          >
-                            {p.imageUrl ? (
-                              <img
-                                src={resolveMediaUrl(p.imageUrl)}
-                                alt=""
-                                className="w-full max-h-48 object-cover rounded-lg border border-white/10"
-                              />
-                            ) : null}
-                            {p.videoUrl ? (
-                              <video
-                                src={resolveMediaUrl(p.videoUrl)}
-                                controls
-                                className="w-full rounded-lg border border-white/10 bg-black"
-                              />
-                            ) : null}
-                            <p className="text-lg font-black text-white">
-                              {String(p.name || '').trim() || 'Producto'}
-                            </p>
-                            {p.description ? (
-                              <p className="text-sm text-zinc-100 leading-relaxed font-medium">
-                                {p.description}
-                              </p>
-                            ) : null}
-                            <p className="text-emerald-400 font-black text-xl">
-                              ${Number(p.price || 0).toLocaleString('es-AR')}
-                            </p>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleWhatsAppBuy({
-                                  name: p.name || 'Producto',
-                                  price: p.price ?? 0,
-                                })
-                              }
-                              className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-sm transition-colors"
-                            >
-                              Consultar por WhatsApp
-                            </button>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
-      )}
+      </section>
 
-      {/* 6. 🛒 CATÁLOGO DE PRODUCTOS */}
-      {filteredProducts.length > 0 && (
-        <section id="productos" className="py-16 px-4">
-          <div className="max-w-7xl mx-auto">
-            <GsapReveal className="text-center mb-10" selector="[data-reveal]">
-              <span
-                data-reveal
-                className="inline-block px-4 py-1.5 rounded-full border border-tone-red/30 bg-tone-red/10 text-tone-red text-xs tracking-[0.15em] uppercase mb-4"
-              >
-                Productos
-              </span>
-              <h2 data-reveal className="text-3xl md:text-4xl font-bold text-white">
-                Todos los Productos
-              </h2>
-            </GsapReveal>
+      {/* Catálogo cargado en el panel */}
+      {products.length > 0 && (
+        <section id="productos" className="border-t-2 border-ink bg-paper-2 px-4 py-16 md:px-6">
+          <div className="mx-auto max-w-7xl">
+            <h2 className="font-display text-3xl uppercase md:text-4xl">Todos los productos</h2>
 
-            <div className="flex flex-col sm:flex-row gap-3 mb-8">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <label className="relative flex-1">
+                <span className="sr-only">Buscar productos</span>
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                  strokeWidth={3}
+                />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar productos..."
-                  className="w-full bg-tone-darker/80 border border-white/5 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-700 focus:outline-none focus:border-tone-red/40"
+                  placeholder="Buscar productos"
+                  className="field pl-10"
                 />
-              </div>
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="bg-tone-darker/80 border border-white/5 rounded-xl py-3 px-4 text-white font-medium focus:outline-none focus:border-tone-red/40 [&>option]:bg-tone-darker [&>option]:text-white"
-              >
-                <option value="all">Todas las categorías</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+              </label>
+              <label>
+                <span className="sr-only">Categoría</span>
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className="field sm:w-56"
+                >
+                  <option value="all">Todas las categorías</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
 
-            <GsapReveal
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
-              selector="[data-card]"
-              y={50}
-              stagger={0.06}
-            >
-              {filteredProducts.map((product, idx) => (
-                <div data-card key={product._id}>
-                  <ProductCard product={product} handleWhatsAppBuy={handleWhatsAppBuy} idx={idx} />
-                </div>
-              ))}
-            </GsapReveal>
+            {filtered.length === 0 ? (
+              <p className="mt-10 text-ink-soft">No hay productos con ese filtro.</p>
+            ) : (
+              <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filtered.map((product) => (
+                  <ProductCard key={product._id} product={product} handleWhatsAppBuy={handleWhatsAppBuy} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
       )}
 
-      {/* 7. 🖨️ SECUENCIA 2: IMPRESORA (scroll estilo Apple) */}
-      {homeSections?.impresoraAnimation?.enabled !== false && (
-        <ScrollSequence
-          framesDir="/frames-mp/"
-          frameCount={192}
-          nativeWidth={1280}
-          nativeHeight={720}
-          scrollVh={5}
-          emoji="🖨️"
-          title={homeSections?.impresoraAnimation?.title || 'Impresora 3D Bambu Lab X1C'}
-          subtitle={
-            homeSections?.impresoraAnimation?.subtitle ||
-            'La nueva generación de precisión y velocidad'
-          }
-          price={homeSections?.impresoraAnimation?.price || '$469.000'}
-          accentColor={homeSections?.impresoraAnimation?.accentColor || '#14e0c8'}
-          sectionId="scroll-animation-impresora"
+      {/* Pasillo 2 */}
+      {journeysOn.printers && (
+        <ScrollJourney
+          sectionId="pasillo-impresoras"
+          aisle={PRINTER_JOURNEY.aisle}
+          aisleTitle={PRINTER_JOURNEY.aisleTitle}
+          titleLines={PRINTER_JOURNEY.titleLines}
+          intro={PRINTER_JOURNEY.intro}
+          items={PRINTER_JOURNEY.items}
+          outroTitle={PRINTER_JOURNEY.outroTitle}
+          outroText={PRINTER_JOURNEY.outroText}
+          ctas={PRINTER_JOURNEY.ctas}
         />
       )}
 
-      {/* 8. 📞 CONTACTO */}
-      <section id="contacto" className="py-20 px-4 bg-white/[0.02]">
-        <div className="max-w-4xl mx-auto">
-          <GsapReveal className="text-center mb-12" selector="[data-reveal]">
-            <span
-              data-reveal
-              className="inline-block px-4 py-1.5 rounded-full border border-tone-red/30 bg-tone-red/10 text-tone-red text-xs tracking-[0.15em] uppercase mb-4"
-            >
-              Contacto
-            </span>
-            <h2 data-reveal className="text-4xl md:text-5xl font-black text-white mb-3">
-              Contacto
-            </h2>
-            <p data-reveal className="text-gray-600">
-              Respondemos en el día
-            </p>
-          </GsapReveal>
-          <div className="flex flex-col gap-6">
-            <GsapReveal
-              className="grid md:grid-cols-3 gap-6"
-              selector="a,div.text-center"
-              y={48}
-              stagger={0.12}
-            >
-              <a
-                href={`https://wa.me/${homeSections?.contactInfo?.whatsapp || WHATSAPP_PHONE}`}
-                target="_blank"
-                className="bg-tone-dark/60 border border-white/5 rounded-xl p-8 text-center hover:border-tone-red/30 hover:scale-105 transition-all duration-300 group"
-              >
-                <div className="w-14 h-14 bg-tone-red/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-tone-red/20 group-hover:scale-110 transition-all">
-                  <Phone className="w-7 h-7 text-tone-red" />
-                </div>
-                <h3 className="font-bold text-white text-lg mb-2">WhatsApp</h3>
-                <p className="text-gray-500">
-                  {homeSections?.contactInfo?.whatsappDisplay || WHATSAPP_DISPLAY}
-                </p>
-              </a>
-              <a
-                href={
-                  homeSections?.contactInfo?.instagramUrl ||
-                  'https://instagram.com/global3dcorrientes'
-                }
-                target="_blank"
-                className="bg-tone-dark/60 border border-white/5 rounded-xl p-8 text-center hover:border-tone-amber/30 hover:scale-105 transition-all duration-300 group"
-              >
-                <div className="w-14 h-14 bg-tone-amber/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-tone-amber/20 group-hover:scale-110 transition-all">
-                  <Instagram className="w-7 h-7 text-tone-amber" />
-                </div>
-                <h3 className="font-bold text-white text-lg mb-2">Instagram</h3>
-                <p className="text-gray-500">
-                  @{homeSections?.contactInfo?.instagram || 'global3dcorrientes'}
-                </p>
-              </a>
-              <div className="bg-tone-dark/60 border border-white/5 rounded-xl p-8 text-center">
-                <div className="w-14 h-14 bg-tone-red/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <MapPin className="w-7 h-7 text-tone-red" />
-                </div>
-                <h3 className="font-bold text-white text-lg mb-2">Ubicación</h3>
-                <p className="text-gray-500">
-                  {homeSections?.contactInfo?.location || 'Corrientes, Argentina'}
-                </p>
-              </div>
-            </GsapReveal>
+      {/* Contacto */}
+      <section id="contacto" className="px-4 py-16 md:px-6">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="font-display text-4xl uppercase md:text-5xl">
+            Hablemos<span className="marker">.</span>
+          </h2>
+          <p className="mt-3 text-ink-soft">Respondemos en el día.</p>
+
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <a
-              href={`mailto:${homeSections?.contactInfo?.email || 'contacto@global3d.com'}`}
-              className="bg-tone-dark/60 border border-white/5 rounded-xl p-8 text-center hover:border-tone-amber/30 hover:scale-105 transition-all duration-300 group max-w-md mx-auto w-full"
+              href={`https://wa.me/${phone}`}
+              target="_blank"
+              rel="noreferrer"
+              className="card-hard flex flex-col gap-2 p-5 transition-transform hover:-translate-y-0.5 hover:bg-signal"
             >
-              <div className="w-14 h-14 bg-tone-amber/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-tone-amber/20 group-hover:scale-110 transition-all">
-                <Mail className="w-7 h-7 text-tone-amber" />
-              </div>
-              <h3 className="font-bold text-white text-lg mb-2">Email</h3>
-              <p className="text-gray-500">
-                {homeSections?.contactInfo?.email || 'contacto@global3d.com'}
-              </p>
+              <Phone className="h-6 w-6" strokeWidth={2.5} />
+              <h3 className="font-display text-lg uppercase">WhatsApp</h3>
+              <p className="text-sm">{contact?.whatsappDisplay || WHATSAPP_DISPLAY}</p>
             </a>
+            <a
+              href={contact?.instagramUrl || 'https://instagram.com/global3dcorrientes'}
+              target="_blank"
+              rel="noreferrer"
+              className="card-hard flex flex-col gap-2 p-5 transition-transform hover:-translate-y-0.5 hover:bg-signal"
+            >
+              <Instagram className="h-6 w-6" strokeWidth={2.5} />
+              <h3 className="font-display text-lg uppercase">Instagram</h3>
+              <p className="text-sm">@{(contact?.instagram || 'global3dcorrientes').replace('@', '')}</p>
+            </a>
+            <div className="card-hard flex flex-col gap-2 p-5">
+              <MapPin className="h-6 w-6" strokeWidth={2.5} />
+              <h3 className="font-display text-lg uppercase">Ubicación</h3>
+              <p className="text-sm">{contact?.location || 'Corrientes, Argentina'}</p>
+            </div>
+            {contact?.email && (
+              <a
+                href={`mailto:${contact.email}`}
+                className="card-hard flex flex-col gap-2 p-5 transition-transform hover:-translate-y-0.5 hover:bg-signal"
+              >
+                <Mail className="h-6 w-6" strokeWidth={2.5} />
+                <h3 className="font-display text-lg uppercase">Email</h3>
+                <p className="break-all text-sm">{contact.email}</p>
+              </a>
+            )}
           </div>
         </div>
       </section>
 
-      <Footer contact={homeSections?.contactInfo} />
+      <Footer contact={contact} />
 
-      {/* WhatsApp FAB */}
+      {/* WhatsApp */}
       <a
-        href={`https://wa.me/${WHATSAPP_PHONE}`}
+        href={`https://wa.me/${phone}`}
         target="_blank"
-        className="fixed bottom-6 right-6 bg-tone-red hover:bg-tone-red/90 p-4 rounded-full shadow-lg shadow-tone-red/30 z-50 transition hover:scale-110"
-        title="Chatear por WhatsApp"
+        rel="noreferrer"
+        className="btn btn-signal fixed bottom-5 right-5 z-40 !px-4 !py-3"
+        aria-label="Escribinos por WhatsApp"
       >
-        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.964-.94 1.162-.173.199-.347.223-.644.075-.197-.103-1.379-1.437-2.612-3.078-.297-.199-.496-.297-.673.15-.176.297-.697.872-1.075.994-.379.123-.646.148-1.143.049-.496-.099-2.425-1.588-3.868-3.012-.298-.298-.497-.447-.696-.447-.02 0-.04 0-.06 0-.2 0-.485.099-.698.298l-1.095 2.697c-.099.297-.022.595.099.793.149.198.397.396.793.495.396.099.793.099 1.141.099.348 0 .695-.099 1.041-.298.349-.198.768-.595.924-.994.099-.299.099-.596.049-.793-.099-.198-.448-1.591-.616-2.137-.149-.546-.298-1.193-.546-1.193z" />
-        </svg>
+        <MessageCircle className="h-5 w-5" strokeWidth={2.6} />
+        <span className="hidden sm:inline">WhatsApp</span>
       </a>
     </div>
   );
