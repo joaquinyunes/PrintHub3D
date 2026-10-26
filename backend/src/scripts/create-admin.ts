@@ -15,7 +15,11 @@ dotenv.config();
  * Si no se pasa contraseña, se genera una aleatoria y se imprime una sola vez.
  */
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/global3d';
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+  console.error('Falta MONGO_URI: definila en backend/.env o en el entorno.');
+  process.exit(1);
+}
 const TENANT_ID = process.env.DEFAULT_TENANT_ID || 'global3d_hq';
 
 const argOf = (name: string): string | undefined => {

@@ -10,7 +10,7 @@ import { OAuth2Client } from 'google-auth-library';
 const googleClient = new OAuth2Client(
   appConfig.google.clientId,
   appConfig.google.clientSecret,
-  `${process.env.API_URL || 'http://localhost:5000'}/api/auth/google/callback`,
+  `${appConfig.apiPublicUrl}/api/auth/google/callback`,
 );
 
 // Paso 1: Redirigir a Google
@@ -29,7 +29,7 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
     const { code } = req.query;
 
     if (!code || typeof code !== 'string') {
-      return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=google_auth_failed`);
+      return res.redirect(`${appConfig.clientUrl}/login?error=google_auth_failed`);
     }
 
     const { tokens } = await googleClient.getToken(code);
@@ -42,7 +42,7 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
 
     const payload = ticket.getPayload();
     if (!payload || !payload.email) {
-      return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=google_auth_failed`);
+      return res.redirect(`${appConfig.clientUrl}/login?error=google_auth_failed`);
     }
 
     const { email, name, picture } = payload;
@@ -81,7 +81,7 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
     const refreshToken = await generateRefreshToken(user._id.toString());
 
     // Redirigir al frontend con el token
-    const redirectUrl = new URL(`${process.env.CLIENT_URL || 'http://localhost:3000'}/auth/callback`);
+    const redirectUrl = new URL(`${appConfig.clientUrl}/auth/callback`);
     redirectUrl.searchParams.set('token', token);
     redirectUrl.searchParams.set('refreshToken', refreshToken.token);
     redirectUrl.searchParams.set('user', JSON.stringify({
@@ -95,7 +95,7 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
     res.redirect(redirectUrl.toString());
   } catch (error: any) {
     logger.error('Error en Google OAuth callback:', error);
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=google_auth_failed`);
+    res.redirect(`${appConfig.clientUrl}/login?error=google_auth_failed`);
   }
 };
 

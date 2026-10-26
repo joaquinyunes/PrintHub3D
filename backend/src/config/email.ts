@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import logger from './logger';
+import { appConfig } from './index';
 
 const createTransporter = () => {
   if (process.env.SMTP_HOST) {
@@ -27,7 +28,7 @@ const createTransporter = () => {
 
 export const sendVerificationEmail = async (email: string, token: string, name: string): Promise<void> => {
   const transporter = createTransporter();
-  const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+  const verificationUrl = `${appConfig.clientUrl}/verify-email?token=${token}`;
   
   const mailOptions = {
     from: process.env.SMTP_FROM || process.env.EMAIL_FROM || '"PrintHub3D" <noreply@printhub3d.com>',
@@ -81,7 +82,7 @@ export const sendMagicCodeEmail = async (email: string, code: string): Promise<v
 
 export const sendPasswordResetEmail = async (email: string, token: string, name: string): Promise<void> => {
   const transporter = createTransporter();
-  const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+  const resetUrl = `${appConfig.clientUrl}/reset-password?token=${token}`;
   
   const mailOptions = {
     from: process.env.SMTP_FROM || process.env.EMAIL_FROM || '"PrintHub3D" <noreply@printhub3d.com>',

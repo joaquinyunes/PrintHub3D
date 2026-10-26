@@ -1,7 +1,7 @@
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
+import { API_BASE_URL as API_BASE } from '@/lib/api';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const MAX_BYTES = Number(process.env.UPLOAD_MAX_BYTES || 30 * 1024 * 1024); // 30 MB
 const ALLOWED_MIME = /^(image\/(jpeg|png|gif|webp|svg\+xml|avif)|video\/(mp4|webm|quicktime))$/;
 

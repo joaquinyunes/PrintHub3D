@@ -39,7 +39,7 @@ const fillTemplate = (template: string, vars: Record<string, string>) => {
 };
 
 const buildTrackingUrl = (baseUrl: string, trackingCode: string) => {
-    const cleaned = (baseUrl || 'http://localhost:3000/track').replace(/\/$/, '');
+    const cleaned = (baseUrl || appConfig.trackingBaseUrl).replace(/\/$/, '');
     return `${cleaned}?code=${trackingCode}`;
 };
 
@@ -276,7 +276,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             const settings = await Settings.findOne({ tenantId: order.tenantId || appConfig.defaultTenantId });
             const statusText = statusCopy[status] || status;
             const trackingCode = order.trackingCode || 'sin código';
-            const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || 'http://localhost:3000/track', trackingCode);
+            const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || appConfig.trackingBaseUrl, trackingCode);
             const templateKey = (status in statusCopy ? status : 'pending') as 'pending' | 'in_progress' | 'post_processing' | 'completed' | 'delivered' | 'cancelled';
             const template = settings?.customerMessageTemplates?.[templateKey]
                 || 'Hola {clientName} 👋 Tu pedido {trackingCode} cambió a {status}. Sigue tu pedido en {trackingUrl}';
@@ -523,7 +523,7 @@ export const resendTrackingToCustomer = async (req: Request, res: Response) => {
         }
 
         const settings = await Settings.findOne({ tenantId: tenantId || appConfig.defaultTenantId });
-        const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || 'http://localhost:3000/track', order.trackingCode);
+        const trackingUrl = buildTrackingUrl(settings?.trackingBaseUrl || appConfig.trackingBaseUrl, order.trackingCode);
         const template = settings?.customerMessageTemplates?.resendTracking
             || 'Hola {clientName} 👋 Aquí tienes nuevamente tu código de seguimiento: {trackingCode}. Consulta tu pedido en {trackingUrl}';
 

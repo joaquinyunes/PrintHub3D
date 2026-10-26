@@ -1,4 +1,5 @@
 import swaggerJsdoc from 'swagger-jsdoc';
+import { appConfig } from './index';
 
 const options = {
   definition: {
@@ -9,7 +10,7 @@ const options = {
       description: 'API documentation for PrintHub3D SaaS',
     },
     servers: [
-      { url: 'http://localhost:5000/api', description: 'Development server' },
+      { url: `${appConfig.apiPublicUrl}/api`, description: 'API' },
     ],
     components: {
       securitySchemes: {

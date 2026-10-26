@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+// El fallback es solo para desarrollo: next.config.ts corta el build de producción si falta NEXT_PUBLIC_API_URL.
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 interface ApiResponse<T> {
   data?: T;

@@ -117,7 +117,7 @@ const SettingsSchema: Schema = new Schema({
     welcomeMessage: { type: String, default: 'Hola, bienvenido a Global 3D.' },
     filamentCostAverage: { type: Number, default: 15000 },
     monthlyGoal: { type: Number, default: 2000000 },
-    trackingBaseUrl: { type: String, default: 'http://localhost:3000/track' },
+    trackingBaseUrl: { type: String, default: appConfig.trackingBaseUrl },
     customerMessageTemplates: {
         pending: { type: String, default: defaultTemplates.pending },
         in_progress: { type: String, default: defaultTemplates.in_progress },

@@ -34,21 +34,33 @@ const getJwtSecret = (): string => {
   throw new Error('JWT_SECRET is required in production');
 };
 
+// En producción las URLs deben venir del entorno; localhost es solo para desarrollo y tests.
+const DEV_CLIENT_URL = 'http://localhost:3000';
+
+if (isProduction && !process.env.CLIENT_URL?.trim()) {
+  logger.fatal('Falta la variable de entorno crítica: CLIENT_URL');
+  process.exit(1);
+}
+
 const getCorsOrigins = (): string[] => {
-  const origins = process.env.CLIENT_URL || 'http://localhost:3000';
-  return origins.split(',').map(o => o.trim());
+  const origins = process.env.CLIENT_URL?.trim() || DEV_CLIENT_URL;
+  return origins.split(',').map(o => o.trim()).filter(Boolean);
 };
 
-const getClientUrl = (): string => {
-  return (process.env.CLIENT_URL || 'http://localhost:3000').split(',')[0].trim();
-};
+const getClientUrl = (): string => getCorsOrigins()[0];
 
+// Render define RENDER_EXTERNAL_URL solo, así que no hace falta cargarla a mano allí.
 const getApiPublicUrl = (): string => {
-  return (
+  const fromEnv =
     process.env.API_PUBLIC_URL?.trim() ||
     process.env.API_URL?.trim() ||
-    `http://localhost:${Number(process.env.PORT || 5000)}`
-  );
+    process.env.RENDER_EXTERNAL_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/$/, '');
+  if (isProduction) {
+    logger.fatal('Falta la URL pública de la API (API_PUBLIC_URL)');
+    process.exit(1);
+  }
+  return `http://localhost:${Number(process.env.PORT || 5000)}`;
 };
 
 const getDefaultTenantId = (): string => {
@@ -68,6 +80,7 @@ export const appConfig = {
   corsOrigins: getCorsOrigins(),
   clientUrl: getClientUrl(),
   apiPublicUrl: getApiPublicUrl(),
+  trackingBaseUrl: `${getClientUrl()}/track`,
   logLevel: process.env.LOG_LEVEL || 'info',
   redisUrl: process.env.REDIS_URL?.trim(),
   google: {
@@ -86,7 +99,7 @@ export const appConfig = {
     production: process.env.AFIP_ENV === 'production',
   },
   whatsapp: {
-    orderApiBaseUrl: process.env.ORDER_API_BASE_URL?.trim() || 'http://localhost:5000/api',
+    orderApiBaseUrl: process.env.ORDER_API_BASE_URL?.trim() || `${getApiPublicUrl()}/api`,
     twilioSid: process.env.TWILIO_ACCOUNT_SID?.trim() || '',
     twilioToken: process.env.TWILIO_AUTH_TOKEN?.trim() || '',
     twilioFrom: process.env.TWILIO_WHATSAPP_FROM?.trim() || '',

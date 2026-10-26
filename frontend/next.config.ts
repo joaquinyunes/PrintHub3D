@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import path from "path";
 
 // Rutas del panel que se unificaron: se mantienen como redirects para no romper
@@ -34,4 +35,12 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sin esta variable el sitio compilado apuntaría a localhost: mejor cortar el build.
+const config = (phase: string): NextConfig => {
+  if (phase === PHASE_PRODUCTION_BUILD && !process.env.NEXT_PUBLIC_API_URL) {
+    throw new Error("Falta NEXT_PUBLIC_API_URL (la URL pública de la API) para compilar en producción.");
+  }
+  return nextConfig;
+};
+
+export default config;
