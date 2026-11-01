@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Printer,
+  ListChecks,
   BarChart3,
   Home,
   Store,
@@ -142,6 +143,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavItem href="/admin" icon={<LayoutDashboard size={20} />} label="Dashboard" active={pathname === "/admin"} />
           <NavItem href="/admin/orders" icon={<ShoppingCart size={20} />} label="Pedidos" active={pathname.includes("/orders")} />
           <NavItem href="/admin/production" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/production")} />
+          <NavItem href="/admin/cola" icon={<ListChecks size={20} />} label="¿Qué imprimo?" active={pathname.includes("/cola")} />
           <NavItem href="/admin/products" icon={<Package size={20} />} label="Inventario" active={pathname.includes("/products")} />
           <NavItem href="/admin/filamento" icon={<Spool size={20} />} label="Filamento" active={pathname.includes("/filamento")} />
           {isAdmin && (

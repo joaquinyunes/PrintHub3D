@@ -31,6 +31,7 @@ import paymentRoutes from './modules/payments/payment.routes';
 import trendsRoutes from './modules/trends/trends.routes';
 import homeRoutes from './modules/home/home.routes';
 import taskRoutes from './modules/task/task.routes';
+import productionQueueRoutes from './modules/production/production.routes';
 import externalRoutes from './modules/external/external.routes';
 import apiKeyRoutes from './modules/settings/api-key.routes';
 import reportRoutes from './modules/reports/report.routes';
@@ -83,6 +84,7 @@ export const createApp = (): Express => {
   app.use('/uploads', uploadsRoutes);
 
   app.use('/api/tasks', taskRoutes);
+  app.use('/api/production-queue', productionQueueRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/auth', magicAuthRoutes);
   app.use('/api/products', productRoutes);
