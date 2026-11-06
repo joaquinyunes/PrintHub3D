@@ -32,9 +32,16 @@ router.get('/:filename', async (req: Request, res: Response, next: NextFunction)
     if (!file) return next();
 
     const size = file.length;
-    const contentType = (file.metadata?.contentType as string | undefined) || 'application/octet-stream';
+    const isModel = file.metadata?.kind === 'model';
+    // Los modelos 3D (.stl/.3mf) siempre se descargan como binario genérico: nunca se interpretan en el navegador.
+    const contentType = isModel ? 'application/octet-stream' : (file.metadata?.contentType as string | undefined) || 'application/octet-stream';
+    if (isModel) {
+      const name = String(file.metadata?.originalName || file.filename).replace(/[^\w.\- ]/g, '_');
+      res.set('Content-Disposition', `attachment; filename="${name}"`);
+    }
 
     res.set({
+      'Content-Security-Policy': 'sandbox',
       'Content-Type': contentType,
       'Accept-Ranges': 'bytes',
       'Cache-Control': 'public, max-age=31536000, immutable',

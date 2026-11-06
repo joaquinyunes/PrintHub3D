@@ -14,8 +14,9 @@ export interface IOrder extends Document {
     
     // 🆕 DATOS CLAVE
     chatLink?: string; // Link al chat del cliente
+    referenceUrl?: string; // Link de referencia (Pinterest, Thingiverse, foto…): solo http(s)
     dueDate?: Date;    // Fecha de entrega
-    files: Array<{ name: string; url: string }>; // Archivos adjuntos
+    files: Array<{ name: string; url: string; kind?: 'image' | 'model' | 'link' }>; // Archivos adjuntos
     
     items: Array<{
         productId?: string;
@@ -61,10 +62,12 @@ const OrderSchema: Schema = new Schema({
     
     // 🆕 NUEVOS CAMPOS (Asegurados)
     chatLink: { type: String, default: "" },
+    referenceUrl: { type: String, default: "" },
     dueDate: { type: Date }, 
     files: [{ 
         name: { type: String }, 
-        url: { type: String } 
+        url: { type: String },
+        kind: { type: String, enum: ['image', 'model', 'link'], default: 'link' },
     }],
 
     items: [{

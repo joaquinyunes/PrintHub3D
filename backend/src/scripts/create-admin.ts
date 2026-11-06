@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { passwordProblem } from '../utils/passwordPolicy';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -37,11 +38,11 @@ const run = async () => {
     process.exit(1);
   }
   if (!password) {
-    password = crypto.randomBytes(9).toString('base64url');
+    password = crypto.randomBytes(12).toString('base64url');
     generated = true;
   }
-  if (password.length < 8) {
-    console.error('❌ La contraseña debe tener al menos 8 caracteres.');
+  if (passwordProblem(password, 'admin')) {
+    console.error('❌ ' + passwordProblem(password, 'admin'));
     process.exit(1);
   }
 

@@ -1,4 +1,5 @@
 import { OrderRepository } from '../../repositories/order.repository';
+import { autoCreatePieces } from '../production/pieces.service';
 import { ProductRepository } from '../../repositories/product.repository';
 import logger from '../../config/logger';
 import Sale from '../sales/sale.model';
@@ -29,9 +30,10 @@ export interface CreateOrderInput {
   notes?: string;
   items: OrderItemInput[];
   dueDate?: string | Date | null;
-  files?: Array<{ name: string; url: string }>;
+  files?: Array<{ name: string; url: string; kind?: 'image' | 'model' | 'link' }>;
   customerContact?: string;
   chatLink?: string;
+  referenceUrl?: string;
   /**
    * `false` para pedidos que vienen de un visitante anónimo (checkout web): el
    * precio SIEMPRE sale del producto guardado en la base y no se aceptan ítems
@@ -113,6 +115,7 @@ export const OrderService = {
       files,
       customerContact,
       chatLink,
+      referenceUrl,
     } = input;
     const trustClientPrices = input.trustClientPrices !== false;
 
@@ -204,6 +207,7 @@ export const OrderService = {
       trackingCode,
       customerContact: customerContact || '',
       chatLink: chatLink || '',
+      referenceUrl: referenceUrl || '',
       items: enrichedItems,
       total: calculatedTotal,
       dueDate: dueDate ? new Date(dueDate) : null,
@@ -241,6 +245,9 @@ export const OrderService = {
         }
       }
     }
+
+    // Piezas automáticas si algún producto tiene partes definidas (no bloquea el pedido).
+    await autoCreatePieces(newOrder as any, tenantId);
 
     // Actualizar CRM de forma no bloqueante
     try {

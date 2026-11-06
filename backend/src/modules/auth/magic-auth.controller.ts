@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import { signSession } from './session';
 import crypto from 'crypto';
 import User, { IUser } from './user.model';
 import { appConfig } from '../../config';
@@ -108,11 +108,7 @@ export const verifyMagicCode = async (req: Request, res: Response) => {
     (user as any).magicCodeExpires = undefined;
     await user.save();
 
-    const token = jwt.sign({
-      id: user._id,
-      role: (user as any).role,
-      tenantId: (user as any).tenantId
-    }, appConfig.jwtSecret, { expiresIn: appConfig.jwtExpiresIn as any });
+    const token = signSession(user as any);
     setAuthCookies(res, token);
 
     res.json({

@@ -13,6 +13,10 @@ export interface IPiece extends Document {
   quantityDone: number;
   status: 'pending' | 'printing' | 'done';
   dueDate: string; // YYYY-MM-DD o ''
+  /** Quién movió la pieza la última vez y toda la cadena (no se borra). */
+  lastAdvancedBy: { kind: string; id: string; name: string } | null;
+  lastAdvancedAt: Date | null;
+  history: Array<{ at: Date; from: string; to: string; byKind: string; byId: string; byName: string }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,6 +35,12 @@ const PieceSchema = new Schema<IPiece>(
     quantityDone: { type: Number, default: 0, min: 0 },
     status: { type: String, enum: ['pending', 'printing', 'done'], default: 'pending' },
     dueDate: { type: String, default: '' },
+    lastAdvancedBy: { type: new Schema({ kind: String, id: String, name: String }, { _id: false }), default: null },
+    lastAdvancedAt: { type: Date, default: null },
+    history: {
+      type: [new Schema({ at: Date, from: String, to: String, byKind: String, byId: String, byName: String }, { _id: false })],
+      default: [],
+    },
   },
   { timestamps: true },
 );

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { maskEmail } from '../../utils/maskEmail';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from './user.model';
@@ -7,6 +8,9 @@ import { appConfig } from '../../config';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../../config/email';
 import { setAuthCookies, clearAuthCookies } from '../../utils/authCookies';
 import crypto from 'crypto';
+import { signSession } from './session';
+import { verifyTotp } from '../../utils/totp';
+import { passwordProblem } from '../../utils/passwordPolicy';
 import logger from '../../config/logger';
 
 const signAccessToken = (payload: object): string =>
@@ -16,6 +20,8 @@ const signAccessToken = (payload: object): string =>
 export const register = async (req: Request, res: Response) => {
     try {
         const { name, email, password } = req.body;
+        const weak = passwordProblem(password, 'client');
+        if (weak) return res.status(400).json({ message: weak });
 
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ message: 'Email ya registrado' });
@@ -40,10 +46,10 @@ export const register = async (req: Request, res: Response) => {
             try {
                 await sendVerificationEmail(email, newUser.verificationToken, name);
             } catch (emailError) {
-                logger.warn(`No se pudo enviar email de verificación a ${email}:`, emailError);
+                logger.warn(`No se pudo enviar email de verificación a ${maskEmail(email)}:`, emailError);
             }
 
-            logger.info(`Nuevo usuario registrado (pendiente verificación): ${email}`);
+            logger.info(`Nuevo usuario registrado (pendiente verificación): ${maskEmail(email)}`);
             return res.status(201).json({
                 message: 'Registro exitoso. Verificá tu email para activar tu cuenta.',
                 email,
@@ -55,7 +61,7 @@ export const register = async (req: Request, res: Response) => {
         newUser.verified = true;
         await newUser.save();
 
-        logger.info(`Nuevo usuario registrado: ${email}`);
+        logger.info(`Nuevo usuario registrado: ${maskEmail(email)}`);
         res.status(201).json({
             message: 'Registro exitoso. Ya podés iniciar sesión.',
             email,
@@ -71,9 +77,9 @@ export const register = async (req: Request, res: Response) => {
 // --- LOGIN (Para Admin y Clientes) ---
 export const login = async (req: Request, res: Response) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, otp } = req.body;
 
-        const user = await User.findOne({ email }) as any;
+        const user = await User.findOne({ email }).select('+totpSecret') as any;
         if (!user) return res.status(400).json({ message: 'Usuario no encontrado' });
         if (user.active === false) return res.status(403).json({ message: 'Cuenta desactivada. Contactá al administrador.' });
 
@@ -105,6 +111,17 @@ export const login = async (req: Request, res: Response) => {
             });
         }
 
+        // 2FA (TOTP): con la contraseña bien pero sin código válido no se abre sesión; el código erróneo también cuenta como intento.
+        if (user.totpEnabled) {
+            if (!otp) return res.status(401).json({ message: 'Ingresá el código de 6 dígitos de tu app de autenticación.', code: 'OTP_REQUIRED' });
+            if (!verifyTotp(user.totpSecret, String(otp))) {
+                user.loginAttempts = (user.loginAttempts || 0) + 1;
+                if (user.loginAttempts >= 5) user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+                await user.save();
+                return res.status(401).json({ message: 'Código incorrecto.', code: 'OTP_INVALID' });
+            }
+        }
+
         // Resetear intentos fallidos en login exitoso
         user.loginAttempts = 0;
         user.lockUntil = undefined;
@@ -119,11 +136,11 @@ export const login = async (req: Request, res: Response) => {
             });
         }
 
-        const token = signAccessToken({ id: user._id, role: user.role, tenantId: user.tenantId });
+        const token = signSession(user);
         const refresh = await generateRefreshToken(user._id.toString());
         setAuthCookies(res, token, refresh.token);
 
-        logger.info(`Login exitoso: ${email}`);
+        logger.info(`Login exitoso: ${maskEmail(email)}`);
         res.json({
             token,
             refreshToken: refresh.token,
@@ -207,14 +224,14 @@ export const refreshToken = async (req: Request, res: Response) => {
     const user = await User.findById(rt.userId) as any;
     if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
 
-    const newToken = signAccessToken({ id: user._id, role: user.role, tenantId: user.tenantId });
+    const newToken = signSession(user);
 
     // Rotación de refresh token
     await rt.deleteOne();
     const newRt = await generateRefreshToken(user._id.toString());
     setAuthCookies(res, newToken, newRt.token);
 
-    logger.info(`Token refrescado para usuario: ${user.email}`);
+    logger.info(`Token refrescado para usuario: ${maskEmail(user.email)}`);
     res.json({
         token: newToken, 
         refreshToken: newRt.token, 
@@ -248,11 +265,11 @@ export const verifyEmail = async (req: Request, res: Response) => {
         await user.save();
 
         // Generar token JWT después de verificar
-        const jwtToken = signAccessToken({ id: user._id, role: user.role, tenantId: user.tenantId });
+        const jwtToken = signSession(user);
         const refresh = await generateRefreshToken(user._id.toString());
         setAuthCookies(res, jwtToken, refresh.token);
 
-        logger.info(`Email verificado exitosamente: ${user.email}`);
+        logger.info(`Email verificado exitosamente: ${maskEmail(user.email)}`);
         res.json({ 
             message: 'Email verificado exitosamente',
             token: jwtToken,
@@ -298,10 +315,10 @@ export const forgotPassword = async (req: Request, res: Response) => {
         try {
             await sendPasswordResetEmail(email, resetToken, user.name);
         } catch (emailError) {
-            logger.warn(`No se pudo enviar email de recuperación a ${email}:`, emailError);
+            logger.warn(`No se pudo enviar email de recuperación a ${maskEmail(email)}:`, emailError);
         }
 
-        logger.info(`Solicitud de recuperación de contraseña para: ${email}`);
+        logger.info(`Solicitud de recuperación de contraseña para: ${maskEmail(email)}`);
         res.json({ 
             message: 'Si el email existe, recibirás instrucciones para recuperar tu contraseña' 
         });
@@ -343,11 +360,27 @@ export const resetPassword = async (req: Request, res: Response) => {
         user.lockUntil = undefined;
         await user.save();
 
-        logger.info(`Contraseña restablecida para: ${user.email}`);
+        logger.info(`Contraseña restablecida para: ${maskEmail(user.email)}`);
         res.json({ message: 'Contraseña actualizada exitosamente' });
 
     } catch (error: any) {
         logger.error('Error en resetPassword:', error);
         res.status(500).json({ message: 'Error restableciendo contraseña' });
+    }
+};
+
+// --- CERRAR SESIÓN EN TODOS LOS DISPOSITIVOS ---
+// Sube la versión de sesión (los tokens viejos dejan de valer en `protect`) y borra los refresh tokens.
+export const logoutAll = async (req: Request, res: Response) => {
+    try {
+        const id = req.user?.id;
+        if (!id) return res.status(401).json({ message: 'No autorizado' });
+        await User.updateOne({ _id: id }, { $inc: { tokenVersion: 1 } });
+        await RefreshToken.deleteMany({ userId: id });
+        clearAuthCookies(res);
+        res.json({ message: 'Sesión cerrada en todos los dispositivos' });
+    } catch (error) {
+        logger.error('Error en logoutAll:', error);
+        res.status(500).json({ message: 'Error cerrando sesiones' });
     }
 };

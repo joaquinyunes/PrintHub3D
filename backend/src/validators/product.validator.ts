@@ -12,6 +12,10 @@ export const ProductSchema = z.object({
   minStock: z.number().min(0).optional(),
   isPublic: z.boolean().optional(),
   sku: z.string().optional(),
+  parts: z
+    .array(z.object({ label: z.string().trim().min(1).max(80), color: z.string().trim().max(40).optional().default(''), quantity: z.number().int().min(1).max(999).optional().default(1) }))
+    .max(30)
+    .optional(),
 });
 
 // Schema para búsqueda de productos

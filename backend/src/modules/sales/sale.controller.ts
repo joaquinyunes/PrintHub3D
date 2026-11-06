@@ -62,6 +62,16 @@ export const getSales = async (req: Request, res: Response) => {
 /* ==========================================================================
    2. REGISTRAR VENTA (Acción del botón VENDER)
    ========================================================================== */
+// Solo http(s) o un archivo subido por nosotros: `javascript:` en un href del panel sería XSS.
+const isHttpUrl = (u: unknown): boolean => {
+  try {
+    return typeof u === 'string' && u.length <= 500 && ['http:', 'https:'].includes(new URL(u).protocol);
+  } catch {
+    return false;
+  }
+};
+const isUploadPath = (u: unknown): boolean => typeof u === 'string' && /^\/uploads\/[\w.-]+$/.test(u);
+
 export const registerSale = async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
@@ -69,7 +79,10 @@ export const registerSale = async (req: Request, res: Response) => {
 
     // --- Venta manual / libre (mostrador sin producto de inventario) ---
     if (!productId) {
-      const { productName, price, cost = 0, category = 'Mostrador', paymentMethod, client, notes } = req.body;
+      const { productName, price, cost = 0, category = 'Mostrador', paymentMethod, client, notes, referenceUrl, imageUrl } = req.body;
+      if ((referenceUrl && !isHttpUrl(referenceUrl)) || (imageUrl && !isHttpUrl(imageUrl) && !isUploadPath(imageUrl))) {
+        return res.status(400).json({ message: 'Link o imagen inválidos (solo http(s) o un archivo subido).' });
+      }
       if (!productName || !(Number(price) >= 0)) {
         return res.status(400).json({ message: 'productName y price son obligatorios para una venta manual.' });
       }
@@ -86,6 +99,8 @@ export const registerSale = async (req: Request, res: Response) => {
         paymentMethod: paymentMethod || '',
         client: client || '',
         notes: notes || '',
+        referenceUrl: referenceUrl || '',
+        imageUrl: imageUrl || '',
         tenantId,
       }).save();
       return res.status(201).json({ message: 'Venta registrada.', sale: manualSale });

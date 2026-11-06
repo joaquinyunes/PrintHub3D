@@ -18,12 +18,12 @@
     "date-fns": "^4.1.0",
     "gsap": "^3.15.0",
     "lucide-react": "^0.562.0",
-    "next": "16.1.1",
+    "next": "^16.4.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "read-excel-file": "^9.3.14",
     "recharts": "^3.6.0",
-    "three": "^0.171.0",
-    "xlsx": "^0.18.5"
+    "three": "^0.171.0"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -33,7 +33,7 @@
     "autoprefixer": "^10.4.23",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
-    "eslint-config-next": "16.1.1",
+    "eslint-config-next": "^16.4.5",
     "eslint-config-prettier": "^9.0.0",
     "postcss": "^8.5.6",
     "prettier": "^3.0.0",

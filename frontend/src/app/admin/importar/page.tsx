@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import * as XLSX from "xlsx";
+import readExcelFile from "read-excel-file/browser";
 import { UploadCloud, Loader2, CheckCircle2, AlertTriangle, FileSpreadsheet, Database } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
@@ -38,13 +38,13 @@ const D = (v: unknown): string | null => {
   return isNaN(d.getTime()) ? null : d.toISOString();
 };
 
-function sheetRows(wb: XLSX.WorkBook, name: string): Row[] {
-  const ws = wb.Sheets[name];
-  if (!ws) return [];
-  return XLSX.utils.sheet_to_json<Row>(ws, { header: 1, raw: true, blankrows: false, defval: null });
+type Workbook = Record<string, Row[]>;
+
+function sheetRows(wb: Workbook, name: string): Row[] {
+  return (wb[name] ?? []).filter((r) => r.some((c) => c != null && c !== ""));
 }
 
-function normalize(wb: XLSX.WorkBook): Omit<Payload, "replace"> {
+function normalize(wb: Workbook): Omit<Payload, "replace"> {
   // --- PEDIDOS ---
   const pedRows = sheetRows(wb, "Pedidos").slice(1);
   const pedidos = pedRows
@@ -140,8 +140,8 @@ export default function ImportarPage() {
     setError(""); setResult(null); setParsed(null); setFileName(file.name);
     try {
       const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: "array", cellDates: true });
-      setParsed(normalize(wb));
+      const sheets = await readExcelFile(buf);
+      setParsed(normalize(Object.fromEntries(sheets.map((x) => [x.sheet, x.data as Row[]]))));
     } catch (e) {
       setError("No se pudo leer el archivo. ¿Es el .xlsx correcto?");
       console.error(e);

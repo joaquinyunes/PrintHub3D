@@ -13,6 +13,8 @@ export interface IProduct extends Document {
   isPublic: boolean;
   tenantId: string;
   sku?: string;
+  /** Partes que se imprimen por unidad: generan las piezas de la cola al crear un pedido. */
+  parts: Array<{ label: string; color: string; quantity: number }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,7 +31,11 @@ const ProductSchema: Schema = new Schema(
     minStock: { type: Number, default: 5 },
     isPublic: { type: Boolean, default: false },
     tenantId: { type: String, required: true, index: true },
-    sku: { type: String, default: "" }, 
+    sku: { type: String, default: "" },
+    parts: {
+      type: [{ _id: false, label: { type: String, required: true, maxlength: 80 }, color: { type: String, default: "", maxlength: 40 }, quantity: { type: Number, default: 1, min: 1, max: 999 } }],
+      default: [],
+    },
   },
   {
     timestamps: true,

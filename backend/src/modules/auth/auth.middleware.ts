@@ -4,6 +4,7 @@ import { appConfig } from '../../config';
 import logger from '../../config/logger';
 import { AppError } from '../../utils/AppError';
 import { body, validationResult } from 'express-validator';
+import User from './user.model';
 
 export type UserRole = 'admin' | 'staff' | 'client';
 
@@ -12,8 +13,11 @@ export interface AuthUser {
     id: string;
     role: UserRole;
     tenantId: string;
-    /** Opcional: el login actual no lo incluye en el token. */
+    /** Nombre para el registro de auditoría (los tokens viejos no lo traen). */
     name?: string;
+    /** Versión de sesión: "cerrar sesión en todos los dispositivos" la sube. */
+    tv?: number;
+    typ?: string;
 }
 
 /** Usuario autenticado de la request. Solo para handlers que ya pasaron por `protect`. */
@@ -31,14 +35,24 @@ declare global {
 }
 
 // 1. Verificar que esté logueado (Cualquiera)
-export const protect = (req: Request, res: Response, next: NextFunction) => {
+export const protect = async (req: Request, res: Response, next: NextFunction) => {
     const token =
         req.header('Authorization')?.replace('Bearer ', '') ||
         req.cookies?.token;
     if (!token) return res.status(401).json({ message: 'No autorizado' });
 
     try {
-        req.user = jwt.verify(token, appConfig.jwtSecret) as AuthUser;
+        const claims = jwt.verify(token, appConfig.jwtSecret) as AuthUser;
+        // El token de PIN de operario identifica a una persona, no abre sesión.
+        if (claims.typ === 'operator') return res.status(401).json({ message: 'Token inválido' });
+        // "Cerrar sesión en todos los dispositivos": un token con versión vieja ya no vale.
+        if (typeof claims.tv === 'number') {
+            const u = await User.findById(claims.id).select('tokenVersion active').lean();
+            if (!u || u.active === false || (u.tokenVersion ?? 0) !== claims.tv) {
+                return res.status(401).json({ message: 'Sesión cerrada. Ingresá de nuevo.' });
+            }
+        }
+        req.user = claims;
         next();
     } catch (error) {
         logger.warn('Token inválido o expirado', { token: token.substring(0, 10) + '...' });
@@ -72,7 +86,7 @@ export const staffOrAdmin = allowRoles('admin', 'staff');
 export const registerValidations = [
   body('name').isLength({ min: 2 }).withMessage('Nombre requerido (mín 2 caracteres)'),
   body('email').isEmail().withMessage('Email inválido').normalizeEmail(),
-  body('password').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
+  body('password').isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres'),
 ];
 
 export const loginValidations = [

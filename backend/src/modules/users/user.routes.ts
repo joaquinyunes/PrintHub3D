@@ -6,6 +6,8 @@ import { protect, adminOnly, authUser } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
 import { reqParam } from '../../utils/reqParam';
 import logger from '../../config/logger';
+import { passwordProblem } from '../../utils/passwordPolicy';
+import { audit } from '../audit/audit.service';
 
 const router = Router();
 
@@ -39,7 +41,11 @@ router.post('/', protect, withTenant, adminOnly, async (req, res) => {
     const exists = await User.findOne({ email: String(email).toLowerCase() });
     if (exists) return res.status(409).json({ message: 'Ya existe un usuario con ese email' });
 
-    const plain = password && String(password).length >= 8 ? String(password) : crypto.randomBytes(9).toString('base64url');
+    if (password) {
+      const weak = passwordProblem(password, role);
+      if (weak) return res.status(400).json({ message: weak });
+    }
+    const plain = password ? String(password) : crypto.randomBytes(12).toString('base64url');
     const hashed = await bcrypt.hash(plain, await bcrypt.genSalt(10));
 
     const user = await User.create({
@@ -52,7 +58,8 @@ router.post('/', protect, withTenant, adminOnly, async (req, res) => {
       tenantId: req.tenantId,
     });
 
-    logger.info(`Usuario de panel creado: ${user.email} (${role})`);
+    logger.info(`Usuario de panel creado (${role})`);
+    await audit(req, 'user.create', String(user._id), { role });
     res.status(201).json({ ...publicUser(user), tempPassword: password ? undefined : plain });
   } catch (error) {
     logger.error('Error creando usuario:', error);
@@ -78,13 +85,14 @@ router.patch('/:id', protect, withTenant, adminOnly, async (req, res) => {
 
     let tempPassword: string | undefined;
     if (req.body.resetPassword) {
-      tempPassword = crypto.randomBytes(9).toString('base64url');
+      tempPassword = crypto.randomBytes(12).toString('base64url');
       target.password = await bcrypt.hash(tempPassword, await bcrypt.genSalt(10));
       (target as any).loginAttempts = 0;
       (target as any).lockUntil = undefined;
     }
 
     await target.save();
+    await audit(req, 'user.update', String(target._id), { role: target.role, active: target.active, passwordReset: !!tempPassword });
     res.json({ ...publicUser(target), tempPassword });
   } catch (error) {
     logger.error('Error actualizando usuario:', error);
@@ -97,6 +105,7 @@ router.delete('/:id', protect, withTenant, adminOnly, async (req, res) => {
   if (String(id) === String(authUser(req).id)) return res.status(400).json({ message: 'No podés eliminarte a vos mismo' });
   const deleted = await User.findOneAndDelete({ _id: id, tenantId: req.tenantId, role: panelRoleFilter });
   if (!deleted) return res.status(404).json({ message: 'Usuario no encontrado' });
+  await audit(req, 'user.delete', String(id), { role: deleted.role });
   res.json({ message: 'Usuario eliminado' });
 });
 

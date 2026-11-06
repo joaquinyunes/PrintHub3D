@@ -1,0 +1,39 @@
+# Blueprint de Render: API + panel. El build corta si no compila (sin "|| true").
+# Uso: Render > New > Blueprint > este repo. Los valores `sync: false` se cargan a mano.
+services:
+  - type: web
+    name: printhub3d-api
+    runtime: node
+    rootDir: backend
+    plan: starter # starter = no se duerme (ver docs/MONITOREO.md)
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        sync: false
+      - key: MP_ACCESS_TOKEN
+        sync: false
+      - key: MP_WEBHOOK_SECRET
+        sync: false
+
+  - type: web
+    name: printhub3d-web
+    runtime: node
+    rootDir: frontend
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXT_PUBLIC_API_URL
+        sync: false

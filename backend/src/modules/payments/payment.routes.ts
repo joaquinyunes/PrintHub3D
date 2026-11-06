@@ -4,7 +4,7 @@ import Sale from '../sales/sale.model';
 import { OrderService } from '../orders/order.service';
 import { MercadoPagoService } from './mercadopago.service';
 import { enqueueNotification } from '../../queue/notificationQueue';
-import { paymentLimiter } from '../../middlewares/rateLimiter';
+import { paymentLimiter, webhookLimiter } from '../../middlewares/rateLimiter';
 import { appConfig } from '../../config';
 import logger from '../../config/logger';
 import { AppError } from '../../utils/AppError';
@@ -94,7 +94,7 @@ router.post('/create-preference', paymentLimiter, async (req: Request, res: Resp
 });
 
 // Webhook de MercadoPago
-router.post('/webhook', async (req: Request, res: Response) => {
+router.post('/webhook', webhookLimiter, async (req: Request, res: Response) => {
   try {
     const type = (req.query.type || req.query.topic || req.body?.type || '') as string;
     const dataId = (req.query['data.id'] || req.query.id || req.body?.data?.id || '') as string;

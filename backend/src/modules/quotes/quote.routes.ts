@@ -1,7 +1,11 @@
 import { Router, Request, Response } from 'express';
 import Quote from './quote.model';
 import { estimateQuote, MATERIALS, QuoteInput } from './quote.pricing';
-import { protect, adminOnly } from '../auth/auth.middleware';
+import { costQuote } from './quote.cost';
+import { z } from 'zod';
+import { publicWriteLimiter } from '../../middlewares/rateLimiter';
+import { zodValidator } from '../../middleware/zodValidator';
+import { protect, adminOnly, staffOrAdmin } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
 import { reqParam } from '../../utils/reqParam';
 import { appConfig } from '../../config';
@@ -18,7 +22,8 @@ const parseInput = (body: any): QuoteInput => ({
     z: Number(body?.dimensionsMm?.z) || 0,
   },
   solidity: String(body.solidity || 'normal'),
-  infill: Number(body.infill) || 20,
+  // 0 % de relleno es válido (pieza hueca): solo se usa 20 cuando no viene el dato.
+  infill: body.infill === undefined || body.infill === null || body.infill === '' || !Number.isFinite(Number(body.infill)) ? 20 : Number(body.infill),
   quantity: Math.max(1, Math.round(Number(body.quantity)) || 1),
   finish: String(body.finish || 'estandar'),
   rush: !!body.rush,
@@ -34,8 +39,19 @@ router.post('/estimate', (req: Request, res: Response) => {
   res.json({ estimate: estimateQuote(parseInput(req.body)) });
 });
 
+// Calculadora de costo por pieza (planilla del taller): gramos y horas del slicer + costos reales.
+const num = z.number().finite().min(0).max(1e9);
+const CostSchema = z.object({
+  settings: z.object({ filamentPrice: num, kwhPrice: num, watts: num, lifeHours: num, spareParts: num, errorPct: z.number().finite().min(0).max(100), mlSurcharge: num }),
+  piece: z.object({ hours: num, minutes: z.number().finite().min(0).max(1e6), grams: num, extras: num }),
+  multiplier: z.number().finite().min(0.01).max(100),
+});
+router.post('/cost', protect, withTenant, staffOrAdmin, zodValidator({ body: CostSchema }), (req: Request, res: Response) => {
+  res.json({ quote: costQuote(req.body.settings, req.body.piece, req.body.multiplier) });
+});
+
 // Enviar cotización (público): guarda el lead y avisa al taller
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', publicWriteLimiter, async (req: Request, res: Response) => {
   try {
     const { clientName, contact, notes, fileUrl } = req.body;
     if (!clientName || !contact) {

@@ -29,4 +29,31 @@ export const paymentLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
+// Escrituras públicas (pedidos de la tienda, cotizaciones, opiniones): tope por IP contra spam y relleno de la base.
+export const publicWriteLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: Number(process.env.PUBLIC_WRITE_LIMIT || 20),
+  message: { message: 'Demasiadas solicitudes desde esta red. Probá de nuevo en unos minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Webhooks (Mercado Pago): holgado para no cortar reintentos legítimos, pero acota un flood.
+export const webhookLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// PIN de operarios: además del bloqueo por operario (5 fallos = 15 min), tope por IP.
+export const pinLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { message: 'Demasiados intentos de PIN desde esta red. Probá en unos minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+});
+
 export default limiter;

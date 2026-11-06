@@ -10,7 +10,7 @@ interface CustomError extends Error {
 export const errorHandler = (err: CustomError | ZodError, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof ZodError) {
     const statusCode = 400;
-    const formattedErrors = err.errors.map((e) => ({
+    const formattedErrors = err.issues.map((e) => ({
       field: e.path.join('.'),
       message: e.message,
       code: e.code,

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import { maskEmail } from '../../utils/maskEmail';
+import { signSession } from './session';
 import User from './user.model';
 import RefreshToken from '../../models/refreshToken.model';
 import { appConfig } from '../../config';
@@ -62,7 +63,7 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
         avatar: picture,
       });
       await user.save();
-      logger.info(`Nuevo usuario via Google OAuth: ${email}`);
+      logger.info(`Nuevo usuario via Google OAuth: ${maskEmail(email)}`);
     } else {
       // Actualizar avatar si no tiene
       if (picture && !user.avatar) {
@@ -72,11 +73,7 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
     }
 
     // Generar JWT y Refresh Token
-    const token = jwt.sign(
-      { id: user._id, role: user.role, tenantId: user.tenantId },
-      appConfig.jwtSecret,
-      { expiresIn: '30d' },
-    );
+    const token = signSession(user as any);
 
     const refreshToken = await generateRefreshToken(user._id.toString());
 
@@ -135,11 +132,7 @@ export const googleAuthToken = async (req: Request, res: Response) => {
       await user.save();
     }
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role, tenantId: user.tenantId },
-      appConfig.jwtSecret,
-      { expiresIn: '30d' },
-    );
+    const token = signSession(user as any);
 
     const refresh = await generateRefreshToken(user._id.toString());
 

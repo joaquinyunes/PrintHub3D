@@ -19,6 +19,9 @@ export interface IUser extends Document {
     passwordResetExpires?: Date;
     loginAttempts?: number;
     lockUntil?: Date;
+    tokenVersion?: number;
+    totpSecret?: string;
+    totpEnabled?: boolean;
 }
 
 const UserSchema: Schema = new Schema({
@@ -37,6 +40,9 @@ const UserSchema: Schema = new Schema({
     passwordResetExpires: { type: Date },
     loginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date },
+    tokenVersion: { type: Number, default: 0 },
+    totpSecret: { type: String, select: false },
+    totpEnabled: { type: Boolean, default: false },
 }, { timestamps: true });
 
 export default mongoose.model<IUser>('User', UserSchema);

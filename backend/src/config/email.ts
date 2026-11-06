@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { maskEmail } from '../utils/maskEmail';
 import logger from './logger';
 import { appConfig } from './index';
 
@@ -52,7 +53,7 @@ export const sendVerificationEmail = async (email: string, token: string, name: 
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    logger.info(`Email de verificación enviado a ${email}`, { messageId: info.messageId });
+    logger.info(`Email de verificación enviado a ${maskEmail(email)}`, { messageId: info.messageId });
   } catch (error) {
     logger.error('Error enviando email de verificación:', error);
     throw new Error('No se pudo enviar el email de verificación');
@@ -77,7 +78,7 @@ export const sendMagicCodeEmail = async (email: string, code: string): Promise<v
       </div>
     `,
   });
-  logger.info(`Código de acceso enviado por email a ${email}`);
+  logger.info(`Código de acceso enviado por email a ${maskEmail(email)}`);
 };
 
 export const sendPasswordResetEmail = async (email: string, token: string, name: string): Promise<void> => {
@@ -106,7 +107,7 @@ export const sendPasswordResetEmail = async (email: string, token: string, name:
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    logger.info(`Email de recuperación enviado a ${email}`, { messageId: info.messageId });
+    logger.info(`Email de recuperación enviado a ${maskEmail(email)}`, { messageId: info.messageId });
   } catch (error) {
     logger.error('Error enviando email de recuperación:', error);
     throw new Error('No se pudo enviar el email de recuperación');

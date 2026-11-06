@@ -4,6 +4,7 @@ import logger from '../../config/logger';
 import { reqParam } from '../../utils/reqParam';
 import Sale from "../sales/sale.model";
 import { InventoryService } from "./inventory.service";
+import { audit } from "../audit/audit.service";
 
 const productRepository = new ProductRepository();
 
@@ -79,7 +80,7 @@ export const createProduct = async (req: Request, res: Response) => {
 
     const {
       name, category, price, cost, stock, minStock,
-      description, imageUrl, isPublic, sku
+      description, imageUrl, isPublic, sku, parts
     } = req.body;
 
     if (!name || price === undefined) {
@@ -104,6 +105,7 @@ export const createProduct = async (req: Request, res: Response) => {
       if (description) product.description = description;
       if (imageUrl) product.imageUrl = imageUrl;
       if (isPublic !== undefined) product.isPublic = isPublic;
+      if (parts !== undefined) product.parts = parts;
 
       await product.save();
       return res.json({ message: "Stock actualizado y datos fusionados", product });
@@ -121,6 +123,7 @@ export const createProduct = async (req: Request, res: Response) => {
       description: description || "",
       imageUrl: imageUrl || "",
       isPublic: Boolean(isPublic),
+      parts: parts ?? [],
       tenantId,
     } as any);
 
@@ -146,6 +149,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
     if (!deleted) {
       return res.status(404).json({ message: "Producto no encontrado" });
     }
+    await audit(req, "product.delete", String(id));
 
     return res.json({ message: "Producto eliminado" });
   } catch (error) {
@@ -172,6 +176,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       "cost",
       "stock",
       "minStock",
+      "parts",
     ];
 
     const updates: any = {};
@@ -197,11 +202,19 @@ export const updateProduct = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Stock mínimo inválido" });
     }
 
+    const before: any = await productRepository.findById(id, tenantId as string).catch(() => null);
     const updatedProduct = await productRepository.update(id, updates, tenantId as string);
 
     if (!updatedProduct) {
       return res.status(404).json({ message: "Producto no encontrado" });
     }
+
+    // S7: quién cambió precio, costo o stock (valores anteriores y nuevos).
+    const changes: Record<string, { from: unknown; to: unknown }> = {};
+    for (const f of ["price", "cost", "stock"] as const) {
+      if (updates[f] !== undefined && before && Number(before[f]) !== Number(updates[f])) changes[f] = { from: before[f], to: Number(updates[f]) };
+    }
+    if (Object.keys(changes).length) await audit(req, "product.update", String(id), changes);
 
     return res.json(updatedProduct);
   } catch (error) {

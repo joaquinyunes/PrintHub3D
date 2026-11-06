@@ -6,21 +6,22 @@ import Piece from './piece.model';
 import { protect, staffOrAdmin } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
 import { zodValidator } from '../../middleware/zodValidator';
+import { readOperator, requireOperatorIfAny } from '../operators/operator.auth';
+import { actorOf, audit } from '../audit/audit.service';
+import { createPiecesForOrder } from './pieces.service';
 import {
   NEXT_PIECE_STATUS,
   PartLine,
   dueInfo,
   groupQueueByColor,
   groupQueueByCustomer,
-  normalizeColor,
-  piecesForItem,
   weekBucket,
 } from './pieces.logic';
 
 // Cola "¿Qué imprimo?" portada de global3d-corrientes: un pedido se parte en piezas (con color) y el taller
 // ve qué imprimir agrupado por color o por cliente, lo más urgente primero.
 const router = Router();
-router.use(protect, withTenant, staffOrAdmin);
+router.use(protect, withTenant, staffOrAdmin, readOperator);
 
 const todayAR = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
 
@@ -53,6 +54,7 @@ router.get('/queue', async (req: Request, res: Response) => {
     quantityDone: p.quantityDone,
     status: p.status,
     dueDate: p.dueDate,
+    lastAdvancedBy: p.lastAdvancedBy ?? null,
     customerKey: p.customerKey,
     customerName: p.clientName,
     due: dueInfo(p.dueDate, today),
@@ -68,30 +70,29 @@ router.post('/orders/:orderId/pieces', zodValidator({ body: GenerateSchema }), a
   if (!order.items?.length) return res.status(400).json({ message: 'El pedido no tiene ítems.' });
   if (await Piece.exists({ tenantId: req.tenantId, orderId: order._id })) return res.status(409).json({ message: 'Este pedido ya tiene piezas.' });
 
-  const partsByIndex = new Map<number, PartLine[]>((req.body.items ?? []).map((i: { itemIndex: number; parts: PartLine[] }) => [i.itemIndex, i.parts]));
-  const dueDate = order.dueDate ? new Date(order.dueDate).toISOString().slice(0, 10) : '';
-  const docs = order.items.flatMap((item, idx) => {
-    const parts = partsByIndex.get(idx);
-    const pieces = parts?.length
-      ? piecesForItem(parts, item.quantity)
-      : [{ label: item.productName, color: null, quantity: Math.max(1, Math.floor(item.quantity)) }];
-    return pieces.map((p) => ({
-      tenantId: req.tenantId, orderId: order._id, trackingCode: order.trackingCode, clientName: order.clientName,
-      customerKey: normalizeColor(order.clientName), itemName: item.productName, label: p.label, color: p.color,
-      quantityTotal: p.quantity, dueDate,
-    }));
-  });
-  res.status(201).json(await Piece.insertMany(docs));
+  const overrides = new Map<number, PartLine[]>((req.body.items ?? []).map((i: { itemIndex: number; parts: PartLine[] }) => [i.itemIndex, i.parts]));
+  const pieces = await createPiecesForOrder(order, String(req.tenantId), overrides);
+  await audit(req, 'pieces.generate', String(order._id), { count: pieces.length });
+  res.status(201).json(pieces);
 });
 
-router.patch('/pieces/:id/advance', async (req: Request, res: Response) => {
+router.patch('/pieces/:id/advance', requireOperatorIfAny, async (req: Request, res: Response) => {
   const { id } = req.params;
   const piece = mongoose.isValidObjectId(id) ? await Piece.findOne({ _id: id, tenantId: req.tenantId }) : null;
   if (!piece) return res.status(404).json({ message: 'Pieza no encontrada.' });
   const next = NEXT_PIECE_STATUS[piece.status];
   const quantityDone = next === 'done' ? piece.quantityTotal : next === 'pending' ? 0 : piece.quantityDone;
+  const who = actorOf(req);
+  const at = new Date();
   // Condicional al estado leído: si otro operario la movió en el medio, no se pisa.
-  const updated = await Piece.findOneAndUpdate({ _id: piece._id, tenantId: req.tenantId, status: piece.status }, { $set: { status: next, quantityDone } }, { returnDocument: 'after' });
+  const updated = await Piece.findOneAndUpdate(
+    { _id: piece._id, tenantId: req.tenantId, status: piece.status },
+    {
+      $set: { status: next, quantityDone, lastAdvancedBy: { kind: who.kind, id: who.id, name: who.name }, lastAdvancedAt: at },
+      $push: { history: { at, from: piece.status, to: next, byKind: who.kind, byId: who.id, byName: who.name } },
+    },
+    { returnDocument: 'after' },
+  );
   if (!updated) return res.status(409).json({ message: 'La pieza cambió mientras tanto. Recargá la cola.' });
   res.json(updated);
 });

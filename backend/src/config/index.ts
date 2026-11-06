@@ -71,7 +71,7 @@ export const appConfig = {
   nodeEnv: NODE_ENV,
   isProduction,
   requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION === 'true',
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN?.trim() || '30d',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN?.trim() || '7d',
   cookieDomain: process.env.COOKIE_DOMAIN?.trim() || undefined,
   port: Number(process.env.PORT || 5000),
   mongoUri: getMongoUri(),

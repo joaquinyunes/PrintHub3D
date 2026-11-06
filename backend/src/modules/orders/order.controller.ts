@@ -95,10 +95,10 @@ export const createOrder = async (req: Request, res: Response) => {
 
         const { 
             clientName, origin, paymentMethod, deposit, 
-            notes, items, dueDate, files, customerContact, chatLink
+            notes, items, dueDate, files, customerContact, chatLink, referenceUrl
         } = req.body;
 
-        logger.info("Recibiendo pedido:", { clientName, dueDate, itemsLength: items?.length });
+        logger.info("Recibiendo pedido", { itemsLength: items?.length }); // sin nombre del cliente: datos personales fuera de los logs (S12)
 
         const savedOrder = await OrderService.createOrder({
             tenantId,
@@ -112,6 +112,7 @@ export const createOrder = async (req: Request, res: Response) => {
             files,
             customerContact,
             chatLink,
+            referenceUrl,
         });
 
         res.status(201).json(savedOrder);

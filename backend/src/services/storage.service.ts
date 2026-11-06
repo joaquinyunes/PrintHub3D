@@ -96,3 +96,21 @@ export const deleteStoredFile = async (id: ObjectId | string): Promise<void> => 
   const objectId = typeof id === 'string' ? new mongoose.mongo.ObjectId(id) : id;
   await getBucket().delete(objectId);
 };
+
+export interface BufferMeta {
+  mime: string;
+  ext: string;
+  kind: 'image' | 'model';
+  tenantId?: string;
+  originalName?: string;
+}
+
+/** Guarda un archivo ya validado (en memoria, con tope de tamaño) con nombre propio. */
+export const storeBuffer = async (buf: Buffer, meta: BufferMeta): Promise<StoredFile> => {
+  const filename = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${meta.ext}`;
+  const upload = getBucket().openUploadStream(filename, {
+    metadata: { contentType: meta.mime, kind: meta.kind, tenantId: meta.tenantId, originalName: meta.originalName },
+  });
+  await pipeline(Readable.from([buf]), upload);
+  return { id: upload.id as ObjectId, filename, mimetype: meta.mime, size: upload.length };
+};

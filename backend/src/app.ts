@@ -41,6 +41,8 @@ import whatsappRoutes from './modules/notifications/whatsapp.routes';
 import aiRoutes from './routes/ai.routes';
 import importRoutes from './modules/import/import.routes';
 import uploadsRoutes from './routes/uploads.routes';
+import operatorRoutes from './modules/operators/operator.routes';
+import auditRoutes from './modules/audit/audit.routes';
 
 /**
  * Arma la app de Express SIN efectos secundarios (no conecta a la DB ni abre
@@ -56,8 +58,15 @@ export const createApp = (): Express => {
     helmet({
       crossOriginEmbedderPolicy: false,
       crossOriginResourcePolicy: { policy: 'cross-origin' },
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      strictTransportSecurity: { maxAge: 63072000, includeSubDomains: true },
     }),
   );
+  // S9: helmet no pone Permissions-Policy. La API no necesita ninguna función del navegador.
+  app.use((_req, res, next) => {
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+    next();
+  });
 
   app.use(
     cors({
@@ -76,8 +85,12 @@ export const createApp = (): Express => {
   app.use(
     '/uploads',
     express.static(path.join(__dirname, '../uploads'), {
-      setHeaders: (res) => {
+      setHeaders: (res, filePath) => {
         res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+        res.set('X-Content-Type-Options', 'nosniff');
+        res.set('Content-Security-Policy', 'sandbox');
+        // Archivos viejos del disco que no son imagen/video (p. ej. .html, .svg, .stl): se descargan, no se ejecutan.
+        if (!/\.(jpe?g|png|gif|webp|avif|mp4|mov|webm)$/i.test(filePath)) res.set('Content-Disposition', 'attachment');
       },
     }),
   );
@@ -85,6 +98,8 @@ export const createApp = (): Express => {
 
   app.use('/api/tasks', taskRoutes);
   app.use('/api/production-queue', productionQueueRoutes);
+  app.use('/api/operators', operatorRoutes);
+  app.use('/api/audit', auditRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/auth', magicAuthRoutes);
   app.use('/api/products', productRoutes);

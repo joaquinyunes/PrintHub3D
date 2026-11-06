@@ -13,6 +13,8 @@ export interface ISale extends Document {
   client?: string;
   paymentMethod?: string;
   notes?: string;
+  referenceUrl?: string;
+  imageUrl?: string;
   importBatch?: string;
   tenantId: string;
   createdAt: Date;
@@ -32,6 +34,8 @@ const SaleSchema: Schema = new Schema(
     client: { type: String, default: "" },
     paymentMethod: { type: String, default: "" },
     notes: { type: String, default: "" },
+    referenceUrl: { type: String, default: "" },
+    imageUrl: { type: String, default: "" },
     importBatch: { type: String, index: true },
     tenantId: { type: String, required: true, index: true },
   },

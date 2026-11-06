@@ -16,17 +16,21 @@ import {
 } from './order.controller'; 
 import { protect, staffOrAdmin, adminOnly } from '../auth/auth.middleware';
 import { withTenant } from '../../middleware/tenant.middleware';
+import { publicWriteLimiter } from '../../middlewares/rateLimiter';
 import { zodValidator } from '../../middleware/zodValidator';
+import { receiveAttachment, saveAttachment } from './attachment.handler';
 import { CreateOrderSchema, UpdateOrderSchema, UpdateOrderStatusSchema, OrderFeedbackSchema } from '../../validators/order.validator';
 
 const router = Router();
 
 // Public routes (no auth)
-router.post('/public', zodValidator({ body: CreateOrderSchema }), createPublicOrder);
+router.post('/public', publicWriteLimiter, zodValidator({ body: CreateOrderSchema }), createPublicOrder);
 router.get('/track/:trackingCode', getOrderByTrackingCode);
-router.post('/track/:trackingCode/feedback', zodValidator({ body: OrderFeedbackSchema }), submitOrderFeedback);
+router.post('/track/:trackingCode/feedback', publicWriteLimiter, zodValidator({ body: OrderFeedbackSchema }), submitOrderFeedback);
 
 // Admin routes (auth required)
+// Adjuntos del pedido: foto de referencia o modelo 3D (.stl/.3mf), validados por contenido.
+router.post('/attachments', protect, withTenant, staffOrAdmin, receiveAttachment, saveAttachment);
 router.get('/summary', protect, withTenant, staffOrAdmin, getOrdersSummary);
 router.get('/', protect, withTenant, staffOrAdmin, getOrders);
 router.post('/', protect, withTenant, staffOrAdmin, zodValidator({ body: CreateOrderSchema }), createOrder);

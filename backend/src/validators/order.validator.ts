@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+// Solo http(s): `javascript:` o `data:` en un href del panel serían XSS.
+const httpUrl = z.string().max(500).refine((u) => {
+  try {
+    return ['http:', 'https:'].includes(new URL(u).protocol);
+  } catch {
+    return false;
+  }
+}, 'El link debe empezar con http:// o https://');
+// Adjuntos: un archivo subido por nosotros (/uploads/…) o un link http(s).
+const fileUrl = z.string().max(500).refine((u) => /^\/uploads\/[\w.-]+$/.test(u) || httpUrl.safeParse(u).success, 'URL de archivo inválida');
+
 // Schema para crear pedido
 export const CreateOrderSchema = z.object({
   clientName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -20,11 +31,13 @@ export const CreateOrderSchema = z.object({
   })).min(1, 'Debe haber al menos un producto'),
   dueDate: z.union([z.string(), z.date(), z.null()]).optional(),
   files: z.array(z.object({
-    name: z.string(),
-    url: z.string(),
-  })).optional(),
+    name: z.string().max(120),
+    url: fileUrl,
+    kind: z.enum(['image', 'model', 'link']).optional(),
+  })).max(20).optional(),
   customerContact: z.string().optional(),
-  chatLink: z.string().optional(),
+  chatLink: z.union([httpUrl, z.literal('')]).optional(),
+  referenceUrl: z.union([httpUrl, z.literal('')]).optional(),
 });
 
 // Schema para editar pedido (todos los campos opcionales: permite updates parciales
@@ -34,7 +47,7 @@ export const UpdateOrderSchema = CreateOrderSchema.partial();
 // Schema para actualizar estado
 export const UpdateOrderStatusSchema = z.object({
   status: z.enum(['pending', 'in_progress', 'post_processing', 'completed', 'delivered', 'cancelled'], {
-    errorMap: () => ({ message: 'Estado inválido' }),
+    message: 'Estado inválido',
   }),
   printTimeMinutes: z.number().min(0).optional(),
   printerId: z.string().optional(),

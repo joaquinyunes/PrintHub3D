@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import { maskEmail } from '../../utils/maskEmail';
+import { passwordProblem } from '../../utils/passwordPolicy';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -29,10 +31,10 @@ export const forgotPassword = async (req: Request, res: Response) => {
     try {
       await sendPasswordResetEmail(email, token, (user as any).name || '');
     } catch (mailErr) {
-      logger.warn(`No se pudo enviar el email de recuperación a ${email}:`, mailErr);
+      logger.warn(`No se pudo enviar el email de recuperación a ${maskEmail(email)}:`, mailErr);
       if (!appConfig.isProduction) {
         // Sin SMTP en desarrollo: dejamos el token en el log para poder probar.
-        logger.info(`[DEV] Token de recuperación para ${email}: ${token}`);
+        logger.info(`[DEV] Token de recuperación para ${maskEmail(email)}: ${token}`);
       }
     }
 
@@ -59,9 +61,8 @@ export const resetPassword = async (req: Request, res: Response) => {
     }
 
     const { password } = req.body;
-    if (!password || password.length < 6) {
-      return res.status(400).json({ message: 'Contraseña debe tener al menos 6 caracteres' });
-    }
+    const weak = passwordProblem(password, (user as any).role);
+    if (weak) return res.status(400).json({ message: weak });
 
     const salt = await bcrypt.genSalt(10);
     (user as any).password = await bcrypt.hash(password, salt);
@@ -69,7 +70,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     (user as any).passwordResetExpires = undefined;
     await user.save();
 
-    logger.info(`Password reset successful for ${(user as any).email}`);
+    logger.info(`Password reset successful for ${maskEmail((user as any).email)}`);
     res.json({ message: 'Contraseña actualizada correctamente' });
   } catch (error) {
     logger.error('Error in resetPassword:', error);
