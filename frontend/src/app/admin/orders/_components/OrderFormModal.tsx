@@ -23,6 +23,7 @@ const emptyForm = (): OrderFormData => ({
   notes: '',
   dueDate: '',
   chatLink: '',
+  referenceUrl: '',
 });
 
 const formFromOrder = (o: Order): OrderFormData => ({
@@ -33,6 +34,7 @@ const formFromOrder = (o: Order): OrderFormData => ({
   notes: o.notes || '',
   dueDate: o.dueDate ? o.dueDate.split('T')[0] : '',
   chatLink: o.chatLink || '',
+  referenceUrl: o.referenceUrl || '',
 });
 
 export default function OrderFormModal({

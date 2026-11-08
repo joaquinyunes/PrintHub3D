@@ -68,21 +68,7 @@ export default function SectionsPage() {
     filamentosSection: { categories: [] }
   });
 
-  useEffect(() => {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      const user = JSON.parse(stored);
-      if (user.user?.role !== 'admin') {
-        router.push('/');
-        return;
-      }
-      loadData();
-    } else {
-      router.push('/admin/login');
-    }
-  }, [router]);
-
-  const loadData = async () => {
+  async function loadData() {
     try {
       const res = await apiFetch('/api/settings');
       if (res.ok) {
@@ -105,6 +91,21 @@ export default function SectionsPage() {
     } catch(e) { console.error(e); }
     finally { setLoading(false); }
   };
+
+  useEffect(() => {
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      const user = JSON.parse(stored);
+      if (user.user?.role !== 'admin') {
+        router.push('/');
+        return;
+      }
+      loadData();
+    } else {
+      router.push('/admin/login');
+    }
+  }, [router]);
+
 
   const handleSave = async () => {
     setSaving(true);

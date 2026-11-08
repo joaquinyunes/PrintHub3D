@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { MessageSquare, Plus, X } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { apiFetch } from '@/lib/api';
+import { Link2, MessageSquare, Plus, Upload, X } from 'lucide-react';
 import { ORIGINS, PAYMENTS } from '../constants';
 import type { OrderFile } from '../types';
 
@@ -11,6 +12,7 @@ export interface OrderFormData {
   notes: string;
   dueDate: string;
   chatLink: string;
+  referenceUrl: string;
 }
 
 interface OrderClientPanelProps {
@@ -28,6 +30,29 @@ export default function OrderClientPanel({
   onFilesChange,
 }: OrderClientPanelProps) {
   const [tempFile, setTempFile] = useState<OrderFile>({ name: '', url: '' });
+
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  // Foto de referencia o modelo 3D (.stl/.3mf): el servidor valida el contenido real antes de guardarlo.
+  const upload = async (file: File) => {
+    setUploading(true);
+    setUploadError('');
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const res = await apiFetch('/api/orders/attachments', { method: 'POST', body });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'No se pudo subir el archivo.');
+      onFilesChange([...files, { name: data.name, url: data.url, kind: data.kind }]);
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : 'No se pudo subir el archivo.');
+    } finally {
+      setUploading(false);
+      if (fileInput.current) fileInput.current.value = '';
+    }
+  };
 
   const addFile = () => {
     if (!tempFile.name || !tempFile.url) return;
@@ -59,6 +84,19 @@ export default function OrderClientPanel({
             placeholder="https://web.whatsapp.com/..."
             value={formData.chatLink}
             onChange={(e) => onFormChange({ chatLink: e.target.value })}
+          />
+        </div>
+        <div>
+          <label htmlFor="order-reference" className="text-[10px] font-bold text-gray-400 uppercase mb-2 block tracking-widest flex items-center gap-2">
+            <Link2 size={12} /> Link de referencia
+          </label>
+          <input
+            id="order-reference"
+            type="url"
+            className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-xs text-gray-300 outline-none focus:border-blue-500"
+            placeholder="https://www.thingiverse.com/... o una foto"
+            value={formData.referenceUrl}
+            onChange={(e) => onFormChange({ referenceUrl: e.target.value })}
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -126,16 +164,31 @@ export default function OrderClientPanel({
             value={tempFile.url}
             onChange={(e) => setTempFile({ ...tempFile, url: e.target.value })}
           />
-          <button onClick={addFile} className="bg-purple-600 p-3 rounded-xl text-white">
+          <button type="button" onClick={addFile} aria-label="Agregar link como archivo" className="bg-purple-600 p-3 rounded-xl text-white">
             <Plus />
           </button>
+        </div>
+        <div className="mb-2">
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/*,.stl,.3mf"
+            className="sr-only"
+            id="order-attachment"
+            onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
+          />
+          <label htmlFor="order-attachment" className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs text-white hover:bg-white/20">
+            <Upload size={14} /> {uploading ? 'Subiendo…' : 'Subir foto o modelo 3D (.stl / .3mf, máx. 50 MB)'}
+          </label>
+          {uploadError && <p role="alert" className="mt-1 text-xs text-red-300">{uploadError}</p>}
         </div>
         <div className="space-y-1">
           {files.map((f, i) => (
             <div key={i} className="flex justify-between bg-white/5 p-2 rounded text-xs">
-              <span className="text-gray-300">{f.name}</span>
+              <span className="text-gray-300">{f.kind === 'model' ? '🧊 ' : f.kind === 'image' ? '🖼️ ' : ''}{f.name}</span>
               <button
                 onClick={() => onFilesChange(files.filter((_, idx) => idx !== i))}
+                aria-label={`Quitar ${f.name}`}
                 className="text-red-400"
               >
                 <X size={12} />

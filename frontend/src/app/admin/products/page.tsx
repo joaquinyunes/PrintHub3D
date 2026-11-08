@@ -59,6 +59,8 @@ export default function ProductsPage() {
   const [historyFilter, setHistoryFilter] = useState<'day'|'week'|'month'|'year'>('month');
 
   const [newSectionName, setNewSectionName] = useState("");
+  // Partes que se imprimen por unidad: al crear un pedido con este producto, las piezas salen solas en la cola.
+  const [parts, setParts] = useState<{ label: string; color: string; quantity: number }[]>([]);
   const [newProduct, setNewProduct] = useState({
     name: "", price: "", cost: "", stock: "", category: "", sku: "", minStock: "5", imageUrl: ""
   });
@@ -79,7 +81,7 @@ export default function ProductsPage() {
     loadData();
   }, [router]);
 
-  const loadData = async () => {
+  async function loadData() {
       try {
         const [resP, resS] = await Promise.all([
             apiFetch("/api/products"),
@@ -139,10 +141,17 @@ export default function ProductsPage() {
             ...newProduct,
             price: Number(newProduct.price),
             cost: Number(newProduct.cost),
-            stock: Number(newProduct.stock)
+            stock: Number(newProduct.stock),
+            parts: parts.filter((x) => x.label.trim()).map((x) => ({ label: x.label.trim(), color: x.color.trim(), quantity: Math.max(1, Math.floor(x.quantity) || 1) })),
         }),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        showToast(body.errors?.[0]?.message || body.message || "No se pudo guardar el producto", "error");
+        return;
+      }
       if (res.ok) {
+        setParts([]);
         showToast("📦 Producto guardado");
         setIsProductModalOpen(false);
         setNewProduct({ name: "", price: "", cost: "", stock: "", category: "", sku: "", minStock: "5", imageUrl: "" });
@@ -394,6 +403,19 @@ export default function ProductsPage() {
                               <option value="General">General</option>
                           </select>
                       </div>
+                      <fieldset className="col-span-2 rounded-2xl border border-white/10 p-4">
+                          <legend className="px-2 text-[10px] text-gray-400 font-black uppercase tracking-widest">Partes a imprimir (opcional)</legend>
+                          <p className="mb-3 text-xs text-gray-400">Si el producto se arma con varias piezas, cargalas acá y se generan solas en «¿Qué imprimo?» al crear un pedido.</p>
+                          {parts.map((x, i) => (
+                            <div key={i} className="mb-2 grid grid-cols-[1fr_8rem_5rem_auto] gap-2">
+                              <input aria-label={`Parte ${i + 1}: nombre`} placeholder="Ej: Cabeza" className="bg-[#050505] border border-white/10 rounded-xl p-3 text-white text-sm" value={x.label} onChange={(e) => setParts(parts.map((q, j) => j === i ? { ...q, label: e.target.value } : q))} />
+                              <input aria-label={`Parte ${i + 1}: color`} placeholder="Color" className="bg-[#050505] border border-white/10 rounded-xl p-3 text-white text-sm" value={x.color} onChange={(e) => setParts(parts.map((q, j) => j === i ? { ...q, color: e.target.value } : q))} />
+                              <input aria-label={`Parte ${i + 1}: cantidad`} type="number" min={1} max={999} className="bg-[#050505] border border-white/10 rounded-xl p-3 text-white text-sm" value={x.quantity} onChange={(e) => setParts(parts.map((q, j) => j === i ? { ...q, quantity: Number(e.target.value) } : q))} />
+                              <button type="button" aria-label={`Quitar parte ${i + 1}`} onClick={() => setParts(parts.filter((_, j) => j !== i))} className="px-3 text-red-400">✕</button>
+                            </div>
+                          ))}
+                          <button type="button" onClick={() => setParts([...parts, { label: "", color: "", quantity: 1 }])} className="rounded-xl bg-white/10 px-3 py-2 text-xs text-white hover:bg-white/20">+ Agregar parte</button>
+                      </fieldset>
                       <div className="col-span-2 pt-6 flex gap-4">
                           <button type="button" onClick={()=>setIsProductModalOpen(false)} className="flex-1 py-5 text-[11px] font-black text-gray-500 uppercase tracking-widest transition-all">Cancelar</button>
                           <button type="submit" className="flex-[2] bg-white text-black py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl hover:bg-gray-200 transition-all active:scale-95">Guardar en Base de Datos</button>

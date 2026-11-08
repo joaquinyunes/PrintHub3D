@@ -19,6 +19,7 @@ export interface OrderItem {
 export interface OrderFile {
   name: string;
   url: string;
+  kind?: 'image' | 'model' | 'link';
 }
 
 export interface Order {
@@ -37,6 +38,7 @@ export interface Order {
   dueDate?: string;
   files?: OrderFile[];
   chatLink?: string;
+  referenceUrl?: string;
 }
 
 export type TabId = 'production' | 'ready' | 'history';

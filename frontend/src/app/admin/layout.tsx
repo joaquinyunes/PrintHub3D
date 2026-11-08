@@ -22,7 +22,9 @@ import {
   Wallet,
   UserCog,
   Percent,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Calculator,
+  Users,
 } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -34,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isAdmin = role === "admin";
 
   // Rutas solo-admin: un operario que las tipee vuelve al dashboard (la API igual las bloquea).
-  const ADMIN_ONLY = ["/admin/expenses", "/admin/analytics", "/admin/rentabilidad", "/admin/reports", "/admin/settings", "/admin/setup", "/admin/home", "/admin/usuarios", "/admin/sections", "/admin/social"];
+  const ADMIN_ONLY = ["/admin/expenses", "/admin/analytics", "/admin/rentabilidad", "/admin/reports", "/admin/settings", "/admin/setup", "/admin/home", "/admin/usuarios", "/admin/operarios", "/admin/sections", "/admin/social"];
   useEffect(() => {
     if (isAuthorized && role === "staff" && ADMIN_ONLY.some((p) => pathname.startsWith(p))) {
       router.replace("/admin");
@@ -144,6 +146,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavItem href="/admin/orders" icon={<ShoppingCart size={20} />} label="Pedidos" active={pathname.includes("/orders")} />
           <NavItem href="/admin/production" icon={<Printer size={20} />} label="Producción" active={pathname.includes("/production")} />
           <NavItem href="/admin/cola" icon={<ListChecks size={20} />} label="¿Qué imprimo?" active={pathname.includes("/cola")} />
+          <NavItem href="/admin/calculadora" icon={<Calculator size={20} />} label="Calculadora" active={pathname.includes("/calculadora")} />
           <NavItem href="/admin/products" icon={<Package size={20} />} label="Inventario" active={pathname.includes("/products")} />
           <NavItem href="/admin/filamento" icon={<Spool size={20} />} label="Filamento" active={pathname.includes("/filamento")} />
           {isAdmin && (
@@ -158,6 +161,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <>
               <div className="my-4 h-px bg-white/5 mx-2" />
               <NavItem href="/admin/importar" icon={<FileSpreadsheet size={20} />} label="Importar planilla" active={pathname.includes("/importar")} />
+              <NavItem href="/admin/operarios" icon={<Users size={20} />} label="Operarios" active={pathname.includes("/operarios")} />
               <NavItem href="/admin/usuarios" icon={<UserCog size={20} />} label="Usuarios" active={pathname.includes("/usuarios")} />
               <NavItem href="/admin/home" icon={<Home size={20} />} label="Inicio Web" active={pathname === "/admin/home"} />
               <NavItem href="/admin/settings" icon={<Settings size={20} />} label="Configuración" active={pathname.includes("/settings")} />

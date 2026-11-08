@@ -44,7 +44,7 @@ export default function CatalogPage() {
     }
   }, [router]);
 
-  const loadProducts = async () => {
+  async function loadProducts() {
     try {
       const res = await apiFetch('/api/products?tenantId=global3d_hq');
       const data = await res.json();

@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from '@/lib/api';
 import {
   Calendar,
   CheckCircle2,
@@ -23,6 +24,12 @@ interface OrderCardProps {
   onPay: () => void;
   onPrint: () => void;
 }
+
+// Defensa en profundidad: solo http(s) o un archivo subido; nunca `javascript:` ni `data:` en un href.
+const safeHref = (url: string): string => {
+  if (url.startsWith('/uploads/')) return resolveMediaUrl(url);
+  return /^https?:\/\//i.test(url) ? url : '#';
+};
 
 export default function OrderCard({
   order,
@@ -135,7 +142,7 @@ export default function OrderCard({
         )}
       </div>
 
-      {(order.notes || (order.files && order.files.length > 0)) && (
+      {(order.notes || order.referenceUrl || (order.files && order.files.length > 0)) && (
         <div className="mb-4 pl-3 flex gap-2">
           {order.notes && (
             <div
@@ -148,14 +155,28 @@ export default function OrderCard({
           {order.files?.map((f, i) => (
             <a
               key={i}
-              href={f.url}
+              href={safeHref(f.url)}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-blue-500/10 text-blue-400 p-1.5 rounded-lg border border-blue-500/20 hover:bg-blue-500/20 transition-colors"
+              aria-label={`Abrir ${f.name}`}
+              title={f.name}
             >
               <LinkIcon size={14} />
             </a>
           ))}
+          {order.referenceUrl && (
+            <a
+              href={safeHref(order.referenceUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Abrir link de referencia"
+              title="Link de referencia"
+              className="bg-purple-500/10 text-purple-300 p-1.5 rounded-lg border border-purple-500/20 hover:bg-purple-500/20 transition-colors"
+            >
+              <LinkIcon size={14} />
+            </a>
+          )}
         </div>
       )}
 
