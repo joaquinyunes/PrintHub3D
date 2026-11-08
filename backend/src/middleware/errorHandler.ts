@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import logger from '../config/logger';
+import { alertServerError } from '../utils/alert';
 
 interface CustomError extends Error {
   statusCode?: number;
@@ -33,6 +34,8 @@ export const errorHandler = (err: CustomError | ZodError, req: Request, res: Res
     path: req.path,
     method: req.method,
   });
+
+  if (statusCode >= 500) alertServerError({ method: req.method, path: req.path, message: err.message });
 
   res.status(statusCode).json({
     status: 'error',

@@ -1,5 +1,7 @@
 > Archivo vivo: qué se hizo y qué falta en este proyecto. Misma base que `soluciones-repos/ESTADO-PROYECTOS/printhub3d.md` (31/10/2026). Cada sesión lo actualiza al terminar.
 
+> **Actualización 08/11/2026** — rama `feat/venta-10k`: H1, H2, H4–H9 hechos y verificados (backend 149 tests, frontend 20, `tsc`/build/lint sin errores, `npm audit` 0 críticas/altas). Parciales: H3, H10 (S2, S10, S12), V4, V7, V8. No hecho: H11. Todo lo que falta y es tuyo: `docs/PENDIENTES-DEL-USUARIO.md`. Seguridad: `docs/SEGURIDAD.md`.
+
 # printhub3d (taller de impresión 3D) — rama `main` · `f12a8bf`
 
 ## Hecho

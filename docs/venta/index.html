@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PrintHub3D — gestión de taller de impresión 3D</title>
+<meta name="description" content="Cotizá, producí y entregá impresiones 3D: la cola te dice qué imprimir ahora, los operarios avanzan cada pieza con PIN y el cliente ve el estado.">
+<style>
+  :root { --bg:#0b0d10; --fg:#eef1f5; --mut:#b4bcc7; --card:#151a21; --line:#2a323d; --acc:#ff8a3d; --accd:#c2410c; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--fg); }
+  a { color:var(--acc); }
+  .wrap { max-width:62rem; margin:0 auto; padding:0 1.25rem; }
+  header { padding:4rem 0 2rem; }
+  h1 { font-size:clamp(2rem,6vw,3.2rem); line-height:1.1; margin:0 0 1rem; }
+  h2 { font-size:1.6rem; margin:0 0 .75rem; }
+  p.lead { font-size:1.25rem; color:var(--mut); max-width:40rem; }
+  section { padding:2.5rem 0; border-top:1px solid var(--line); }
+  .grid { display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(15rem,1fr)); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:.9rem; padding:1.1rem; }
+  .card h3 { margin:.1rem 0 .4rem; font-size:1.1rem; }
+  .btn { display:inline-block; background:var(--accd); color:#fff; padding:.8rem 1.3rem; border-radius:.6rem; text-decoration:none; font-weight:700; }
+  .btn:focus-visible, a:focus-visible { outline:3px solid var(--acc); outline-offset:3px; }
+  figure { margin:0; } figure img { width:100%; height:auto; border-radius:.7rem; border:1px solid var(--line); }
+  figcaption { color:var(--mut); font-size:.9rem; margin-top:.4rem; }
+  .nota { background:#2a2110; border:1px solid #7a5b14; color:#f6dfa4; padding:.8rem 1rem; border-radius:.6rem; font-size:.95rem; }
+  ul.tick { padding-left:1.2rem; } ul.tick li { margin:.3rem 0; }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <p style="color:var(--acc);font-weight:700;margin:0 0 .5rem">PrintHub3D · para talleres de impresión 3D a medida</p>
+  <h1>Cotizá, producí y entregá impresiones 3D sin perderte entre planillas y chats.</h1>
+  <p class="lead">La cola te dice qué imprimir ahora, los operarios avanzan cada pieza con su PIN y el cliente ve el estado de su pedido.</p>
+  <p><a class="btn" href="#contacto">Quiero verlo funcionando</a></p>
+</header>
+
+<main class="wrap">
+  <section aria-labelledby="problema">
+    <h2 id="problema">El problema</h2>
+    <div class="grid">
+      <div class="card"><h3>«¿Qué imprimo ahora?»</h3><p>Los pedidos están en un chat, las fechas en una planilla y nadie sabe qué carrete conviene cambiar primero.</p></div>
+      <div class="card"><h3>«¿Quién hizo esta pieza?»</h3><p>Cuando una pieza sale mal no hay a quién preguntarle ni cuándo pasó.</p></div>
+      <div class="card"><h3>«¿Cuánto cobro?»</h3><p>Cada cotización se calcula a mano y el precio cambia según el día y el cansancio.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="como">
+    <h2 id="como">Cómo lo resuelve</h2>
+    <ul class="tick">
+      <li><strong>Productos con partes:</strong> cargás «cabeza roja ×1, cuerpo negro ×2» una vez y cada pedido genera sus piezas solo.</li>
+      <li><strong>Cola «¿Qué imprimo?»:</strong> piezas pendientes por color o por cliente, lo más urgente primero.</li>
+      <li><strong>Operarios con PIN:</strong> cada avance queda con quién lo hizo y cuándo; con bloqueo tras 5 PIN erróneos.</li>
+      <li><strong>Calculadora de costo</strong> con las fórmulas de tu planilla y precio para MercadoLibre.</li>
+      <li><strong>Pedidos con fotos, modelos .stl/.3mf y link de referencia;</strong> los archivos se validan por su contenido real.</li>
+      <li><strong>Tus datos en tu propia base,</strong> con backups, verificación en dos pasos y registro de auditoría.</li>
+    </ul>
+    <div class="grid">
+      <figure><img src="../capturas/cola-0-piezas-desde-partes.jpg" alt="Cola de piezas agrupadas por color, con vencimiento y botón Empezar" width="800" height="609"><figcaption>La cola. Captura de un entorno de prueba, no de un cliente.</figcaption></figure>
+      <figure><img src="../capturas/cola-3-pin-correcto-registra-quien.jpg" alt="Cola mostrando último movimiento de un operario después de identificarse con PIN" width="800" height="600"><figcaption>Tras el PIN queda registrado quién empezó la pieza. Entorno de prueba.</figcaption></figure>
+      <figure><img src="../capturas/calculadora-fila-planilla.jpg" alt="Calculadora de costo con resultado de 43.168 pesos" width="800" height="600"><figcaption>La calculadora reproduce la fila de la planilla del taller al peso. Entorno de prueba.</figcaption></figure>
+    </div>
+    <p class="nota" role="note">Hoy no hay un cliente real publicado: las capturas son de un entorno de prueba. Un <strong>taller piloto</strong> es el siguiente paso.</p>
+  </section>
+
+  <section aria-labelledby="precio">
+    <h2 id="precio">Precio</h2>
+    <div class="grid">
+      <div class="card"><h3>Instalación</h3><p>Base propia, dominio, tus datos cargados y capacitación.</p><p><strong>Precio: a confirmar.</strong></p></div>
+      <div class="card"><h3>Mensual</h3><p>Hosting, backups, actualizaciones de seguridad y soporte con tiempo de respuesta por escrito.</p><p><strong>Precio: a confirmar.</strong></p></div>
+      <div class="card"><h3>Completo</h3><p>Todo lo anterior + Mercado Pago, WhatsApp y factura con proveedor certificado + 12 meses de mantenimiento.</p><p><strong>Precio: a confirmar.</strong></p></div>
+    </div>
+    <p>Comparación honesta con una suscripción como Printago (USD 4 por ranura por mes): <a href="../VENTA-PAQUETES-Y-COSTO.md">tabla de costo a 3 años</a>. Las integraciones con Mercado Pago, WhatsApp y factura requieren las cuentas del taller y todavía no están probadas en producción.</p>
+  </section>
+
+  <section aria-labelledby="caso">
+    <h2 id="caso">Caso real</h2>
+    <p>Todavía no hay un taller usándolo en producción. <strong>Buscamos un taller piloto</strong> para instalarlo, usarlo un mes con sus pedidos reales y publicar el resultado con su permiso.</p>
+  </section>
+
+  <section id="contacto" aria-labelledby="ctt">
+    <h2 id="ctt">Contacto</h2>
+    <p>[Completar: correo y WhatsApp de contacto del dueño]</p>
+  </section>
+</main>
+<footer class="wrap" style="padding:2rem 1.25rem;color:var(--mut);font-size:.9rem">© PrintHub3D · Corrientes, Argentina</footer>
+</body>
+</html>

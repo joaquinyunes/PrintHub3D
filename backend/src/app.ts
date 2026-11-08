@@ -43,6 +43,7 @@ import importRoutes from './modules/import/import.routes';
 import uploadsRoutes from './routes/uploads.routes';
 import operatorRoutes from './modules/operators/operator.routes';
 import auditRoutes from './modules/audit/audit.routes';
+import clientPrivacyRoutes from './modules/clients/client.privacy';
 
 /**
  * Arma la app de Express SIN efectos secundarios (no conecta a la DB ni abre
@@ -106,6 +107,7 @@ export const createApp = (): Express => {
   app.use('/api/inventory', inventoryRoutes);
   app.use('/api/orders', orderRoutes);
   app.use('/api/analytics', analyticsRoutes);
+  app.use('/api/clients', clientPrivacyRoutes);
   app.use('/api/clients', clientRoutes);
   app.use('/api/chats', chatRoutes);
   app.use('/api/printers', printerRoutes);

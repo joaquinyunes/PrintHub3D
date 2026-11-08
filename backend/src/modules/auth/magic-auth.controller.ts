@@ -108,6 +108,8 @@ export const verifyMagicCode = async (req: Request, res: Response) => {
     (user as any).magicCodeExpires = undefined;
     await user.save();
 
+    // Con 2FA activa, el código por email no alcanza: solo contraseña + código de la app.
+    if ((user as any).totpEnabled) return res.status(403).json({ message: 'Esta cuenta usa verificación en dos pasos: ingresá con email, contraseña y código.', code: 'OTP_REQUIRED' });
     const token = signSession(user as any);
     setAuthCookies(res, token);
 

@@ -85,6 +85,23 @@ describe('2FA en el login del panel', () => {
   });
 });
 
+describe('la 2FA no se esquiva por otros caminos de login', () => {
+  it('con 2FA activa, el código por email (magic) no abre sesión; sin 2FA sigue funcionando', async () => {
+    const withTotp: any = await mkUser('magic2fa@fa.test');
+    await User.updateOne({ _id: withTotp._id }, { $set: { totpEnabled: true, totpSecret: newSecret(), magicCode: '123456', magicCodeExpires: new Date(Date.now() + 60_000) } });
+    const blocked = await request(app).post('/api/auth/magic/verify').send({ identifier: 'magic2fa@fa.test', code: '123456' });
+    expect(blocked.status).toBe(403);
+    expect(blocked.body.code).toBe('OTP_REQUIRED');
+    expect(blocked.body.token).toBeUndefined();
+
+    const plain: any = await mkUser('magicplain@fa.test');
+    await User.updateOne({ _id: plain._id }, { $set: { magicCode: '654321', magicCodeExpires: new Date(Date.now() + 60_000) } });
+    const ok = await request(app).post('/api/auth/magic/verify').send({ identifier: 'magicplain@fa.test', code: '654321' });
+    expect(ok.status).toBe(200);
+    expect(ok.body.token).toBeTruthy();
+  });
+});
+
 describe('cerrar sesión en todos los dispositivos', () => {
   it('después de logout-all, los tokens anteriores dejan de valer', async () => {
     await mkUser('multi@dev.test');

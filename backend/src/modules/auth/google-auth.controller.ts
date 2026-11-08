@@ -73,6 +73,7 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
     }
 
     // Generar JWT y Refresh Token
+    if ((user as any).totpEnabled) return res.redirect(`${appConfig.clientUrl}/login?error=two_factor_required`);
     const token = signSession(user as any);
 
     const refreshToken = await generateRefreshToken(user._id.toString());
@@ -132,6 +133,7 @@ export const googleAuthToken = async (req: Request, res: Response) => {
       await user.save();
     }
 
+    if ((user as any).totpEnabled) return res.status(403).json({ message: 'Esta cuenta usa verificación en dos pasos: ingresá con email, contraseña y código.', code: 'OTP_REQUIRED' });
     const token = signSession(user as any);
 
     const refresh = await generateRefreshToken(user._id.toString());
