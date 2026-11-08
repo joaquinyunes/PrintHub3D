@@ -314,7 +314,7 @@ export default function SectionsPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="text-xs text-gray-500 block mb-1">Código (ej: vasoriver)</label>
+                          <label className="text-xs text-gray-400 block mb-1">Código (ej: vasoriver)</label>
                           <input
                             value={video.code}
                             onChange={(e) => updateCustomVideo(index, 'code', e.target.value)}
@@ -323,7 +323,7 @@ export default function SectionsPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-gray-500 block mb-1">Título</label>
+                          <label className="text-xs text-gray-400 block mb-1">Título</label>
                           <input
                             value={video.title}
                             onChange={(e) => updateCustomVideo(index, 'title', e.target.value)}
@@ -332,7 +332,7 @@ export default function SectionsPage() {
                           />
                         </div>
                         <div className="col-span-2">
-                          <label className="text-xs text-gray-500 block mb-1">URL del Video</label>
+                          <label className="text-xs text-gray-400 block mb-1">URL del Video</label>
                           <input
                             value={video.videoUrl}
                             onChange={(e) => updateCustomVideo(index, 'videoUrl', e.target.value)}
@@ -341,7 +341,7 @@ export default function SectionsPage() {
                           />
                         </div>
                         <div className="col-span-2">
-                          <label className="text-xs text-gray-500 block mb-1">Descripción</label>
+                          <label className="text-xs text-gray-400 block mb-1">Descripción</label>
                           <textarea
                             value={video.description}
                             onChange={(e) => updateCustomVideo(index, 'description', e.target.value)}
@@ -420,7 +420,7 @@ function CategoryManager({
   const colors = {
     productos: { bgZone: 'bg-blue-900/20 border-blue-500/20', btn: 'bg-blue-600 hover:bg-blue-500' },
     impresoras: { bgZone: 'bg-green-900/20 border-green-500/20', btn: 'bg-green-600 hover:bg-green-500' },
-    filamentos: { bgZone: 'bg-orange-900/20 border-orange-500/20', btn: 'bg-orange-600 hover:bg-orange-500' }
+    filamentos: { bgZone: 'bg-orange-900/20 border-orange-500/20', btn: 'bg-orange-700 hover:bg-orange-500' }
   };
   const currentStyles = colors[section as keyof typeof colors] || colors.productos;
 
@@ -459,7 +459,7 @@ function CategoryManager({
                 <div className="p-4 border-t border-white/5 space-y-4">
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="text-xs text-gray-500 block mb-1">Icono (emoji)</label>
+                      <label className="text-xs text-gray-400 block mb-1">Icono (emoji)</label>
                       <input
                         value={cat.icon}
                         onChange={(e) => onUpdateCategory(catIndex, 'icon', e.target.value)}
@@ -468,7 +468,7 @@ function CategoryManager({
                       />
                     </div>
                     <div className="col-span-2">
-                      <label className="text-xs text-gray-500 block mb-1">URL de Imagen</label>
+                      <label className="text-xs text-gray-400 block mb-1">URL de Imagen</label>
                       <input
                         value={cat.imageUrl}
                         onChange={(e) => onUpdateCategory(catIndex, 'imageUrl', e.target.value)}
@@ -506,7 +506,7 @@ function CategoryManager({
                         {expandedSubs[sub.id] && (
                           <div className="p-3 border-t border-white/5 space-y-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">Productos</span>
+                              <span className="text-xs text-gray-400">Productos</span>
                               <button onClick={() => onAddProduct(catIndex, subIndex)} className="text-green-400 hover:text-green-300 text-xs flex items-center gap-1">
                                 <Plus className="h-3 w-3"/> Agregar
                               </button>
@@ -519,7 +519,7 @@ function CategoryManager({
                                     <div className="flex items-center gap-2">
                                       <button 
                                         onClick={() => onUpdateProduct(catIndex, subIndex, prodIndex, 'enabled', !prod.enabled)}
-                                        className={`p-1 rounded ${prod.enabled ? 'text-green-400' : 'text-gray-500'}`}
+                                        className={`p-1 rounded ${prod.enabled ? 'text-green-400' : 'text-gray-400'}`}
                                       >
                                         {prod.enabled ? <Eye className="h-3 w-3"/> : <EyeOff className="h-3 w-3"/>}
                                       </button>
@@ -576,7 +576,7 @@ function CategoryManager({
                                 </div>
                               ))}
                               {sub.products.length === 0 && (
-                                <p className="text-gray-600 text-xs text-center py-2">Sin productos</p>
+                                <p className="text-gray-400 text-xs text-center py-2">Sin productos</p>
                               )}
                             </div>
                           </div>
@@ -584,7 +584,7 @@ function CategoryManager({
                       </div>
                     ))}
                     {cat.subCategories.length === 0 && (
-                      <p className="text-gray-600 text-sm">Sin subcategorías</p>
+                      <p className="text-gray-400 text-sm">Sin subcategorías</p>
                     )}
                   </div>
                 </div>
@@ -592,7 +592,7 @@ function CategoryManager({
             </div>
           ))}
           {categories.categories.length === 0 && (
-            <div className="text-center py-10 text-gray-500">
+            <div className="text-center py-10 text-gray-400">
               <p>No hay categorías. Creá una arriba!</p>
             </div>
           )}

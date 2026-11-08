@@ -111,13 +111,13 @@ export default function OrderCartPanel({
       <div className="flex bg-[#141414] p-1.5 rounded-2xl mb-6 border border-white/5 w-fit">
         <button
           onClick={() => setItemTab('product')}
-          className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${itemTab === 'product' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
+          className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${itemTab === 'product' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
         >
           <Package size={14} /> PRODUCTO
         </button>
         <button
           onClick={() => setItemTab('custom')}
-          className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${itemTab === 'custom' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
+          className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${itemTab === 'custom' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
         >
           <Wrench size={14} /> PERSONALIZADO
         </button>
@@ -132,7 +132,7 @@ export default function OrderCartPanel({
         {itemTab === 'product' ? (
           <>
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
               <select
                 className="w-full bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-3 py-3 text-sm text-white outline-none focus:border-blue-500 appearance-none [&>option]:bg-zinc-900 [&>option]:text-white"
                 value={itemInput.id}
@@ -158,7 +158,7 @@ export default function OrderCartPanel({
               className="w-24 border-l border-white/10 flex items-center justify-center gap-1 px-1"
               title="Tiempo de impresión (minutos)"
             >
-              <Timer size={12} className="text-gray-500" />
+              <Timer size={12} className="text-gray-400" />
               <input
                 type="number"
                 className="w-12 bg-transparent border-none py-3 text-center text-white outline-none text-xs"
@@ -281,7 +281,7 @@ export default function OrderCartPanel({
                 </div>
                 <div>
                   <p className="font-bold text-sm text-white">{i.productName}</p>
-                  <p className="text-xs text-gray-500 font-mono">
+                  <p className="text-xs text-gray-400 font-mono">
                     {i.quantity} x ${i.price.toLocaleString()}
                   </p>
                 </div>
@@ -292,7 +292,7 @@ export default function OrderCartPanel({
                 </span>
                 <button
                   onClick={() => onCartChange(cart.filter((_, x) => x !== idx))}
-                  className="text-gray-600 hover:text-red-400 bg-white/5 p-2 rounded-lg hover:bg-white/10 transition-colors"
+                  className="text-gray-400 hover:text-red-400 bg-white/5 p-2 rounded-lg hover:bg-white/10 transition-colors"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -300,7 +300,7 @@ export default function OrderCartPanel({
             </div>
           ))}
           {cart.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-gray-600 opacity-30 gap-2">
+            <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-30 gap-2">
               <ShoppingCart size={40} />
               <p className="text-xs uppercase tracking-widest">Carrito vacío</p>
             </div>

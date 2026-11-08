@@ -182,7 +182,7 @@ export default function ImportarPage() {
         <div className="p-2 bg-blue-500/10 rounded-xl"><FileSpreadsheet className="w-6 h-6 text-blue-400" /></div>
         <h1 className="text-2xl font-black">Importar planilla</h1>
       </div>
-      <p className="text-sm text-gray-500 mb-8">
+      <p className="text-sm text-gray-400 mb-8">
         Subí el Excel de <span className="text-gray-300">Pedidos / Ventas / Gastos / Stock</span> y se carga todo al sistema.
       </p>
 
@@ -190,7 +190,7 @@ export default function ImportarPage() {
         <div className="mb-6 grid grid-cols-3 gap-3 text-center">
           {(["pedidos", "ventas", "gastos"] as const).map((k) => (
             <div key={k} className="bg-white/5 border border-white/10 rounded-xl p-3">
-              <div className="text-[10px] uppercase tracking-widest text-gray-500">{k}</div>
+              <div className="text-[10px] uppercase tracking-widest text-gray-400">{k}</div>
               <div className="text-lg font-black">{status.totales[k] ?? 0}</div>
               <div className="text-[10px] text-blue-400">{status.importados[k] ?? 0} de la planilla</div>
             </div>
@@ -203,7 +203,7 @@ export default function ImportarPage() {
 
       <button onClick={() => inputRef.current?.click()}
         className="w-full border-2 border-dashed border-white/15 hover:border-blue-500/50 rounded-2xl py-10 flex flex-col items-center gap-3 transition-colors">
-        <UploadCloud className="w-8 h-8 text-gray-500" />
+        <UploadCloud className="w-8 h-8 text-gray-400" />
         <span className="text-sm font-bold text-gray-300">{fileName || "Elegir archivo .xlsx"}</span>
       </button>
 
@@ -220,7 +220,7 @@ export default function ImportarPage() {
             {Object.entries(counts).map(([k, v]) => (
               <div key={k} className="flex justify-between text-sm">
                 <span className="text-gray-400">{k}</span>
-                <span className={`font-bold ${v ? "text-white" : "text-gray-600"}`}>{v}</span>
+                <span className={`font-bold ${v ? "text-white" : "text-gray-400"}`}>{v}</span>
               </div>
             ))}
           </div>

@@ -93,7 +93,7 @@ export default function LoginPage() {
             <Box className="text-white h-6 w-6" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Acceso Privado</h1>
-          <p className="text-gray-600 text-sm">Global 3D Corrientes OS</p>
+          <p className="text-gray-400 text-sm">Global 3D Corrientes OS</p>
         </div>
 
         {offline && !error && (
@@ -110,7 +110,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
-            <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-600" />
+            <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
             <input
               name="email"
               type="email"
@@ -123,7 +123,7 @@ export default function LoginPage() {
           </div>
 
           <div className="relative">
-            <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-600" />
+            <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
             <input
               name="password"
               type="password"
@@ -135,7 +135,7 @@ export default function LoginPage() {
             />
           </div>
 
-          <button type="submit" disabled={loading} className="w-full bg-tone-red hover:bg-tone-red/90 text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2">
+          <button type="submit" disabled={loading} className="w-full bg-[#c2410c] hover:bg-[#9a3412] text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2">
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
@@ -148,8 +148,8 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center space-y-2">
-          <a href="/forgot-password" className="block text-xs text-gray-500 hover:text-white transition">¿Olvidaste tu contraseña?</a>
-          <p className="text-xs text-gray-600">Acceso restringido únicamente a personal autorizado.</p>
+          <a href="/forgot-password" className="block text-xs text-gray-400 hover:text-white transition">¿Olvidaste tu contraseña?</a>
+          <p className="text-xs text-gray-400">Acceso restringido únicamente a personal autorizado.</p>
           <a href="/register" className="text-xs text-tone-amber hover:text-tone-amber/80">¿Eres cliente? Crea tu cuenta aquí</a>
         </div>
       </div>

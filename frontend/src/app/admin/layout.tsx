@@ -134,7 +134,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
 
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white transition-colors">
+          <button onClick={() => setIsSidebarOpen(false)} aria-label="Cerrar menú" className="lg:hidden text-gray-400 hover:text-white transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -191,7 +191,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* CONTENIDO PRINCIPAL */}
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
         <header className="lg:hidden flex h-16 items-center px-4 border-b border-white/10 bg-[#111]">
-          <button onClick={() => setIsSidebarOpen(true)} className="text-gray-400 hover:text-white p-2">
+          <button onClick={() => setIsSidebarOpen(true)} aria-label="Abrir menú" className="text-gray-400 hover:text-white p-2">
             <Menu size={24} />
           </button>
           <span className="ml-4 font-bold text-white">Panel Admin</span>
@@ -223,7 +223,7 @@ function NavItem({ href, icon, label, active }: { href: string; icon: React.Reac
           : "text-gray-400 hover:bg-white/5 hover:text-white"
       }`}
     >
-      <div className={`${active ? "text-tone-red" : "text-gray-500 group-hover:text-white transition-colors"}`}>
+      <div className={`${active ? "text-tone-red" : "text-gray-400 group-hover:text-white transition-colors"}`}>
         {icon}
       </div>
       <span>{label}</span>

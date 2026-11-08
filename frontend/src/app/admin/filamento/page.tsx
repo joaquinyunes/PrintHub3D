@@ -153,7 +153,7 @@ export default function AdminFilamento() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-white">Filamento</h1>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-gray-400">
               {totalKg.toFixed(2)} kg · {items.length} variedades · valor ${inventoryValue.toLocaleString("es-AR", { maximumFractionDigits: 0 })}
             </p>
           </div>
@@ -175,7 +175,7 @@ export default function AdminFilamento() {
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -203,7 +203,7 @@ export default function AdminFilamento() {
           <Loader2 className="w-6 h-6 text-tone-red animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-600 text-sm">
+        <div className="text-center py-16 text-gray-400 text-sm">
           <Spool className="w-8 h-8 mx-auto mb-2 opacity-40" />
           No hay filamentos cargados.
         </div>
@@ -217,7 +217,7 @@ export default function AdminFilamento() {
                 <div className="flex items-center gap-4">
                   <div className="flex-1 min-w-0">
                     <button onClick={() => openEdit(f)} className="text-white font-bold hover:text-tone-red transition text-left">
-                      {f.color} <span className="text-gray-600 font-normal">· {f.brand}</span>
+                      {f.color} <span className="text-gray-400 font-normal">· {f.brand}</span>
                     </button>
                     <div className="mt-1.5 h-1.5 w-full max-w-xs bg-black/40 rounded-full overflow-hidden">
                       <div className={`h-full ${low ? "bg-tone-red" : "bg-green-400"}`} style={{ width: `${pct}%` }} />
@@ -227,7 +227,7 @@ export default function AdminFilamento() {
                     <span className={`text-lg font-black ${low ? "text-tone-red" : "text-green-400"}`}>
                       {(f.gramsRemaining / 1000).toFixed(2)} kg
                     </span>
-                    <p className="text-xs text-gray-600">{f.material} · {f.spools} bobina(s) · ${f.costPerKg}/kg</p>
+                    <p className="text-xs text-gray-400">{f.material} · {f.spools} bobina(s) · ${f.costPerKg}/kg</p>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
                     <button
@@ -266,7 +266,7 @@ export default function AdminFilamento() {
               <h2 className="text-lg font-black text-white">
                 {modal.mode === "edit" ? "Editar filamento" : "Nuevo filamento"}
               </h2>
-              <button onClick={() => setModal(null)} className="text-gray-500 hover:text-white">
+              <button onClick={() => setModal(null)} className="text-gray-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -282,7 +282,7 @@ export default function AdminFilamento() {
                 ["lowThresholdGrams", "Alerta bajo (g)", "number"],
               ] as const).map(([key, label, type]) => (
                 <div key={key}>
-                  <label className="text-xs text-gray-500 block mb-1">{label}</label>
+                  <label className="text-xs text-gray-400 block mb-1">{label}</label>
                   <input
                     type={type}
                     value={form[key]}

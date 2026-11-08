@@ -32,7 +32,7 @@ function StatCard({ title, value, subtext, icon: Icon, color, trend }: any) {
                     {value}
                 </div>
                 {subtext && (
-                    <p className="text-[10px] text-gray-500 font-medium font-mono uppercase tracking-wide">
+                    <p className="text-[10px] text-gray-400 font-medium font-mono uppercase tracking-wide">
                         {subtext}
                     </p>
                 )}
@@ -115,7 +115,7 @@ function PrinterModule({ printer }: { printer: any }) {
                     <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
                         <div className="h-full bg-blue-500" style={{ width: `${live.progress || 0}%` }} />
                     </div>
-                    <div className="flex justify-between text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                    <div className="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wider">
                         <span>{live.progress || 0}%{fmtTimeLeft(live.timeLeftSeconds) ? ` · ${fmtTimeLeft(live.timeLeftSeconds)}` : ''}</span>
                         {typeof live.nozzleTemp === 'number' && <span>{Math.round(live.nozzleTemp)}° / {Math.round(live.bedTemp || 0)}°</span>}
                     </div>
@@ -130,7 +130,7 @@ function PrinterModule({ printer }: { printer: any }) {
             )}
             {!isPrinting && !live && (
                 <div className="mt-4 pt-4 border-t border-white/5">
-                    <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-2">
                         <Zap size={12}/> Standby - Lista
                     </span>
                 </div>
@@ -299,7 +299,7 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/5 pb-6">
             <div>
                 <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-white tracking-tighter mb-2">DASHBOARD</h1>
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-[0.3em] pl-1">Centro de Comando</p>
+                <p className="text-gray-400 text-xs font-bold uppercase tracking-[0.3em] pl-1">Centro de Comando</p>
             </div>
         </div>
 
@@ -309,7 +309,7 @@ export default function DashboardPage() {
                     <p className="font-bold text-white">Terminá de configurar tu taller</p>
                     <p className="text-xs text-gray-400">Nombre del negocio, WhatsApp y datos de contacto — un minuto.</p>
                 </div>
-                <span className="shrink-0 rounded-full bg-tone-red px-4 py-2 text-xs font-black uppercase tracking-wider text-white">Configurar →</span>
+                <span className="shrink-0 rounded-full bg-[#c2410c] px-4 py-2 text-xs font-black uppercase tracking-wider text-white">Configurar →</span>
             </a>
         )}
 
@@ -326,11 +326,11 @@ export default function DashboardPage() {
             <div className="lg:col-span-2 bg-[#0a0a0a] border border-white/5 rounded-3xl p-6 shadow-2xl">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2"><Activity size={16} className="text-blue-500"/> Monitor de Impresión</h3>
-                    <span className="text-[10px] font-bold text-gray-500 uppercase px-2 py-1 bg-[#111] rounded border border-white/5">{printers.length} Unidades</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase px-2 py-1 bg-[#111] rounded border border-white/5">{printers.length} Unidades</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[450px] overflow-y-auto custom-scrollbar pr-2">
                     {printers.map(p => <PrinterModule key={p._id} printer={p} />)}
-                    {printers.length === 0 && <div className="col-span-2 py-10 border border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center text-gray-600 gap-2"><AlertTriangle/> Sin impresoras conectadas</div>}
+                    {printers.length === 0 && <div className="col-span-2 py-10 border border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center text-gray-400 gap-2"><AlertTriangle/> Sin impresoras conectadas</div>}
                 </div>
             </div>
 
@@ -353,13 +353,13 @@ export default function DashboardPage() {
                 <button onClick={handleAddTask} className="bg-pink-600 hover:bg-pink-500 text-white px-6 rounded-xl font-bold uppercase text-xs tracking-widest">Agregar</button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {tasks.length === 0 ? <p className="text-center text-gray-600 text-xs py-4 uppercase tracking-widest col-span-2">No hay tareas</p> : tasks.map(task => (
+                {tasks.length === 0 ? <p className="text-center text-gray-400 text-xs py-4 uppercase tracking-widest col-span-2">No hay tareas</p> : tasks.map(task => (
                     <div key={task._id} className={`flex items-center justify-between p-4 rounded-xl border transition-all ${task.completed ? 'bg-black/20 border-white/5 opacity-50' : 'bg-[#141414] border-white/10 hover:border-pink-500/30'}`}>
                         <div className="flex items-center gap-4">
-                            <button onClick={() => toggleTask(task._id, task.completed)}>{task.completed ? <CheckSquare size={20} className="text-pink-500"/> : <Square size={20} className="text-gray-500"/>}</button>
-                            <span className={`text-sm ${task.completed ? 'line-through text-gray-500' : 'text-white'}`}>{task.text}</span>
+                            <button onClick={() => toggleTask(task._id, task.completed)}>{task.completed ? <CheckSquare size={20} className="text-pink-500"/> : <Square size={20} className="text-gray-400"/>}</button>
+                            <span className={`text-sm ${task.completed ? 'line-through text-gray-400' : 'text-white'}`}>{task.text}</span>
                         </div>
-                        <button onClick={() => deleteTask(task._id)} className="text-gray-600 hover:text-red-500 p-2"><Trash2 size={14}/></button>
+                        <button onClick={() => deleteTask(task._id)} className="text-gray-400 hover:text-red-500 p-2"><Trash2 size={14}/></button>
                     </div>
                 ))}
             </div>
@@ -369,11 +369,11 @@ export default function DashboardPage() {
         {isFilamentModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in">
                 <div className="w-full max-w-lg bg-[#0f0f0f] border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col max-h-[80vh]">
-                    <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2"><Spool className="text-purple-500"/> Ingreso de Stock</h2><button onClick={()=>setIsFilamentModalOpen(false)}><X className="text-gray-500 hover:text-white"/></button></div>
+                    <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2"><Spool className="text-purple-500"/> Ingreso de Stock</h2><button onClick={()=>setIsFilamentModalOpen(false)}><X className="text-gray-400 hover:text-white"/></button></div>
                     {parsedItems.length === 0 ? (
                         <><textarea autoFocus className="w-full bg-black border border-white/10 rounded-xl p-5 text-sm text-white outline-none focus:border-purple-500 font-mono resize-none h-48 mb-4" placeholder={`Gorilon Rojo 3\nPLA Negro 5`} value={bulkText} onChange={e => setBulkText(e.target.value)}/><button onClick={parseBulkStock} className="w-full bg-white text-black font-black uppercase text-xs py-4 rounded-xl hover:bg-gray-200">Procesar</button></>
                     ) : (
-                        <><div className="flex-1 overflow-y-auto mb-6 bg-[#111] rounded-xl border border-white/5"><table className="w-full text-left"><thead className="bg-[#1a1a1a] text-[10px] uppercase text-gray-500 font-bold"><tr><th className="px-5 py-3">Item</th><th className="px-5 py-3 text-center">Cant.</th><th className="px-5 py-3"></th></tr></thead><tbody className="divide-y divide-white/5">{parsedItems.map((item, i) => (<tr key={i}><td className="px-5 py-3 text-sm font-bold text-white">{item.name}</td><td className="px-5 py-3 text-sm text-center text-purple-400 font-mono">{item.quantity}</td><td className="px-5 py-3 text-right"><button onClick={() => setParsedItems(parsedItems.filter((_, idx) => idx !== i))} className="text-red-500 hover:text-red-400"><Trash2 size={14}/></button></td></tr>))}</tbody></table></div><div className="flex gap-3"><button onClick={() => setParsedItems([])} className="px-6 py-3 rounded-xl bg-white/5 text-gray-400 text-xs font-bold uppercase">Atrás</button><button onClick={confirmStockIngress} className="flex-1 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black uppercase">Confirmar</button></div></>
+                        <><div className="flex-1 overflow-y-auto mb-6 bg-[#111] rounded-xl border border-white/5"><table className="w-full text-left"><thead className="bg-[#1a1a1a] text-[10px] uppercase text-gray-400 font-bold"><tr><th className="px-5 py-3">Item</th><th className="px-5 py-3 text-center">Cant.</th><th className="px-5 py-3"></th></tr></thead><tbody className="divide-y divide-white/5">{parsedItems.map((item, i) => (<tr key={i}><td className="px-5 py-3 text-sm font-bold text-white">{item.name}</td><td className="px-5 py-3 text-sm text-center text-purple-400 font-mono">{item.quantity}</td><td className="px-5 py-3 text-right"><button onClick={() => setParsedItems(parsedItems.filter((_, idx) => idx !== i))} className="text-red-500 hover:text-red-400"><Trash2 size={14}/></button></td></tr>))}</tbody></table></div><div className="flex gap-3"><button onClick={() => setParsedItems([])} className="px-6 py-3 rounded-xl bg-white/5 text-gray-400 text-xs font-bold uppercase">Atrás</button><button onClick={confirmStockIngress} className="flex-1 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black uppercase">Confirmar</button></div></>
                     )}
                 </div>
             </div>

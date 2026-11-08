@@ -76,7 +76,7 @@ function StatCard({ title, value, icon: Icon, color, sub, trend }: any) {
 
                 {sub && (
                     <div className="flex items-center gap-2">
-                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{sub}</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{sub}</p>
                         {trend && (
                             <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 font-black flex items-center gap-0.5">
                                 <ArrowUpRight size={10}/> {trend}
@@ -248,7 +248,7 @@ export default function AnalyticsPage() {
             <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-white tracking-tighter mb-4 drop-shadow-[0_0_30px_rgba(59,130,246,0.3)]">
               REPORTES
             </h1>
-            <div className="flex items-center gap-4 text-gray-500">
+            <div className="flex items-center gap-4 text-gray-400">
                 <p className="text-xs font-bold uppercase tracking-[0.3em] pl-1 border-l-2 border-blue-500 ml-1 py-1">
                     Análisis de Rendimiento <span className="text-white/40 mx-2">|</span> 
                     <span className="text-white uppercase"> {selectedMonth === 'all' ? 'Anual' : MONTHS[Number(selectedMonth)]} {selectedYear}</span>
@@ -317,7 +317,7 @@ export default function AnalyticsPage() {
                     </div>
                     <div>
                         <h2 className="text-xl font-black text-white uppercase tracking-tight">Filtro Temporal</h2>
-                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Consulta períodos específicos</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Consulta períodos específicos</p>
                     </div>
                 </div>
 
@@ -330,7 +330,7 @@ export default function AnalyticsPage() {
                         <button 
                             key={period.id}
                             onClick={() => setTimePeriod(period.id as any)}
-                            className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${timePeriod === period.id ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]' : 'text-gray-500 hover:text-white'}`}
+                            className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${timePeriod === period.id ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]' : 'text-gray-400 hover:text-white'}`}
                         >
                             {period.label}
                         </button>
@@ -338,7 +338,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="bg-white/5 px-8 py-4 rounded-2xl border border-white/5 flex flex-col items-center md:items-end">
-                    <span className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mb-1">Ingresos en este tramo</span>
+                    <span className="text-[9px] text-gray-400 font-black uppercase tracking-[0.2em] mb-1">Ingresos en este tramo</span>
                     <span className="text-2xl font-black text-emerald-400 tracking-tighter">{formatMoney(periodTotal)}</span>
                 </div>
             </div>
@@ -411,7 +411,7 @@ export default function AnalyticsPage() {
                         </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-10">
-                        <span className="text-[10px] text-gray-600 font-black uppercase">Mix de</span>
+                        <span className="text-[10px] text-gray-400 font-black uppercase">Mix de</span>
                         <span className="text-3xl font-black text-white tracking-tighter">Ventas</span>
                     </div>
                 </div>
@@ -420,7 +420,7 @@ export default function AnalyticsPage() {
                         <div key={i} className="flex justify-between items-center group">
                             <div className="flex items-center gap-3">
                                 <div className="w-2 h-2 rounded-full" style={{backgroundColor: COLORS[i % COLORS.length]}}/>
-                                <span className="text-[10px] font-black uppercase text-gray-500 group-hover:text-gray-300 transition-colors">{cat._id}</span>
+                                <span className="text-[10px] font-black uppercase text-gray-400 group-hover:text-gray-300 transition-colors">{cat._id}</span>
                             </div>
                             <span className="text-[11px] font-mono font-black text-white/80">{formatMoney(cat.total)}</span>
                         </div>
@@ -442,14 +442,14 @@ export default function AnalyticsPage() {
                     </button>
                     <div>
                         <h2 className="text-2xl font-black text-white uppercase tracking-tight">Historial Detallado</h2>
-                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Registros de transacciones unitarias</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Registros de transacciones unitarias</p>
                     </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
                     {/* Buscador */}
                     <div className="relative flex-1 sm:w-80 group">
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600 group-focus-within:text-blue-500 transition-colors"/>
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors"/>
                         <input 
                             type="text" 
                             placeholder="Buscar concepto..." 
@@ -470,7 +470,7 @@ export default function AnalyticsPage() {
                             <button 
                                 key={btn.id}
                                 onClick={() => setOriginFilter(btn.id as any)}
-                                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${originFilter === btn.id ? 'bg-white text-black shadow-xl' : 'text-gray-600 hover:text-gray-400'}`}
+                                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${originFilter === btn.id ? 'bg-white text-black shadow-xl' : 'text-gray-400 hover:text-gray-400'}`}
                             >
                                 <btn.icon size={12}/> {btn.label}
                             </button>
@@ -484,7 +484,7 @@ export default function AnalyticsPage() {
                 <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
                     <table className="w-full text-left border-collapse min-w-[800px]">
                         <thead className="sticky top-0 bg-[#0a0a0a] z-10">
-                            <tr className="text-[10px] uppercase text-gray-600 font-black tracking-[0.2em] border-b border-white/5">
+                            <tr className="text-[10px] uppercase text-gray-400 font-black tracking-[0.2em] border-b border-white/5">
                                 <th className="px-10 py-6">Fecha y Hora</th>
                                 <th className="px-10 py-6">Concepto Registrado</th>
                                 <th className="px-10 py-6">Origen / Cat</th>
@@ -503,7 +503,7 @@ export default function AnalyticsPage() {
                                         <td className="px-10 py-6">
                                             <div className="flex flex-col gap-1">
                                                 <span className="text-xs font-black text-white/90">{new Date(record.createdAt).toLocaleDateString('es-AR', {day:'2-digit', month:'short', year:'numeric'})}</span>
-                                                <div className="flex items-center gap-1.5 text-gray-600">
+                                                <div className="flex items-center gap-1.5 text-gray-400">
                                                     <Clock size={10}/>
                                                     <span className="text-[10px] font-mono">{new Date(record.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                                                 </div>
@@ -523,15 +523,15 @@ export default function AnalyticsPage() {
                                                 }`}>
                                                     {isExpense ? 'Egreso / Compra' : isCustom ? 'Pedido Web' : 'Inventario Stock'}
                                                 </span>
-                                                <span className="text-[10px] text-gray-600 font-bold uppercase">{record.category}</span>
+                                                <span className="text-[10px] text-gray-400 font-bold uppercase">{record.category}</span>
                                             </div>
                                         </td>
                                         <td className="px-10 py-6 text-center">
                                             {!isExpense && <span className="font-mono text-xs font-black bg-white/5 px-3 py-1 rounded-lg">x{record.quantity || 1}</span>}
-                                            {isExpense && <span className="font-mono text-xs text-gray-600">-</span>}
+                                            {isExpense && <span className="font-mono text-xs text-gray-400">-</span>}
                                         </td>
                                         <td className="px-10 py-6 text-right">
-                                            {!isExpense && <div className="text-xs font-bold text-gray-500">{formatMoney(record.cost || 0)}</div>}
+                                            {!isExpense && <div className="text-xs font-bold text-gray-400">{formatMoney(record.cost || 0)}</div>}
                                         </td>
                                         <td className="px-10 py-6 text-right">
                                             <div className="flex flex-col items-end">
@@ -567,8 +567,8 @@ export default function AnalyticsPage() {
             {/* Footer de la tabla */}
             <div className="p-8 bg-white/[0.02] border-t border-white/5 flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                    <MousePointer2 size={14} className="text-gray-600"/>
-                    <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Fin de registros para este tramo</span>
+                    <MousePointer2 size={14} className="text-gray-400"/>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Fin de registros para este tramo</span>
                 </div>
                 <div className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">
                     PrintHub3D Analytics System v2.0

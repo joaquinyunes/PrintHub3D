@@ -24,7 +24,7 @@ export default function TrackingCodeModal({ code, onClose }: TrackingCodeModalPr
               {code}
             </span>
           </div>
-          <p className="text-xs text-gray-500 text-center mt-3">
+          <p className="text-xs text-gray-400 text-center mt-3">
             El cliente debe buscar este código en /track
           </p>
         </div>
@@ -32,7 +32,7 @@ export default function TrackingCodeModal({ code, onClose }: TrackingCodeModalPr
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-6">
           <p className="text-yellow-400 text-xs font-bold mb-1">📋 IMPORTANTE</p>
           <p className="text-gray-400 text-xs">Para que el cliente pueda ver el video, necesitas:</p>
-          <ol className="text-xs text-gray-500 mt-2 space-y-1 list-decimal list-inside">
+          <ol className="text-xs text-gray-400 mt-2 space-y-1 list-decimal list-inside">
             <li>
               Ir a{' '}
               <a

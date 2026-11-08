@@ -83,8 +83,8 @@ export default function OrderCard({
           )}
           {/* FECHA */}
           {dueDate && (
-            <div className="flex items-center gap-1.5 mt-2 text-[10px] text-gray-500 font-bold uppercase tracking-wide">
-              <Calendar size={12} className={isOverdue ? 'text-red-500' : 'text-gray-500'} />
+            <div className="flex items-center gap-1.5 mt-2 text-[10px] text-gray-400 font-bold uppercase tracking-wide">
+              <Calendar size={12} className={isOverdue ? 'text-red-500' : 'text-gray-400'} />
               {dueDate.toLocaleDateString()}
             </div>
           )}
@@ -136,7 +136,7 @@ export default function OrderCard({
           </div>
         ))}
         {order.items.length > 3 && (
-          <p className="text-[10px] text-center text-gray-500 italic">
+          <p className="text-[10px] text-center text-gray-400 italic">
             + {order.items.length - 3} más
           </p>
         )}
@@ -191,7 +191,7 @@ export default function OrderCard({
         {activeTab === 'production' && order.status === 'pending' && (
           <button
             onClick={() => onStatusChange(order._id, 'in_progress')}
-            className="flex-[2] min-w-[130px] py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider"
+            className="flex-[2] min-w-[130px] py-3 rounded-xl bg-orange-700 hover:bg-orange-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 uppercase tracking-wider"
           >
             <Flame size={16} /> Empezar
           </button>

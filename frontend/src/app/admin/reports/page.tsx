@@ -84,7 +84,7 @@ export default function AnalyticsPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-8">
           <div>
             <h1 className="text-4xl font-black text-white tracking-tighter mb-2">REPORTES</h1>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">
+            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">
               Análisis de: <span className="text-white">{selectedMonth === 'all' ? 'Todo el año' : months[Number(selectedMonth)]} {selectedYear}</span>
             </p>
           </div>
@@ -95,7 +95,7 @@ export default function AnalyticsPage() {
                 className="appearance-none bg-[#111] border border-white/10 rounded-xl px-5 py-3 pr-10 text-xs font-bold uppercase outline-none focus:border-blue-500 cursor-pointer hover:bg-[#161616] transition-colors">
                 <option value={2024}>2024</option><option value={2025}>2025</option><option value={2026}>2026</option><option value={2027}>2027</option>
               </select>
-              <Calendar className="absolute right-3 top-3 h-4 w-4 text-gray-500 pointer-events-none"/>
+              <Calendar className="absolute right-3 top-3 h-4 w-4 text-gray-400 pointer-events-none"/>
             </div>
             <div className="relative">
               <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}
@@ -103,7 +103,7 @@ export default function AnalyticsPage() {
                 <option value="all">Todo el Año</option>
                 {months.map((m, i) => <option key={i} value={i}>{m}</option>)}
               </select>
-              <Filter className="absolute right-3 top-3 h-4 w-4 text-gray-500 pointer-events-none"/>
+              <Filter className="absolute right-3 top-3 h-4 w-4 text-gray-400 pointer-events-none"/>
             </div>
             <button onClick={handleExport} className="bg-white text-black px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-gray-200 transition-colors shadow-lg shadow-white/5">
                 <Download size={16}/> Exportar
@@ -115,7 +115,7 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-[#0f0f0f] border border-white/5 p-6 rounded-2xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-6 opacity-10 text-white group-hover:scale-110 transition-transform"><DollarSign size={40}/></div>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2">Facturación Bruta</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Facturación Bruta</p>
                 <div className="text-3xl font-black text-white">{formatMoney(ingresosTotales)}</div>
             </div>
 
@@ -191,7 +191,7 @@ export default function AnalyticsPage() {
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="text-center">
-                            <span className="text-[10px] text-gray-500 font-bold uppercase block">Total</span>
+                            <span className="text-[10px] text-gray-400 font-bold uppercase block">Total</span>
                             <span className="text-lg font-bold text-white">{formatMoney(ingresosTotales)}</span>
                         </div>
                     </div>
@@ -220,7 +220,7 @@ export default function AnalyticsPage() {
             <div className="overflow-x-auto max-h-[500px] overflow-y-auto custom-scrollbar">
                 <table className="w-full text-left">
                     <thead className="sticky top-0 bg-[#111] z-10">
-                        <tr className="text-[10px] uppercase text-gray-500 font-bold tracking-widest border-b border-white/5">
+                        <tr className="text-[10px] uppercase text-gray-400 font-bold tracking-widest border-b border-white/5">
                             <th className="px-6 py-4">Fecha</th>
                             <th className="px-6 py-4">Concepto / Producto</th>
                             <th className="px-6 py-4">Categoría</th>
@@ -238,7 +238,7 @@ export default function AnalyticsPage() {
                             <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
                                 <td className="px-6 py-4">
                                     <div className="text-xs font-mono text-gray-400">{new Date(item.createdAt).toLocaleDateString()}</div>
-                                    <div className="text-[10px] text-gray-600">{new Date(item.createdAt).toLocaleTimeString()}</div>
+                                    <div className="text-[10px] text-gray-400">{new Date(item.createdAt).toLocaleTimeString()}</div>
                                 </td>
                                 <td className="px-6 py-4 font-bold text-white text-sm">
                                     {item.productName || item.clientName || item.description || 'Sin concepto'}
@@ -266,7 +266,7 @@ export default function AnalyticsPage() {
                             </tr>
                         )})}
                         {(!data?.salesHistory || data.salesHistory.length === 0) && (
-                            <tr><td colSpan={5} className="py-12 text-center text-gray-600 text-sm uppercase tracking-widest">Sin transacciones registradas</td></tr>
+                            <tr><td colSpan={5} className="py-12 text-center text-gray-400 text-sm uppercase tracking-widest">Sin transacciones registradas</td></tr>
                         )}
                     </tbody>
                 </table>

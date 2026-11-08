@@ -206,7 +206,7 @@ export default function SettingsPage() {
                 className="w-full bg-black/50 border border-white/10 rounded p-2 pl-9 text-sm outline-none focus:border-primary"
               />
             </div>
-            <p className="text-[10px] text-gray-500 mt-1">
+            <p className="text-[10px] text-gray-400 mt-1">
               Sin espacios ni símbolos (+). Debe incluir código de país.
             </p>
           </div>
@@ -221,7 +221,7 @@ export default function SettingsPage() {
               placeholder="https://tu-dominio.com/track"
               className="w-full bg-black/50 border border-white/10 rounded p-2 text-sm outline-none focus:border-primary"
             />
-            <p className="text-[10px] text-gray-500 mt-1">
+            <p className="text-[10px] text-gray-400 mt-1">
               Se usará en los enlaces de seguimiento enviados al cliente.
             </p>
           </div>
@@ -296,7 +296,7 @@ export default function SettingsPage() {
               onChange={handleChange}
               className="w-full bg-black/50 border border-white/10 rounded p-2 text-sm outline-none"
             />
-            <p className="text-[10px] text-gray-500 mt-1">
+            <p className="text-[10px] text-gray-400 mt-1">
               Usado para estimaciones rápidas si el producto no tiene costo definido.
             </p>
           </div>
@@ -319,7 +319,7 @@ export default function SettingsPage() {
                 className="w-full bg-black/50 border border-white/10 rounded p-2 text-sm outline-none resize-none"
               />
             </div>
-            <div className="text-[10px] text-gray-500 space-y-1">
+            <div className="text-[10px] text-gray-400 space-y-1">
               <p className="font-semibold">Variables disponibles:</p>
               <p>
                 <code className="bg-black/40 px-1 rounded">{'{clientName}'}</code>,{' '}

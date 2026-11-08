@@ -46,12 +46,10 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: http://localhost:5000
 
-  # Vulnerabilidades conocidas en dependencias de producción. Informativo: no
-  # corta el pipeline (hay avisos transitivos que no se pueden arreglar acá), pero
-  # deja el reporte visible en cada PR.
+  # Vulnerabilidades conocidas en dependencias de producción: corta el pipeline con críticas o altas (S1/S11).
+  # Las moderadas se ven en el reporte pero no cortan (mercadopago/uuid: sin parche compatible, ver docs/SEGURIDAD.md).
   audit:
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
       matrix:
         project: [backend, frontend]
@@ -90,3 +88,15 @@ jobs:
           buscar 'Slack' 'xox[abprs]-[0-9A-Za-z-]{10,}'
           buscar 'URL de base con clave' '(mongodb(\+srv)?|postgres(ql)?)://[^:/@\s"'"'"'<$]+:(?!(?i:password|clave|contrase|xxx|tu_|your))[^@\s"'"'"'<$\{]{6,}@[A-Za-z0-9.-]+\.(mongodb\.net|neon\.tech|supabase\.(co|com)|render\.com|rds\.amazonaws\.com)'
           exit $fallo
+
+  # Historial completo: un secreto borrado en un commit posterior sigue estando en git (S8).
+  secretos-historial:
+    name: Secretos en el historial
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

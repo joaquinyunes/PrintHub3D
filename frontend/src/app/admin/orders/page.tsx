@@ -196,14 +196,14 @@ export default function OrderListPage() {
             >
               PEDIDOS
             </h1>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-[0.3em] pl-1">
+            <p className="text-gray-400 text-xs font-bold uppercase tracking-[0.3em] pl-1">
               Centro de Comando
             </p>
           </div>
 
           <div className="flex items-center gap-4 w-full md:w-auto">
             <div className="relative group flex-1 md:w-64">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 h-4 w-4 transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-400 h-4 w-4 transition-colors" />
               <input
                 type="text"
                 placeholder="BUSCAR..."
@@ -230,20 +230,20 @@ export default function OrderListPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative pb-4 px-6 text-sm font-bold uppercase tracking-widest transition-all flex items-center gap-3 group min-w-fit ${isActive ? 'text-white' : 'text-gray-600 hover:text-gray-300'}`}
+                className={`relative pb-4 px-6 text-sm font-bold uppercase tracking-widest transition-all flex items-center gap-3 group min-w-fit ${isActive ? 'text-white' : 'text-gray-400 hover:text-gray-300'}`}
               >
                 <tab.icon
-                  className={`h-5 w-5 ${isActive ? tab.color : 'text-gray-600 group-hover:text-gray-400'}`}
+                  className={`h-5 w-5 ${isActive ? tab.color : 'text-gray-400 group-hover:text-gray-400'}`}
                 />
                 <div className="flex flex-col items-start">
                   <span>{tab.label}</span>
-                  <span className="text-[9px] normal-case opacity-50 font-medium tracking-normal">
+                  <span className="text-[9px] normal-case font-medium tracking-normal">
                     {tab.description}
                   </span>
                 </div>
                 {count > 0 && (
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-black' : 'bg-white/10 text-gray-500'}`}
+                    className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-black' : 'bg-white/10 text-gray-400'}`}
                   >
                     {count}
                   </span>
@@ -262,8 +262,8 @@ export default function OrderListPage() {
         <div className="space-y-16 pb-20">
           {sortedGroupKeys.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 opacity-30">
-              <Package size={64} className="mb-4 text-gray-500" />
-              <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">
+              <Package size={64} className="mb-4 text-gray-400" />
+              <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">
                 No hay pedidos en esta sección
               </p>
             </div>

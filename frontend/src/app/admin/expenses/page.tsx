@@ -113,7 +113,7 @@ export default function ExpensesPage() {
                                     <span className="font-mono text-xl font-bold text-red-400">
                                         - ${expense.amount.toLocaleString()}
                                     </span>
-                                    <button onClick={() => handleDelete(expense._id)} className="text-gray-600 hover:text-red-500">
+                                    <button onClick={() => handleDelete(expense._id)} className="text-gray-400 hover:text-red-500">
                                         <Trash2 size={18} />
                                     </button>
                                 </div>

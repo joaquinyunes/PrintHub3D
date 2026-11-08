@@ -64,7 +64,7 @@ export default function OrderClientPanel({
     <div className="lg:col-span-5 space-y-8">
       <div className="bg-[#141414] p-6 rounded-2xl border border-white/5 space-y-6">
         <div>
-          <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block tracking-widest">
+          <label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block tracking-widest">
             Cliente
           </label>
           <input
@@ -76,7 +76,7 @@ export default function OrderClientPanel({
           />
         </div>
         <div>
-          <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block tracking-widest flex items-center gap-2">
+          <label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block tracking-widest flex items-center gap-2">
             <MessageSquare size={12} /> Link del Chat
           </label>
           <input
@@ -101,7 +101,7 @@ export default function OrderClientPanel({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block tracking-widest">
+            <label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block tracking-widest">
               Origen
             </label>
             <select
@@ -117,7 +117,7 @@ export default function OrderClientPanel({
             </select>
           </div>
           <div>
-            <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block tracking-widest">
+            <label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block tracking-widest">
               Pago
             </label>
             <select

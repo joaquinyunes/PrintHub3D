@@ -96,7 +96,7 @@ export default function SetupPage() {
 
   const field = (k: string, label: string, placeholder = "", type = "text") => (
     <div>
-      <label className="mb-1 block text-xs uppercase tracking-wider text-gray-500">{label}</label>
+      <label className="mb-1 block text-xs uppercase tracking-wider text-gray-400">{label}</label>
       <input
         type={type}
         value={(form as any)[k]}
@@ -116,7 +116,7 @@ export default function SetupPage() {
           </div>
           <div>
             <h1 className="text-2xl font-black">Configurá tu taller</h1>
-            <p className="text-xs text-gray-600">Un minuto. Podés cambiar todo después en Configuración.</p>
+            <p className="text-xs text-gray-400">Un minuto. Podés cambiar todo después en Configuración.</p>
           </div>
         </div>
 
@@ -124,7 +124,7 @@ export default function SetupPage() {
           {STEPS.map((s, i) => (
             <div key={s} className="flex-1">
               <div className={`h-1 rounded-full ${i <= step ? "bg-tone-red" : "bg-white/10"}`} />
-              <p className={`mt-1.5 text-[10px] uppercase tracking-wider ${i <= step ? "text-tone-red" : "text-gray-600"}`}>{s}</p>
+              <p className={`mt-1.5 text-[10px] uppercase tracking-wider ${i <= step ? "text-tone-red" : "text-gray-400"}`}>{s}</p>
             </div>
           ))}
         </div>
@@ -176,7 +176,7 @@ export default function SetupPage() {
               <Check className="h-7 w-7 text-emerald-400" />
             </div>
             <h2 className="text-xl font-black">Listo</h2>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-400">
               Ahora cargá tus productos, tus impresoras y tus precios. El resto de la web se edita en Inicio Web.
             </p>
             <div className="mt-6 flex flex-col gap-2">

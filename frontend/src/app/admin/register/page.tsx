@@ -69,7 +69,7 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Nombre */}
           <div className="relative group">
-            <div className="absolute left-3 top-3 text-gray-500">
+            <div className="absolute left-3 top-3 text-gray-400">
               <User className="h-5 w-5" />
             </div>
             <input
@@ -84,7 +84,7 @@ export default function RegisterPage() {
 
           {/* Email */}
           <div className="relative group">
-            <div className="absolute left-3 top-3 text-gray-500">
+            <div className="absolute left-3 top-3 text-gray-400">
               <Mail className="h-5 w-5" />
             </div>
             <input
@@ -99,7 +99,7 @@ export default function RegisterPage() {
 
           {/* Contraseña */}
           <div className="relative group">
-            <div className="absolute left-3 top-3 text-gray-500">
+            <div className="absolute left-3 top-3 text-gray-400">
               <Lock className="h-5 w-5" />
             </div>
             <input
@@ -122,7 +122,7 @@ export default function RegisterPage() {
         </form>
         
         <div className="mt-6 text-center">
-          <Link href="/admin/login" className="text-xs text-gray-500 hover:text-white transition">
+          <Link href="/admin/login" className="text-xs text-gray-400 hover:text-white transition">
             ¿Ya tienes cuenta? Iniciar Sesión
           </Link>
         </div>

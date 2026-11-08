@@ -428,7 +428,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
               {expandedCats[cat.id] && (
                 <div className="p-4 border-t border-white/5 space-y-4">
                   <div>
-                    <label className="text-xs text-gray-500 block mb-1">Descripción</label>
+                    <label className="text-xs text-gray-400 block mb-1">Descripción</label>
                     <input type="text" value={cat.description || ''} onChange={e => updateSectionCategory(sectionKey, i, 'description', e.target.value)} className="w-full bg-zinc-800 rounded-lg py-2 px-3 text-sm" placeholder="Descripción corta" />
                   </div>
                   <div className="flex items-center gap-2">
@@ -452,7 +452,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                       <div key={sub.id} className="bg-black/30 border border-white/5 rounded-lg overflow-hidden">
                         <div className="p-3 flex items-center justify-between">
                           <button onClick={() => toggleSub(sub.id)} className="flex items-center gap-2">
-                            {expandedSubs[sub.id] ? <ChevronDown className="w-3 h-3 text-gray-500"/> : <ChevronRight className="w-3 h-3 text-gray-500"/>}
+                            {expandedSubs[sub.id] ? <ChevronDown className="w-3 h-3 text-gray-400"/> : <ChevronRight className="w-3 h-3 text-gray-400"/>}
                             <input
                               value={sub.name}
                               onChange={(e) => updateSubCategory(sectionKey, i, subIndex, e.target.value)}
@@ -468,7 +468,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                         {expandedSubs[sub.id] && (
                           <div className="p-3 border-t border-white/5 space-y-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">Productos</span>
+                              <span className="text-xs text-gray-400">Productos</span>
                               <button onClick={() => addProductToSubCategory(sectionKey, i, subIndex)} className="text-green-400 hover:text-green-300 text-xs flex items-center gap-1">
                                 <Plus className="w-3 h-3"/> Agregar
                               </button>
@@ -481,7 +481,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                                     <div className="flex items-center gap-2">
                                       <button 
                                         onClick={() => updateProductInSubCategory(sectionKey, i, subIndex, prodIndex, 'enabled', !prod.enabled)}
-                                        className={`p-1 rounded ${prod.enabled ? 'text-green-400' : 'text-gray-500'}`}
+                                        className={`p-1 rounded ${prod.enabled ? 'text-green-400' : 'text-gray-400'}`}
                                       >
                                         {prod.enabled ? <Eye className="w-3 h-3"/> : <EyeOff className="w-3 h-3"/>}
                                       </button>
@@ -511,7 +511,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                                       className="bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-gray-300 outline-none"
                                     />
                                     <div className="col-span-2">
-                                      <label className="text-[10px] text-gray-500 block mb-1">Imagen</label>
+                                      <label className="text-[10px] text-gray-400 block mb-1">Imagen</label>
                                       <SimpleUploader
                                         value={prod.imageUrl || ''}
                                         onChange={(url) => updateProductInSubCategory(sectionKey, i, subIndex, prodIndex, 'imageUrl', url)}
@@ -519,7 +519,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                                       />
                                     </div>
                                     <div className="col-span-2">
-                                      <label className="text-[10px] text-gray-500 block mb-1">Imagen Hover (opcional)</label>
+                                      <label className="text-[10px] text-gray-400 block mb-1">Imagen Hover (opcional)</label>
                                       <SimpleUploader
                                         value={prod.imageHover || ''}
                                         onChange={(url) => updateProductInSubCategory(sectionKey, i, subIndex, prodIndex, 'imageHover', url)}
@@ -527,7 +527,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                                       />
                                     </div>
                                     <div className="col-span-2">
-                                      <label className="text-[10px] text-gray-500 block mb-1">Video (opcional)</label>
+                                      <label className="text-[10px] text-gray-400 block mb-1">Video (opcional)</label>
                                       <SimpleUploader
                                         value={prod.videoUrl || ''}
                                         onChange={(url) => updateProductInSubCategory(sectionKey, i, subIndex, prodIndex, 'videoUrl', url)}
@@ -538,7 +538,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                                 </div>
                               ))}
                               {(!sub.products || sub.products.length === 0) && (
-                                <p className="text-gray-600 text-xs text-center py-2">Sin productos</p>
+                                <p className="text-gray-400 text-xs text-center py-2">Sin productos</p>
                               )}
                             </div>
                           </div>
@@ -546,7 +546,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                       </div>
                     ))}
                     {(!cat.subCategories || cat.subCategories.length === 0) && (
-                      <p className="text-gray-600 text-sm">Sin subcategorías. Agregá una arriba.</p>
+                      <p className="text-gray-400 text-sm">Sin subcategorías. Agregá una arriba.</p>
                     )}
                   </div>
                 </div>
@@ -555,7 +555,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
           ))}
         </div>
         {(!section?.categories || section.categories.length === 0) && (
-          <p className="text-gray-500 text-center py-8">No hay categorías. Agregá una para mostrar en la web.</p>
+          <p className="text-gray-400 text-center py-8">No hay categorías. Agregá una para mostrar en la web.</p>
         )}
       </div>
     );
@@ -567,7 +567,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-black uppercase">Configuración</h1>
-            <p className="text-gray-500">Editá todas las secciones del sitio</p>
+            <p className="text-gray-400">Editá todas las secciones del sitio</p>
           </div>
           <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-medium">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -611,10 +611,10 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4">Sección Rastreo</h2>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-gray-500 block mb-1">Habilitado</label><input type="checkbox" checked={sections.rastreoSection?.enabled} onChange={e => setSections(prev => ({ ...prev, rastreoSection: { ...prev.rastreoSection, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Título</label><input type="text" value={sections.rastreoSection?.title || ''} onChange={e => setSections(prev => ({ ...prev, rastreoSection: { ...prev.rastreoSection, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.rastreoSection?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, rastreoSection: { ...prev.rastreoSection, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Badge</label><input type="text" value={sections.rastreoSection?.badge || ''} onChange={e => setSections(prev => ({ ...prev, rastreoSection: { ...prev.rastreoSection, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Habilitado</label><input type="checkbox" checked={sections.rastreoSection?.enabled} onChange={e => setSections(prev => ({ ...prev, rastreoSection: { ...prev.rastreoSection, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Título</label><input type="text" value={sections.rastreoSection?.title || ''} onChange={e => setSections(prev => ({ ...prev, rastreoSection: { ...prev.rastreoSection, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Subtítulo</label><input type="text" value={sections.rastreoSection?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, rastreoSection: { ...prev.rastreoSection, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Badge</label><input type="text" value={sections.rastreoSection?.badge || ''} onChange={e => setSections(prev => ({ ...prev, rastreoSection: { ...prev.rastreoSection, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
               </div>
             </div>
 
@@ -659,7 +659,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs text-gray-500 block mb-1">Código (ej: vasoriver)</label>
+                        <label className="text-xs text-gray-400 block mb-1">Código (ej: vasoriver)</label>
                         <input
                           value={video.code}
                           onChange={(e) => {
@@ -672,7 +672,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-gray-500 block mb-1">Título</label>
+                        <label className="text-xs text-gray-400 block mb-1">Título</label>
                         <input
                           value={video.title}
                           onChange={(e) => {
@@ -685,7 +685,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                         />
                       </div>
                       <div className="col-span-2">
-                        <label className="text-xs text-gray-500 block mb-1">URL del Video</label>
+                        <label className="text-xs text-gray-400 block mb-1">URL del Video</label>
                         <input
                           value={video.videoUrl}
                           onChange={(e) => {
@@ -698,7 +698,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                         />
                       </div>
                       <div className="col-span-2">
-                        <label className="text-xs text-gray-500 block mb-1">Descripción</label>
+                        <label className="text-xs text-gray-400 block mb-1">Descripción</label>
                         <textarea
                           value={video.description}
                           onChange={(e) => {
@@ -716,7 +716,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                 ))}
               </div>
               {(!sections.rastreoSection?.customVideos || sections.rastreoSection.customVideos.length === 0) && (
-                <p className="text-gray-500 text-center py-4">No hay videos. Agregá uno para mostrar en rastreo.</p>
+                <p className="text-gray-400 text-center py-4">No hay videos. Agregá uno para mostrar en rastreo.</p>
               )}
             </div>
 
@@ -731,13 +731,13 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4">Sección Productos</h2>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-gray-500 block mb-1">Habilitado</label><input type="checkbox" checked={sections.productosSection?.enabled} onChange={e => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Título</label><input type="text" value={sections.productosSection?.title || ''} onChange={e => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.productosSection?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Badge (emoji)</label><input type="text" value={sections.productosSection?.badge || ''} onChange={e => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Habilitado</label><input type="checkbox" checked={sections.productosSection?.enabled} onChange={e => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Título</label><input type="text" value={sections.productosSection?.title || ''} onChange={e => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Subtítulo</label><input type="text" value={sections.productosSection?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Badge (emoji)</label><input type="text" value={sections.productosSection?.badge || ''} onChange={e => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
               </div>
               <div className="mt-4">
-                <label className="text-xs text-gray-500 block mb-1">Imagen Hero (fondo) - Recomendado: 1920x1080px (16:9)</label>
+                <label className="text-xs text-gray-400 block mb-1">Imagen Hero (fondo) - Recomendado: 1920x1080px (16:9)</label>
                 <FileUploader
                   value={sections.productosSection?.heroImage || ''}
                   onChange={(url) => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, heroImage: url } }))}
@@ -748,11 +748,11 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Search className="w-5 h-5" /> Todos los Productos - Búsqueda</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-gray-500 block mb-1">Habilitar búsqueda</label><input type="checkbox" checked={sections.productosSection?.allProductsSearch?.enabled} onChange={e => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, allProductsSearch: { ...prev.productosSection?.allProductsSearch, enabled: e.target.checked } } }))} className="w-5 h-5 rounded" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Placeholder</label><input type="text" value={sections.productosSection?.allProductsSearch?.placeholder || ''} onChange={e => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, allProductsSearch: { ...prev.productosSection?.allProductsSearch, placeholder: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" placeholder="Buscar productos..." /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Habilitar búsqueda</label><input type="checkbox" checked={sections.productosSection?.allProductsSearch?.enabled} onChange={e => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, allProductsSearch: { ...prev.productosSection?.allProductsSearch, enabled: e.target.checked } } }))} className="w-5 h-5 rounded" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Placeholder</label><input type="text" value={sections.productosSection?.allProductsSearch?.placeholder || ''} onChange={e => setSections(prev => ({ ...prev, productosSection: { ...prev.productosSection, allProductsSearch: { ...prev.productosSection?.allProductsSearch, placeholder: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" placeholder="Buscar productos..." /></div>
               </div>
               <div className="mt-4">
-                <label className="text-xs text-gray-500 block mb-2">Opciones de orden disponibles</label>
+                <label className="text-xs text-gray-400 block mb-2">Opciones de orden disponibles</label>
                 <div className="flex flex-wrap gap-2">
                   {['price_asc', 'price_desc', 'name_asc', 'name_desc', 'newest'].map(opt => (
                     <label key={opt} className="flex items-center gap-2 bg-zinc-800 px-3 py-2 rounded-lg cursor-pointer hover:bg-zinc-700">
@@ -780,7 +780,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                 </div>
               </div>
               <div className="mt-4">
-                <label className="text-xs text-gray-500 block mb-2">Filtros de búsqueda</label>
+                <label className="text-xs text-gray-400 block mb-2">Filtros de búsqueda</label>
                 <div className="flex flex-wrap gap-2">
                   {['searchByName', 'searchByDescription', 'filterByPrice'].map(opt => (
                     <label key={opt} className="flex items-center gap-2 bg-zinc-800 px-3 py-2 rounded-lg cursor-pointer hover:bg-zinc-700">
@@ -817,13 +817,13 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4">Sección Impresoras</h2>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-gray-500 block mb-1">Habilitado</label><input type="checkbox" checked={sections.impresorasSection?.enabled} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Título</label><input type="text" value={sections.impresorasSection?.title || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.impresorasSection?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Badge (emoji)</label><input type="text" value={sections.impresorasSection?.badge || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Habilitado</label><input type="checkbox" checked={sections.impresorasSection?.enabled} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Título</label><input type="text" value={sections.impresorasSection?.title || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Subtítulo</label><input type="text" value={sections.impresorasSection?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Badge (emoji)</label><input type="text" value={sections.impresorasSection?.badge || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
               </div>
               <div className="mt-4">
-                <label className="text-xs text-gray-500 block mb-1">Imagen Hero (fondo)</label>
+                <label className="text-xs text-gray-400 block mb-1">Imagen Hero (fondo)</label>
                 <FileUploader
                   value={sections.impresorasSection?.heroImage || ''}
                   onChange={(url) => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, heroImage: url } }))}
@@ -834,13 +834,13 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
               <h3 className="text-lg font-bold mb-4">Animación Hero</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-gray-500 block mb-1">Animación habilitada</label><input type="checkbox" checked={sections.impresorasSection?.animation?.enabled} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, enabled: e.target.checked } } }))} className="w-5 h-5 rounded" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Título</label><input type="text" value={sections.impresorasSection?.animation?.title || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, title: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.impresorasSection?.animation?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, subtitle: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Precio</label><input type="text" value={sections.impresorasSection?.animation?.price || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, price: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Color acento</label><input type="text" value={sections.impresorasSection?.animation?.accentColor || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, accentColor: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Carpeta frames</label><input type="text" value={sections.impresorasSection?.animation?.framesDir || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, framesDir: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Total frames</label><input type="number" value={sections.impresorasSection?.animation?.totalFrames || 0} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, totalFrames: parseInt(e.target.value) || 0 } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Animación habilitada</label><input type="checkbox" checked={sections.impresorasSection?.animation?.enabled} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, enabled: e.target.checked } } }))} className="w-5 h-5 rounded" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Título</label><input type="text" value={sections.impresorasSection?.animation?.title || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, title: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Subtítulo</label><input type="text" value={sections.impresorasSection?.animation?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, subtitle: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Precio</label><input type="text" value={sections.impresorasSection?.animation?.price || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, price: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Color acento</label><input type="text" value={sections.impresorasSection?.animation?.accentColor || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, accentColor: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Carpeta frames</label><input type="text" value={sections.impresorasSection?.animation?.framesDir || ''} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, framesDir: e.target.value } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Total frames</label><input type="number" value={sections.impresorasSection?.animation?.totalFrames || 0} onChange={e => setSections(prev => ({ ...prev, impresorasSection: { ...prev.impresorasSection, animation: { ...prev.impresorasSection?.animation, totalFrames: parseInt(e.target.value) || 0 } } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
               </div>
             </div>
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
@@ -854,13 +854,13 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4">Sección Filamentos</h2>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-gray-500 block mb-1">Habilitado</label><input type="checkbox" checked={sections.filamentosSection?.enabled} onChange={e => setSections(prev => ({ ...prev, filamentosSection: { ...prev.filamentosSection, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Título</label><input type="text" value={sections.filamentosSection?.title || ''} onChange={e => setSections(prev => ({ ...prev, filamentosSection: { ...prev.filamentosSection, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.filamentosSection?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, filamentosSection: { ...prev.filamentosSection, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Badge (emoji)</label><input type="text" value={sections.filamentosSection?.badge || ''} onChange={e => setSections(prev => ({ ...prev, filamentosSection: { ...prev.filamentosSection, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Habilitado</label><input type="checkbox" checked={sections.filamentosSection?.enabled} onChange={e => setSections(prev => ({ ...prev, filamentosSection: { ...prev.filamentosSection, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Título</label><input type="text" value={sections.filamentosSection?.title || ''} onChange={e => setSections(prev => ({ ...prev, filamentosSection: { ...prev.filamentosSection, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Subtítulo</label><input type="text" value={sections.filamentosSection?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, filamentosSection: { ...prev.filamentosSection, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Badge (emoji)</label><input type="text" value={sections.filamentosSection?.badge || ''} onChange={e => setSections(prev => ({ ...prev, filamentosSection: { ...prev.filamentosSection, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
               </div>
               <div className="mt-4">
-                <label className="text-xs text-gray-500 block mb-1">Imagen Hero (fondo)</label>
+                <label className="text-xs text-gray-400 block mb-1">Imagen Hero (fondo)</label>
                 <FileUploader
                   value={sections.filamentosSection?.heroImage || ''}
                   onChange={(url) => setSections(prev => ({ ...prev, filamentosSection: { ...prev.filamentosSection, heroImage: url } }))}
@@ -879,10 +879,10 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4">Sección Contacto</h2>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-gray-500 block mb-1">Habilitado</label><input type="checkbox" checked={sections.contactoSection?.enabled} onChange={e => setSections(prev => ({ ...prev, contactoSection: { ...prev.contactoSection, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Título</label><input type="text" value={sections.contactoSection?.title || ''} onChange={e => setSections(prev => ({ ...prev, contactoSection: { ...prev.contactoSection, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Subtítulo</label><input type="text" value={sections.contactoSection?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, contactoSection: { ...prev.contactoSection, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
-                <div><label className="text-xs text-gray-500 block mb-1">Badge</label><input type="text" value={sections.contactoSection?.badge || ''} onChange={e => setSections(prev => ({ ...prev, contactoSection: { ...prev.contactoSection, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Habilitado</label><input type="checkbox" checked={sections.contactoSection?.enabled} onChange={e => setSections(prev => ({ ...prev, contactoSection: { ...prev.contactoSection, enabled: e.target.checked } }))} className="w-5 h-5 rounded" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Título</label><input type="text" value={sections.contactoSection?.title || ''} onChange={e => setSections(prev => ({ ...prev, contactoSection: { ...prev.contactoSection, title: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Subtítulo</label><input type="text" value={sections.contactoSection?.subtitle || ''} onChange={e => setSections(prev => ({ ...prev, contactoSection: { ...prev.contactoSection, subtitle: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
+                <div><label className="text-xs text-gray-400 block mb-1">Badge</label><input type="text" value={sections.contactoSection?.badge || ''} onChange={e => setSections(prev => ({ ...prev, contactoSection: { ...prev.contactoSection, badge: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" /></div>
               </div>
             </div>
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
@@ -890,35 +890,35 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
               <p className="text-sm text-zinc-400 mb-4">Editá los datos de contacto que aparecerán en la web</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">WhatsApp (números)</label>
+                  <label className="text-xs text-gray-400 block mb-1">WhatsApp (números)</label>
                   <input type="text" value={sections.contactInfo?.whatsapp || ''} onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, whatsapp: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" placeholder="5493794123456" />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">WhatsApp Visible</label>
+                  <label className="text-xs text-gray-400 block mb-1">WhatsApp Visible</label>
                   <input type="text" value={sections.contactInfo?.whatsappDisplay || ''} onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, whatsappDisplay: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" placeholder="+54 9 3794 123456" />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">Instagram</label>
+                  <label className="text-xs text-gray-400 block mb-1">Instagram</label>
                   <input type="text" value={sections.contactInfo?.instagram || ''} onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, instagram: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" placeholder="global3dcorrientes" />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">URL Instagram</label>
+                  <label className="text-xs text-gray-400 block mb-1">URL Instagram</label>
                   <input type="text" value={sections.contactInfo?.instagramUrl || ''} onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, instagramUrl: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" placeholder="https://instagram.com/..." />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">Facebook (usuario)</label>
+                  <label className="text-xs text-gray-400 block mb-1">Facebook (usuario)</label>
                   <input type="text" value={sections.contactInfo?.facebook || ''} onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, facebook: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" placeholder="global3d" />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">URL Facebook</label>
+                  <label className="text-xs text-gray-400 block mb-1">URL Facebook</label>
                   <input type="text" value={sections.contactInfo?.facebookUrl || ''} onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, facebookUrl: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" placeholder="https://facebook.com/..." />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">Ubicación</label>
+                  <label className="text-xs text-gray-400 block mb-1">Ubicación</label>
                   <input type="text" value={sections.contactInfo?.location || ''} onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, location: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" placeholder="Corrientes, Argentina" />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">Email</label>
+                  <label className="text-xs text-gray-400 block mb-1">Email</label>
                   <input type="email" value={sections.contactInfo?.email || ''} onChange={e => setSections(prev => ({ ...prev, contactInfo: { ...prev.contactInfo, email: e.target.value } }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" placeholder="contacto@global3d.com" />
                 </div>
               </div>
@@ -928,7 +928,7 @@ const removeSubCategory = (sectionKey: 'rastreoSection' | 'productosSection' | '
                 <DollarSign className="w-4 h-4 text-emerald-500" /> Configuración General
               </h3>
               <div>
-                <label className="text-xs text-gray-500 block mb-1">Meta mensual de facturación ($)</label>
+                <label className="text-xs text-gray-400 block mb-1">Meta mensual de facturación ($)</label>
                 <input type="number" value={sections.monthlyGoal ?? 2000000} onChange={e => setSections(prev => ({ ...prev, monthlyGoal: Number(e.target.value) }))} className="w-full bg-zinc-800 rounded-lg py-2 px-3" placeholder="2000000" />
               </div>
             </div>

@@ -257,7 +257,7 @@ export default function ProductionPage() {
          <div className="p-8 border-b border-white/5 flex justify-between items-center">
             <div>
                 <h3 className="font-black text-white text-lg tracking-tight uppercase">Impresoras</h3>
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mt-1">Estado de impresoras</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mt-1">Estado de impresoras</p>
             </div>
             <button onClick={() => setIsPrinterModalOpen(true)} className="bg-white/5 p-2.5 rounded-xl hover:bg-white/10 text-white transition-all border border-white/10 active:scale-95"><Plus className="h-4 w-4"/></button>
          </div>
@@ -272,7 +272,7 @@ export default function ProductionPage() {
                         <div className="flex justify-between items-start mb-3">
                             <div>
                                 <span className={`font-bold text-base ${isBusy ? 'text-cyan-200/80' : isMaintenance ? 'text-red-300/80' : 'text-gray-300'}`}>{p.name}</span>
-                                <p className="text-[10px] text-gray-600 font-mono uppercase tracking-wider">{p.model}</p>
+                                <p className="text-[10px] text-gray-400 font-mono uppercase tracking-wider">{p.model}</p>
                             </div>
                             <div className={`w-2.5 h-2.5 rounded-full ${
                                 isBusy
@@ -310,7 +310,7 @@ export default function ProductionPage() {
                                     
                                     <button
                                         onClick={() => deletePrinter(p._id)}
-                                        className="text-gray-600 hover:text-red-500 transition-colors"
+                                        className="text-gray-400 hover:text-red-500 transition-colors"
                                         title="Eliminar impresora"
                                     >
                                         <Trash2 size={14}/>
@@ -331,7 +331,7 @@ export default function ProductionPage() {
             <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-white tracking-tighter mb-2 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]">
                 PRODUCCIÓN
             </h1>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-[0.3em] pl-1">Control de Impresiones</p>
+            <p className="text-gray-400 text-xs font-bold uppercase tracking-[0.3em] pl-1">Control de Impresiones</p>
          </div>
 
          <div className="grid grid-cols-2 gap-10 h-[calc(100vh-180px)] min-w-[800px]">
@@ -361,7 +361,7 @@ export default function ProductionPage() {
                 <input autoFocus placeholder="Nombre" className="w-full bg-black border border-white/10 rounded-2xl p-4 mb-4 text-sm text-white outline-none focus:border-cyan-500 transition-all font-bold"
                     value={newPrinterName} onChange={e => setNewPrinterName(e.target.value)} />
 
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Estado en vivo (opcional)</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Estado en vivo (opcional)</label>
                 <select value={newPrinterInt.type} onChange={e => setNewPrinterInt({ ...newPrinterInt, type: e.target.value })}
                     className="w-full bg-black border border-white/10 rounded-2xl p-3 my-2 text-sm text-white outline-none [&>option]:bg-black">
                     <option value="none">Sin integración (estado manual)</option>
@@ -379,7 +379,7 @@ export default function ProductionPage() {
                 )}
 
                 <div className="flex justify-end gap-3">
-                    <button onClick={() => setIsPrinterModalOpen(false)} className="text-[10px] font-black px-5 py-3 text-gray-500 hover:text-white uppercase tracking-widest">Cancelar</button>
+                    <button onClick={() => setIsPrinterModalOpen(false)} className="text-[10px] font-black px-5 py-3 text-gray-400 hover:text-white uppercase tracking-widest">Cancelar</button>
                     <button onClick={addPrinter} className="bg-white text-black text-[10px] font-black px-8 py-3 rounded-xl hover:bg-gray-200 transition-all uppercase tracking-widest">Guardar</button>
                 </div>
             </div>
@@ -392,7 +392,7 @@ export default function ProductionPage() {
                 <h3 className="font-black mb-6 text-white text-xl flex items-center gap-3 tracking-tight uppercase"><Activity className="text-cyan-500"/> Iniciar</h3>
                 <div className="space-y-6">
                     <div>
-                        <label className="text-[10px] text-gray-500 block mb-2 uppercase font-black tracking-widest">Asignar Terminal</label>
+                        <label className="text-[10px] text-gray-400 block mb-2 uppercase font-black tracking-widest">Asignar Terminal</label>
                         <select className="w-full bg-black border border-white/10 rounded-2xl p-4 text-sm text-white outline-none focus:border-cyan-500 appearance-none cursor-pointer font-bold"
                             value={startConfig.printerId} onChange={e => setStartConfig({...startConfig, printerId: e.target.value})}>
                             <option value="">-- Seleccionar --</option>
@@ -402,13 +402,13 @@ export default function ProductionPage() {
                         </select>
                     </div>
                     <div>
-                        <label className="text-[10px] text-gray-500 block mb-2 uppercase font-black tracking-widest">Minutos Estimados</label>
+                        <label className="text-[10px] text-gray-400 block mb-2 uppercase font-black tracking-widest">Minutos Estimados</label>
                         <input type="number" className="w-full bg-black border border-white/10 rounded-2xl p-4 text-white outline-none focus:border-cyan-500 font-mono text-lg"
                             value={startConfig.minutes} onChange={e => setStartConfig({...startConfig, minutes: e.target.value})} />
                     </div>
                     <div className="grid grid-cols-[1fr_auto] gap-2">
                         <div>
-                            <label className="text-[10px] text-gray-500 block mb-2 uppercase font-black tracking-widest">Filamento (opcional)</label>
+                            <label className="text-[10px] text-gray-400 block mb-2 uppercase font-black tracking-widest">Filamento (opcional)</label>
                             <select className="w-full bg-black border border-white/10 rounded-2xl p-3 text-sm text-white outline-none [&>option]:bg-black"
                                 value={startConfig.filamentId} onChange={e => setStartConfig({...startConfig, filamentId: e.target.value})}>
                                 <option value="">-- Ninguno --</option>
@@ -418,14 +418,14 @@ export default function ProductionPage() {
                             </select>
                         </div>
                         <div>
-                            <label className="text-[10px] text-gray-500 block mb-2 uppercase font-black tracking-widest">Gramos</label>
+                            <label className="text-[10px] text-gray-400 block mb-2 uppercase font-black tracking-widest">Gramos</label>
                             <input type="number" placeholder="0" className="w-24 bg-black border border-white/10 rounded-2xl p-3 text-white outline-none font-mono"
                                 value={startConfig.filamentGrams} onChange={e => setStartConfig({...startConfig, filamentGrams: e.target.value})} />
                         </div>
                     </div>
                 </div>
                 <div className="flex justify-end gap-3 mt-10">
-                    <button onClick={() => setIsStartModalOpen(false)} className="text-[10px] font-black px-5 py-3 text-gray-500 hover:text-white uppercase tracking-widest">Abortar</button>
+                    <button onClick={() => setIsStartModalOpen(false)} className="text-[10px] font-black px-5 py-3 text-gray-400 hover:text-white uppercase tracking-widest">Abortar</button>
                     <button onClick={confirmStart} className="bg-cyan-600 text-white text-[10px] font-black px-10 py-3 rounded-xl hover:bg-cyan-500 shadow-lg shadow-cyan-900/20 uppercase tracking-widest transition-all">Comenzar</button>
                 </div>
             </div>
@@ -438,7 +438,7 @@ export default function ProductionPage() {
                 <h2 className="text-lg font-black text-white uppercase tracking-tight mb-2">
                     Finalizar ítem
                 </h2>
-                <p className="text-[11px] text-gray-500 uppercase tracking-widest mb-4">
+                <p className="text-[11px] text-gray-400 uppercase tracking-widest mb-4">
                     Pedido: <span className="text-white">{selectedOrderForFinish.clientName}</span>
                 </p>
                 <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
@@ -459,7 +459,7 @@ export default function ProductionPage() {
                             >
                               <div>
                                   <div className="text-sm font-bold text-white">{item.productName}</div>
-                                  <div className="text-[11px] text-gray-500 font-mono">
+                                  <div className="text-[11px] text-gray-400 font-mono">
                                       x{item.quantity} {printed && '· IMPRESO'}
                                   </div>
                               </div>
@@ -475,7 +475,7 @@ export default function ProductionPage() {
                 <div className="flex justify-end gap-3 pt-4">
                     <button
                       onClick={() => { setSelectedOrderForFinish(null); setFinishItemIndex(null); }}
-                      className="px-5 py-2 rounded-xl text-[11px] font-bold text-gray-500 hover:text-white uppercase tracking-widest"
+                      className="px-5 py-2 rounded-xl text-[11px] font-bold text-gray-400 hover:text-white uppercase tracking-widest"
                     >
                       Cerrar
                     </button>
@@ -540,10 +540,10 @@ function ProductionCard({ order, action, label, btnStyle, icon, isActive }: any)
                 <div>
                     {dateBadge}
                     <h4 className="font-black text-white text-base mt-3 line-clamp-1 tracking-tight">{order.clientName}</h4>
-                    <p className="text-[10px] text-gray-600 font-mono mt-0.5 uppercase tracking-tighter">REF: #{order._id.slice(-6)}</p>
+                    <p className="text-[10px] text-gray-400 font-mono mt-0.5 uppercase tracking-tighter">REF: #{order._id.slice(-6)}</p>
                 </div>
                 {order.files && order.files.length > 0 && (
-                    <a href={order.files[0].url} target="_blank" className="bg-white/5 p-2 rounded-xl text-gray-500 hover:text-white hover:bg-white/10 transition-all">
+                    <a href={order.files[0].url} target="_blank" className="bg-white/5 p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all">
                         <FileText size={16}/>
                     </a>
                 )}

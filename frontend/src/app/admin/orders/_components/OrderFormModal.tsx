@@ -97,7 +97,7 @@ export default function OrderFormModal({
             {order ? 'Editar Pedido' : 'Nueva Orden'}
           </h2>
           <button onClick={onClose}>
-            <X className="h-6 w-6 text-gray-500 hover:text-white transition-colors" />
+            <X className="h-6 w-6 text-gray-400 hover:text-white transition-colors" />
           </button>
         </div>
 
@@ -121,7 +121,7 @@ export default function OrderFormModal({
         <div className="p-6 border-t border-white/10 bg-[#141414] flex justify-end gap-3 rounded-b-3xl">
           <button
             onClick={onClose}
-            className="px-6 py-3 rounded-xl text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors"
+            className="px-6 py-3 rounded-xl text-xs font-bold text-gray-400 hover:text-white uppercase tracking-widest transition-colors"
           >
             Cancelar
           </button>

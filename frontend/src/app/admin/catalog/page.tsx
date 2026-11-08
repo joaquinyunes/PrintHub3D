@@ -123,7 +123,7 @@ export default function CatalogPage() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-black uppercase tracking-tight">Catálogo de Precios</h1>
-          <p className="text-gray-500 mt-2">Crea categorías y productos para seleccionar rápidamente al hacer pedidos.</p>
+          <p className="text-gray-400 mt-2">Crea categorías y productos para seleccionar rápidamente al hacer pedidos.</p>
         </div>
 
         {/* AGREGAR CATEGORÍA */}
@@ -167,7 +167,7 @@ export default function CatalogPage() {
                   </div>
                 ))}
                 {cat.products.length === 0 && (
-                  <p className="text-gray-500 text-sm">Sin productos</p>
+                  <p className="text-gray-400 text-sm">Sin productos</p>
                 )}
               </div>
 
@@ -181,7 +181,7 @@ export default function CatalogPage() {
         </div>
 
         {categories.length === 0 && (
-          <div className="text-center py-20 text-gray-500">
+          <div className="text-center py-20 text-gray-400">
             <Package size={48} className="mx-auto mb-4 opacity-50"/>
             <p>No hay categorías. Creá una arriba!</p>
           </div>

@@ -1,0 +1,6 @@
+# Política de reporte de vulnerabilidades (RFC 9116)
+Contact: mailto:seguridad@COMPLETAR-DOMINIO-DEL-TALLER
+Expires: 2027-11-08T00:00:00.000Z
+Preferred-Languages: es, en
+Canonical: https://print-hub3-d.vercel.app/.well-known/security.txt
+Policy: https://github.com/joaquinyunes/PrintHub3D/blob/main/docs/SEGURIDAD.md

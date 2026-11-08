@@ -77,7 +77,7 @@ export default function RentabilidadPage() {
             <h1 className="text-4xl font-black tracking-tighter">
               RENTABILIDAD
             </h1>
-            <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.25em] text-gray-500">Margen real · P&amp;L</p>
+            <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.25em] text-gray-400">Margen real · P&amp;L</p>
           </div>
           <div className="flex gap-2">
             <select
@@ -139,7 +139,7 @@ export default function RentabilidadPage() {
 
             {/* Waterfall simple */}
             <div className="rounded-3xl border border-white/5 bg-[#0f0f0f] p-6">
-              <h3 className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-gray-500">De ingresos a ganancia neta</h3>
+              <h3 className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-gray-400">De ingresos a ganancia neta</h3>
               <div className="space-y-2">
                 <Bar2 label="Ingresos" value={t.revenue} total={t.revenue} color="bg-white/70" />
                 <Bar2 label="− Costo de material / mercadería" value={t.cogs} total={t.revenue} color="bg-orange-500" />
@@ -148,7 +148,7 @@ export default function RentabilidadPage() {
                 <Bar2 label="= Ganancia neta" value={t.netProfit} total={t.revenue} color={netPositive ? "bg-emerald-400" : "bg-red-500"} strong />
               </div>
               {data.pipeline.orders > 0 && (
-                <p className="mt-4 border-t border-white/5 pt-3 text-xs text-gray-500">
+                <p className="mt-4 border-t border-white/5 pt-3 text-xs text-gray-400">
                   + {data.pipeline.orders} pedido(s) en curso por {money(data.pipeline.value)} (ganancia estimada {money(data.pipeline.estimatedProfit)}), todavía no facturados.
                 </p>
               )}
@@ -157,7 +157,7 @@ export default function RentabilidadPage() {
             <div className="grid gap-4 lg:grid-cols-2">
               {/* Top productos por ganancia */}
               <div className="rounded-3xl border border-white/5 bg-[#0f0f0f] p-6">
-                <h3 className="mb-4 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-gray-500">
+                <h3 className="mb-4 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-gray-400">
                   <Package className="h-4 w-4" /> Productos que más dejan
                 </h3>
                 {productChart.length > 0 ? (
@@ -174,13 +174,13 @@ export default function RentabilidadPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="py-12 text-center text-sm text-gray-600">Sin ventas en el período</p>
+                  <p className="py-12 text-center text-sm text-gray-400">Sin ventas en el período</p>
                 )}
               </div>
 
               {/* Gastos por categoría */}
               <div className="rounded-3xl border border-white/5 bg-[#0f0f0f] p-6">
-                <h3 className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-gray-500">Gastos por categoría</h3>
+                <h3 className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-gray-400">Gastos por categoría</h3>
                 {data.expensesByCategory.length > 0 ? (
                   <ResponsiveContainer width="100%" height={260}>
                     <PieChart>
@@ -196,7 +196,7 @@ export default function RentabilidadPage() {
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="py-12 text-center text-sm text-gray-600">Sin gastos en el período</p>
+                  <p className="py-12 text-center text-sm text-gray-400">Sin gastos en el período</p>
                 )}
               </div>
             </div>
@@ -204,7 +204,7 @@ export default function RentabilidadPage() {
             {/* Tabla de márgenes */}
             <div className="overflow-x-auto rounded-3xl border border-white/5 bg-[#0f0f0f]">
               <table className="w-full text-left text-sm">
-                <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-gray-500">
+                <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-gray-400">
                   <tr>
                     <th className="px-4 py-3">Producto</th>
                     <th className="px-4 py-3 text-right">Unid.</th>
@@ -235,7 +235,7 @@ export default function RentabilidadPage() {
                   ))}
                   {data.products.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-4 py-10 text-center text-gray-600">
+                      <td colSpan={6} className="px-4 py-10 text-center text-gray-400">
                         Todavía no hay ventas registradas en este período.
                       </td>
                     </tr>
@@ -253,11 +253,11 @@ export default function RentabilidadPage() {
 function Kpi({ label, value, icon: Icon, accent, sub }: any) {
   return (
     <div className="rounded-3xl border border-white/5 bg-[#0f0f0f] p-5">
-      <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.15em] text-gray-500">
+      <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.15em] text-gray-400">
         <Icon className="h-3.5 w-3.5" /> {label}
       </p>
       <p className={`mt-2 text-2xl font-black tracking-tight ${accent}`}>{value}</p>
-      {sub && <p className="mt-1 text-[10px] uppercase tracking-wide text-gray-600">{sub}</p>}
+      {sub && <p className="mt-1 text-[10px] uppercase tracking-wide text-gray-400">{sub}</p>}
     </div>
   );
 }

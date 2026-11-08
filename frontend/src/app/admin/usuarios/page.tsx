@@ -91,7 +91,7 @@ export default function UsuariosPage() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-white">Usuarios del panel</h1>
-            <p className="text-xs text-gray-600">Dueño (admin) y operarios (staff). Los operarios no ven caja ni configuración.</p>
+            <p className="text-xs text-gray-400">Dueño (admin) y operarios (staff). Los operarios no ven caja ni configuración.</p>
           </div>
         </div>
         <button
@@ -118,7 +118,7 @@ export default function UsuariosPage() {
           >
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} copiar
           </button>
-          <button onClick={() => setTempPass(null)} className="ml-auto text-gray-500 hover:text-white">
+          <button onClick={() => setTempPass(null)} className="ml-auto text-gray-400 hover:text-white">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -131,7 +131,7 @@ export default function UsuariosPage() {
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-white/5">
           <table className="w-full text-left text-sm">
-            <thead className="bg-white/5 text-[11px] uppercase tracking-wider text-gray-500">
+            <thead className="bg-white/5 text-[11px] uppercase tracking-wider text-gray-400">
               <tr>
                 <th className="px-4 py-3">Usuario</th>
                 <th className="px-4 py-3">Rol</th>
@@ -144,7 +144,7 @@ export default function UsuariosPage() {
                 <tr key={u.id} className="hover:bg-white/[0.02]">
                   <td className="px-4 py-3">
                     <p className="font-bold text-white">{u.name}</p>
-                    <p className="text-xs text-gray-500">{u.email}</p>
+                    <p className="text-xs text-gray-400">{u.email}</p>
                   </td>
                   <td className="px-4 py-3">
                     <select
@@ -160,7 +160,7 @@ export default function UsuariosPage() {
                     <button
                       onClick={() => patch(u.id, { active: !u.active })}
                       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
-                        u.active ? "bg-green-500/10 text-green-400" : "bg-gray-500/10 text-gray-500"
+                        u.active ? "bg-green-500/10 text-green-400" : "bg-gray-500/10 text-gray-400"
                       }`}
                     >
                       {u.active ? <ShieldCheck className="h-3.5 w-3.5" /> : <UserIcon className="h-3.5 w-3.5" />}
@@ -168,11 +168,11 @@ export default function UsuariosPage() {
                     </button>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => patch(u.id, { resetPassword: true })} className="text-xs text-gray-500 hover:text-tone-amber">
+                    <button onClick={() => patch(u.id, { resetPassword: true })} className="text-xs text-gray-400 hover:text-tone-amber">
                       Resetear clave
                     </button>
                     <span className="mx-2 text-white/10">·</span>
-                    <button onClick={() => remove(u.id)} className="text-xs text-gray-500 hover:text-tone-red">
+                    <button onClick={() => remove(u.id)} className="text-xs text-gray-400 hover:text-tone-red">
                       Eliminar
                     </button>
                   </td>
@@ -188,7 +188,7 @@ export default function UsuariosPage() {
           <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-tone-dark p-6">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-black text-white">Nuevo usuario</h2>
-              <button onClick={() => setShowNew(false)} className="text-gray-500 hover:text-white">
+              <button onClick={() => setShowNew(false)} className="text-gray-400 hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>

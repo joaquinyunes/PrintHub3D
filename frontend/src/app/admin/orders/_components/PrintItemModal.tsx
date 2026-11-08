@@ -21,7 +21,7 @@ export default function PrintItemModal({
         <h2 className="text-lg font-black text-white uppercase tracking-tight mb-2">
           Elegir ítem a imprimir
         </h2>
-        <p className="text-[11px] text-gray-500 uppercase tracking-widest mb-4">
+        <p className="text-[11px] text-gray-400 uppercase tracking-widest mb-4">
           Pedido: <span className="text-white">{order.clientName}</span>
         </p>
         <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
@@ -42,7 +42,7 @@ export default function PrintItemModal({
               >
                 <div>
                   <div className="text-sm font-bold text-white">{item.productName}</div>
-                  <div className="text-[11px] text-gray-500 font-mono">
+                  <div className="text-[11px] text-gray-400 font-mono">
                     x{item.quantity} {printed && '· IMPRESO'}
                   </div>
                 </div>
@@ -58,7 +58,7 @@ export default function PrintItemModal({
         <div className="flex justify-end gap-3 pt-2">
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-xl text-[11px] font-bold text-gray-500 hover:text-white uppercase tracking-widest"
+            className="px-5 py-2 rounded-xl text-[11px] font-bold text-gray-400 hover:text-white uppercase tracking-widest"
           >
             Cerrar
           </button>

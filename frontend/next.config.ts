@@ -20,14 +20,16 @@ const apiOrigin = (() => {
   }
 })();
 
-// Content-Security-Policy en modo SOLO REPORTE: Next.js inyecta scripts en línea,
-// así que sigue permitido 'unsafe-inline' hasta pasar a nonces. Para activarla,
-// cambiar "Content-Security-Policy-Report-Only" por "Content-Security-Policy".
-// Los héroes 3D (three.js) piden blob: y wasm; los archivos subidos vienen de la
-// API o de Vercel Blob; el QR del panel se pide a api.qrserver.com.
-const cspReportOnly = [
+// Content-Security-Policy EN MODO BLOQUEO (S2). Límite conocido: Next.js inyecta scripts en línea y las
+// páginas son estáticas, así que script-src conserva 'unsafe-inline' hasta pasar a nonces (requiere renderizado
+// dinámico de todo el sitio; ver docs/SEGURIDAD.md). El resto de las directivas sí cierra: sin eval en producción,
+// sin objetos/embeds, sin <base> ajeno, formularios y conexiones solo al propio sitio y a la API.
+// Los héroes 3D (three.js) piden blob: y wasm; los archivos subidos vienen de la API o de Vercel Blob; el QR del panel
+// se pide a api.qrserver.com. En desarrollo Next necesita eval para el hot reload.
+const isDev = process.env.NODE_ENV !== "production";
+const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${apiOrigin} https://*.public.blob.vercel-storage.com https://api.qrserver.com`,
   "font-src 'self' data:",
@@ -48,9 +50,7 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
-  // Solo frame-ancestors aplicado (equivale a X-Frame-Options); el resto va en modo reporte.
-  { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
-  { key: "Content-Security-Policy-Report-Only", value: cspReportOnly },
+  { key: "Content-Security-Policy", value: csp },
 ];
 
 const nextConfig: NextConfig = {

@@ -25,7 +25,7 @@ export default function DeliverModal({
         <h2 className="text-xl font-bold text-white mb-2 uppercase tracking-wide flex items-center gap-2">
           <CheckCircle2 className="text-emerald-500" /> Confirmar Entrega
         </h2>
-        <p className="text-xs text-gray-500 mb-6 leading-relaxed">
+        <p className="text-xs text-gray-400 mb-6 leading-relaxed">
           El pedido se marcará como entregado y se guardará en ventas.
         </p>
         <div className="bg-[#141414] p-5 rounded-xl border border-white/5 mb-6 space-y-4">
