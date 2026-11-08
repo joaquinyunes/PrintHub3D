@@ -12,7 +12,7 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -32,7 +32,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -57,7 +57,7 @@ jobs:
       run:
         working-directory: ${{ matrix.project }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -69,7 +69,7 @@ jobs:
     name: Builds que no esconden errores
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           if git grep -nE '(build|buildCommand|RUN npm run build|tsc)[^\n]*(\|\| *true|noEmitOnError +false)' -- render.yaml 'backend/Dockerfile' 'frontend/Dockerfile' 'backend/package.json' 'frontend/package.json' package.json docker-compose*.yml; then
             echo "Un build oculta errores (|| true / --noEmitOnError false)"; exit 1
@@ -79,7 +79,7 @@ jobs:
     name: Escaneo de secretos
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Busca formas de claves reales en los archivos versionados. Imprime solo
       # archivo, línea y tipo: nunca el valor. Si falla, rotar la clave antes de borrarla.
       - name: Buscar patrones de secretos
@@ -106,7 +106,7 @@ jobs:
     name: Secretos en el historial
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@v2
