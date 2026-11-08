@@ -63,6 +63,18 @@ jobs:
           node-version: 20
       - run: npm audit --omit=dev --audit-level=high
 
+  # H3: un build que termina en `|| true` o `--noEmitOnError false` esconde errores de TypeScript.
+  # El build de Render vive en su panel; acá se cuida lo que está versionado (render.yaml, Dockerfiles, package.json).
+  builds-sin-parche:
+    name: Builds que no esconden errores
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          if git grep -nE '(build|buildCommand|RUN npm run build|tsc)[^\n]*(\|\| *true|noEmitOnError +false)' -- render.yaml 'backend/Dockerfile' 'frontend/Dockerfile' 'backend/package.json' 'frontend/package.json' package.json docker-compose*.yml; then
+            echo "Un build oculta errores (|| true / --noEmitOnError false)"; exit 1
+          fi
+
   secretos:
     name: Escaneo de secretos
     runs-on: ubuntu-latest

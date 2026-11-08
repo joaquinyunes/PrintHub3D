@@ -32,7 +32,7 @@ Fecha: 08/11/2026. Revisión hecha leyendo el código nuevo de esta etapa con la
 
 ## Dependencias (08/11/2026)
 - Backend: **moderadas restantes: `mercadopago` (SDK 2.x) → `uuid`**. Subir a `mercadopago@3.6` es un cambio mayor sobre el cobro; no se hizo sin probar contra Mercado Pago real. No son críticas ni altas.
-- Se pasó a `zod` 4 y `nodemailer` 10 (cambios mayores) corrigiendo el código y con los 149 tests del backend en verde.
+- Se pasó a `zod` 4 y `nodemailer` 10 (cambios mayores) corrigiendo el código y con los 155 tests del backend en verde.
 - `xlsx` (con vulnerabilidades altas sin parche en npm) se **reemplazó** por `read-excel-file` en la pantalla «Importar planilla». ⚠️ No se probó con la planilla real del taller (solo compila y el flujo de la pantalla); probar con el `.xlsx` verdadero antes de usarla.
 
 ## Cómo reportar una vulnerabilidad

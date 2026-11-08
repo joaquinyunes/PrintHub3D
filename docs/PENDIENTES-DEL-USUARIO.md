@@ -3,10 +3,10 @@
 Lo que **no** pude hacer (o no corresponde que haga yo), en orden de urgencia.
 
 ## Antes del viernes 13/11 (para poder mostrarlo)
-1. **Decidir cómo se publica este trabajo.** Quedó en la rama `feat/venta-10k` (avance directo desde `main`) y **no** en `main` para que no se despliegue sola en Render/Vercel sin que la veas. Para publicarlo: abrir un PR `feat/venta-10k → main` y mirar que los 5 trabajos de CI queden verdes (backend, frontend, audit, secretos, secretos-historial).
+1. **Mirar que el CI quede verde en `main`** (backend, frontend, audit, builds-sin-parche, secretos, secretos-historial): el trabajo ya está en `main` y Render/Vercel pueden desplegarlo solos. Ojo con lo que cambia en producción: CSP en bloqueo, zod/nodemailer/mongoose mayores, sesión de 7 días.
 2. **Completar el contacto de seguridad**: `frontend/public/.well-known/security.txt` → `Contact:` con un correo de seguridad del taller (dejé un marcador a propósito; `scripts/smoke-test.mjs` falla mientras esté sin completar).
 3. **Enlace público roto (H12)**: `print-hub3-d.vercel.app` da 503. Dejar **un** proyecto de Vercel de los tres (`print-hub3d`, `printhub3d`, `print-hub3-d`) y borrar los otros; el archivo `frontend/vercel.json` ya ignora ramas `dependabot/*`. Redeploy del front en Render (hoy sin encabezados de seguridad) y del backend con Atlas.
-4. **Cambiar el build de Render del backend** a `npm ci && npm run build` (el `|| true` está en el panel de Render, no en el repo; no tengo acceso a tu cuenta de Render: me pidió elegir un espacio de trabajo y no toqué nada). El archivo `render.yaml` ya lo trae bien para un Blueprint nuevo.
+4. **Cambiar el build de Render del backend** a `npm ci && npm run build` (el `|| true` está en el panel de Render, no en el repo; no tengo acceso a tu cuenta: la herramienta de Render solo deja listar y cambiar variables, no el comando de build). `render.yaml` ya lo trae bien para un Blueprint nuevo y el CI (`builds-sin-parche`) falla si alguien versiona un build con `|| true`.
 5. **Probar la planilla real** en «Importar planilla»: reemplacé la librería `xlsx` (con vulnerabilidades sin parche) por `read-excel-file`; compila pero no la probé con tu `.xlsx` de verdad.
 
 ## Decisiones tuyas (no son técnicas)
@@ -16,7 +16,7 @@ Lo que **no** pude hacer (o no corresponde que haga yo), en orden de urgencia.
 
 ## Cuentas y credenciales (se piden al final, como pide el plan)
 9. **Mercado Pago** (`MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET`), **WhatsApp/Twilio**, **factura con proveedor certificado**: sin probar en producción.
-10. **H11 insumos + Google Sheets**: cuenta de servicio de Google, planilla compartida e id (`docs/INSUMOS-SHEETS.md`).
+10. **H11 insumos + Google Sheets**: la API y la sincronización (solo lectura, con informe previo) ya están hechas y probadas con una planilla falsa. Falta la cuenta de servicio de Google, compartir la planilla y cargar `GOOGLE_SHEETS_ID`, `GOOGLE_SHEETS_RANGE`, `GOOGLE_SERVICE_ACCOUNT_JSON`; después probar `POST /api/supplies/sync` con la planilla real (`docs/INSUMOS-SHEETS.md`). Falta también la pantalla.
 11. **Sentry o el webhook de alertas** (`ALERT_WEBHOOK_URL`) y **monitores de uptime** (`docs/MONITOREO.md`).
 
 ## Con otras personas o herramientas

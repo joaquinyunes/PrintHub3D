@@ -43,6 +43,7 @@ import importRoutes from './modules/import/import.routes';
 import uploadsRoutes from './routes/uploads.routes';
 import operatorRoutes from './modules/operators/operator.routes';
 import auditRoutes from './modules/audit/audit.routes';
+import supplyRoutes from './modules/supplies/supply.routes';
 import clientPrivacyRoutes from './modules/clients/client.privacy';
 
 /**
@@ -101,6 +102,7 @@ export const createApp = (): Express => {
   app.use('/api/production-queue', productionQueueRoutes);
   app.use('/api/operators', operatorRoutes);
   app.use('/api/audit', auditRoutes);
+  app.use('/api/supplies', supplyRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/auth', magicAuthRoutes);
   app.use('/api/products', productRoutes);
