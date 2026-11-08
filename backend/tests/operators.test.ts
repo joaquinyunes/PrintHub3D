@@ -45,9 +45,9 @@ describe('operarios con PIN', () => {
     expect(JSON.stringify(list.body)).not.toMatch(/pin|\$2/i);
   });
 
-  it('PIN correcto da token; incorrecto 401 con mensaje genérico', async () => {
+  it('PIN correcto da token; incorrecto 403 con mensaje genérico', async () => {
     const id = await addOp(A, 'Marcos', '5938');
-    expect((await pinLogin(A, id, '0000')).status).toBe(401);
+    expect((await pinLogin(A, id, '0000')).status).toBe(403);
     const ok = await pinLogin(A, id, '5938');
     expect(ok.status).toBe(200);
     expect(ok.body.token).toBeTruthy();
@@ -55,7 +55,7 @@ describe('operarios con PIN', () => {
 
   it('5 PIN incorrectos bloquean al operario, aun con el PIN bueno; el admin lo destraba cambiando el PIN', async () => {
     const id = await addOp(A, 'Nora', '7261');
-    for (let i = 0; i < 4; i++) expect((await pinLogin(A, id, '1111')).status).toBe(401);
+    for (let i = 0; i < 4; i++) expect((await pinLogin(A, id, '1111')).status).toBe(403);
     expect((await pinLogin(A, id, '1111')).status).toBe(423);
     expect((await pinLogin(A, id, '7261')).status).toBe(423);
     const reset = await request(app).patch(`/api/operators/${id}`).set('Authorization', bearer('admin', A)).send({ pin: '8352' });
@@ -65,7 +65,7 @@ describe('operarios con PIN', () => {
 
   it('aislamiento por taller: un operario del taller A no existe para el taller B', async () => {
     const id = await addOp(A, 'Omar', '6184');
-    expect((await pinLogin(B, id, '6184')).status).toBe(401);
+    expect((await pinLogin(B, id, '6184')).status).toBe(403);
     const listB = await request(app).get('/api/operators').set('Authorization', bearer('staff', B));
     expect(listB.body.items.map((o: any) => o.name)).not.toContain('Omar');
     const patchB = await request(app).patch(`/api/operators/${id}`).set('Authorization', bearer('admin', B)).send({ active: false });
@@ -78,7 +78,8 @@ describe('operarios con PIN', () => {
     const { token } = (await pinLogin(A, idA, '3917')).body;
     const pieceB = await newPiece(B, 'OPS-B1');
     const res = await request(app).patch(`/api/production-queue/pieces/${pieceB}/advance`).set('Authorization', bearer('staff', B)).set('x-operator-token', token);
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe('OPERATOR_TOKEN_INVALID');
   });
 
   it('con operarios en el taller, el staff necesita PIN para avanzar y queda registrado quién fue', async () => {
@@ -123,10 +124,11 @@ describe('operarios con PIN', () => {
     const id = await addOp(A, 'Ulises', '3085');
     const { token } = (await pinLogin(A, id, '3085')).body;
     await request(app).patch(`/api/operators/${id}`).set('Authorization', bearer('admin', A)).send({ active: false });
-    expect((await pinLogin(A, id, '3085')).status).toBe(401);
+    expect((await pinLogin(A, id, '3085')).status).toBe(403);
     const pieceId = await newPiece(A, 'OPS-A3');
     const res = await request(app).patch(`/api/production-queue/pieces/${pieceId}/advance`).set('Authorization', bearer('staff', A)).set('x-operator-token', token);
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe('OPERATOR_TOKEN_INVALID');
   });
 
   it('el registro de auditoría no se puede modificar ni borrar', async () => {

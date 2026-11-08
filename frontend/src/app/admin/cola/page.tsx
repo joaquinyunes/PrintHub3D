@@ -146,7 +146,7 @@ export default function ColaPage() {
 }
 
 function PinDialog({ onClose, onIdentified }: { onClose: () => void; onIdentified: (name: string) => void }) {
-  const [ops, setOps] = useState<Operator[]>([]);
+  const [ops, setOps] = useState<Operator[] | null>(null); // null = cargando
   const [opId, setOpId] = useState("");
   const [pin, setPin] = useState("");
   const [msg, setMsg] = useState("");
@@ -160,6 +160,8 @@ function PinDialog({ onClose, onIdentified }: { onClose: () => void; onIdentifie
         const items: Operator[] = (await res.json()).items;
         setOps(items);
         if (items.length === 1) setOpId(items[0].id);
+      } else {
+        setOps([]);
       }
     })();
   }, []);
@@ -195,7 +197,9 @@ function PinDialog({ onClose, onIdentified }: { onClose: () => void; onIdentifie
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-labelledby="pin-title">
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-gray-900 p-6">
         <h2 id="pin-title" className="text-lg font-bold">¿Quién imprime?</h2>
-        {ops.length === 0 ? (
+        {ops === null ? (
+          <p className="text-sm text-gray-300">Cargando operarios…</p>
+        ) : ops.length === 0 ? (
           <p className="text-sm text-gray-300">Todavía no hay operarios cargados. El administrador los crea en «Operarios».</p>
         ) : (
           <>

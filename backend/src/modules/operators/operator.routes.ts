@@ -64,7 +64,8 @@ router.patch('/:id', adminOnly, zodValidator({ body: UpdateSchema }), async (req
 // Identificarse con PIN → token de operario (12 h) que va en `x-operator-token`.
 router.post('/login', pinLimiter, zodValidator({ body: LoginSchema }), async (req: Request, res: Response) => {
   const { operatorId, pin } = req.body;
-  const fail = () => res.status(401).json({ message: 'Operario o PIN incorrecto.' });
+  // 403 y no 401: el 401 del front significa "sesión vencida" y manda al login.
+  const fail = () => res.status(403).json({ message: 'Operario o PIN incorrecto.', code: 'PIN_INVALID' });
   if (!mongoose.isValidObjectId(operatorId)) return fail();
   // Siempre dentro del taller de la sesión: un operario de otro taller es "no existe".
   const op = await Operator.findOne({ _id: operatorId, tenantId: req.tenantId, active: true }).select('+pinHash');

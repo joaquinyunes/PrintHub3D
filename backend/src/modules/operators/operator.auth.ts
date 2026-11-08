@@ -48,7 +48,7 @@ export const readOperator = async (req: Request, res: Response, next: NextFuncti
     req.operator = { id: String(op._id), name: op.name };
     next();
   } catch {
-    res.status(401).json({ message: 'Identificación de operario inválida o vencida. Ingresá tu PIN de nuevo.', code: 'OPERATOR_TOKEN_INVALID' });
+    res.status(403).json({ message: 'Identificación de operario inválida o vencida. Ingresá tu PIN de nuevo.', code: 'OPERATOR_TOKEN_INVALID' });
   }
 };
 
