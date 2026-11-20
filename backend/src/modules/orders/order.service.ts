@@ -1,5 +1,7 @@
 import { OrderRepository } from '../../repositories/order.repository';
 import { autoCreatePieces } from '../production/pieces.service';
+import Product from '../products/product.model';
+import Order from './order.model';
 import { ProductRepository } from '../../repositories/product.repository';
 import logger from '../../config/logger';
 import Sale from '../sales/sale.model';
@@ -144,15 +146,27 @@ export const OrderService = {
     let calculatedTotal = 0;
     let calculatedCost = 0;
 
-    // Validar stock disponible para los ítems de inventario (no aplica a personalizados).
+    // Cantidad pedida POR PRODUCTO (si el mismo producto viene en dos renglones, se suman: no se esquiva el tope).
+    const wanted = new Map<string, number>();
     for (const item of items) {
       if (item.productId && !item.isCustom) {
-        const product = await productRepository.findById(item.productId, tenantId).catch(() => null);
-        if (product && typeof product.stock === 'number' && product.stock < Number(item.quantity || 0)) {
-          throw new Error(
-            `Stock insuficiente de "${product.name}": disponible ${product.stock}, pedido ${item.quantity}`,
-          );
-        }
+        const key = String(item.productId);
+        wanted.set(key, (wanted.get(key) ?? 0) + Number(item.quantity || 0));
+      }
+    }
+
+    // Validar disponibilidad (mensaje claro). La reserva real y atómica se hace más abajo.
+    const names = new Map<string, string>();
+    for (const [pid, qty] of wanted) {
+      const product = await productRepository.findById(pid, tenantId).catch(() => null);
+      if (!product) continue; // el armado de ítems informa "ya no está disponible"
+      names.set(pid, product.name);
+      // Visitante anónimo: solo lo que el catálogo público muestra; un producto oculto/borrador no se vende.
+      if (!trustClientPrices && (product as any).isPublic !== true) {
+        throw new AppError('Uno de los productos del pedido ya no está disponible', 409);
+      }
+      if (typeof product.stock === 'number' && product.stock < qty) {
+        throw new Error(`Stock insuficiente de "${product.name}": disponible ${product.stock}, pedido ${qty}`);
       }
     }
 
@@ -197,8 +211,25 @@ export const OrderService = {
         : buildRandomTrackingCode();
     const trackingCode = await ensureUniqueTrackingCode(trackingBase);
 
+    // Reserva ATÓMICA de stock: `stock >= cantidad` y el descuento ocurren en una sola operación, así que dos pedidos
+    // simultáneos nunca venden la misma unidad ni dejan el stock negativo. Si algo falla, se devuelve lo reservado.
+    const reserved: Array<{ pid: string; qty: number; name: string; previousStock: number; newStock: number }> = [];
+    const releaseStock = async () => {
+      for (const r of reserved) await Product.updateOne({ _id: r.pid, tenantId }, { $inc: { stock: r.qty } }).catch((e) => logger.error('No se pudo devolver el stock reservado', e));
+    };
+    let newOrder: any;
+    try {
+      for (const [pid, qty] of wanted) {
+        const updated: any = await Product.findOneAndUpdate({ _id: pid, tenantId, stock: { $gte: qty } }, { $inc: { stock: -qty } }, { returnDocument: 'after' });
+        if (!updated) {
+          const current: any = await Product.findOne({ _id: pid, tenantId }).lean();
+          throw new Error(`Stock insuficiente de "${names.get(pid) ?? current?.name ?? 'producto'}": disponible ${current?.stock ?? 0}, pedido ${qty}`);
+        }
+        reserved.push({ pid, qty, name: updated.name, previousStock: updated.stock + qty, newStock: updated.stock });
+      }
+
     // Crear orden
-    const newOrder = await orderRepository.create({
+    newOrder = await orderRepository.create({
       clientName,
       origin: origin || 'Local',
       paymentMethod: paymentMethod || 'Efectivo',
@@ -216,33 +247,28 @@ export const OrderService = {
       status: 'pending',
       tenantId,
     } as any);
+    } catch (e) {
+      await releaseStock();
+      throw e;
+    }
 
-    // Registrar movimientos de inventario si hay productos asociados
-    for (const item of enrichedItems) {
-      if (item.productId && !item.isCustom) {
-        try {
-          const product = await productRepository.findById(item.productId, tenantId);
-          if (product) {
-            const previousStock = product.stock;
-            product.stock -= item.quantity;
-            await product.save();
-
-            await new InventoryMovement({
-              tenantId,
-              productId: product._id,
-              productName: product.name,
-              type: 'order_consumption',
-              quantity: item.quantity,
-              previousStock,
-              newStock: product.stock,
-              unit: 'unidades',
-              reason: `Orden ${trackingCode}`,
-              orderId: (newOrder as any)._id?.toString(),
-            }).save();
-          }
-        } catch (invError) {
-          logger.error('Error actualizando inventario:', invError);
-        }
+    // Registrar movimientos de inventario (el descuento ya se hizo en la reserva).
+    for (const r of reserved) {
+      try {
+        await new InventoryMovement({
+          tenantId,
+          productId: r.pid,
+          productName: r.name,
+          type: 'order_consumption',
+          quantity: r.qty,
+          previousStock: r.previousStock,
+          newStock: r.newStock,
+          unit: 'unidades',
+          reason: `Orden ${trackingCode}`,
+          orderId: (newOrder as any)._id?.toString(),
+        }).save();
+      } catch (invError) {
+        logger.error('Error registrando el movimiento de inventario:', invError);
       }
     }
 
@@ -291,7 +317,9 @@ export const OrderService = {
       throw new Error('Pedido no encontrado');
     }
 
-    if ((order as any).isSaleRegistered) {
+    // Reclamo atómico: dos clics/requests simultáneos no registran dos ventas.
+    const claimed = await Order.findOneAndUpdate({ _id: orderId, tenantId, isSaleRegistered: { $ne: true } }, { $set: { isSaleRegistered: true } });
+    if (!claimed) {
       throw new Error('Venta ya registrada');
     }
 
@@ -324,11 +352,16 @@ export const OrderService = {
       createdAt: new Date(),
     });
 
-    await newSale.save();
+    try {
+      await newSale.save();
+    } catch (e) {
+      await Order.updateOne({ _id: orderId, tenantId }, { $set: { isSaleRegistered: false } });
+      throw e;
+    }
 
-    await orderRepository.update(orderId, { 
-      status: 'delivered', 
-      isSaleRegistered: true 
+    await orderRepository.update(orderId, {
+      status: 'delivered',
+      isSaleRegistered: true
     } as any, tenantId);
 
     const updatedOrder = await orderRepository.findById(orderId, tenantId);

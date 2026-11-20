@@ -36,6 +36,7 @@ export interface IOrder extends Document {
     finishedAt?: Date;
     adminNotified?: boolean;
     isSaleRegistered: boolean;
+    processedPayments: string[]; // ids de pago de Mercado Pago ya acreditados (idempotencia del webhook)
     importBatch?: string;
     customerSatisfaction?: number;
     customerFeedback?: string;
@@ -53,6 +54,7 @@ const OrderSchema: Schema = new Schema({
         default: 'pending'
     },
     importBatch: { type: String, index: true },
+    processedPayments: { type: [String], default: [], select: false },
     paymentMethod: { type: String, default: "Efectivo" },
     deposit: { type: Number, default: 0 },
     total: { type: Number, required: true },

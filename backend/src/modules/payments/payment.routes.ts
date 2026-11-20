@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Order from '../orders/order.model';
 import Sale from '../sales/sale.model';
 import { OrderService } from '../orders/order.service';
@@ -112,38 +113,68 @@ router.post('/webhook', webhookLimiter, async (req: Request, res: Response) => {
     const payment: any = await MercadoPagoService.getPayment(dataId);
     if (!payment) return res.status(200).json({ ok: true });
 
-    const order: any = await Order.findOne({ _id: payment.external_reference });
+    const ref = String(payment.external_reference || '');
+    if (!mongoose.isValidObjectId(ref)) {
+      logger.warn('Webhook MP con external_reference inválida');
+      return res.status(200).json({ ok: true });
+    }
+    const order: any = await Order.findOne({ _id: ref });
     if (!order) {
-      logger.warn(`Orden no encontrada para webhook MP: ${payment.external_reference}`);
+      logger.warn(`Orden no encontrada para webhook MP: ${ref}`);
       return res.status(200).json({ ok: true });
     }
 
     if (payment.status === 'approved') {
-      const amount = Number(payment.transaction_amount || 0);
-      const isBalance = payment.metadata?.balance === true || payment.metadata?.balance === 'true';
-      order.paymentMethod = 'MercadoPago';
-      // Saldo: acumula sobre lo ya pagado. Seña/total: fija el monto.
-      order.deposit = isBalance
-        ? Math.min(Number(order.total || 0), Number(order.deposit || 0) + amount)
-        : amount || order.deposit;
-
-      if (!order.isSaleRegistered) {
-        await new Sale({
-          productName: `Pedido web: ${order.clientName}`,
-          productId: order._id,
-          orderId: order._id,
-          quantity: 1,
-          price: order.total,
-          cost: 0,
-          profit: order.total,
-          category: 'Web',
-          tenantId: order.tenantId,
-        }).save();
-        order.isSaleRegistered = true;
+      // Idempotencia: cada pago de MP se acredita UNA vez. El reclamo es atómico, así que cinco notificaciones
+      // simultáneas (o un reintento) del mismo pago no duplican ni la seña/saldo ni la venta.
+      const paymentKey = String(dataId);
+      const claimed = await Order.findOneAndUpdate({ _id: ref, processedPayments: { $ne: paymentKey } }, { $push: { processedPayments: paymentKey } });
+      if (!claimed) {
+        logger.info(`Pago ${paymentKey} ya procesado: se ignora el aviso repetido`);
+        return res.status(200).json({ ok: true });
       }
 
-      await order.save();
-      logger.info(`Pago aprobado y venta registrada para orden ${order.trackingCode}`);
+      try {
+        const amountRaw = Number(payment.transaction_amount || 0);
+        const amount = Number.isFinite(amountRaw) && amountRaw > 0 ? amountRaw : 0;
+        const isBalance = payment.metadata?.balance === true || payment.metadata?.balance === 'true';
+        const cur = { $ifNull: ['$deposit', 0] };
+        // Saldo: suma sobre lo ya pagado. Seña/total: queda el mayor monto abonado. Siempre con tope en el total.
+        // Todo en una sola operación atómica (dos pagos distintos a la vez no se pisan).
+        const updated: any = await Order.findOneAndUpdate(
+          { _id: ref },
+          [{ $set: { paymentMethod: 'MercadoPago', deposit: amount ? { $min: ['$total', isBalance ? { $add: [cur, amount] } : { $max: [cur, amount] }] } : cur } }],
+          { returnDocument: 'after', updatePipeline: true },
+        );
+
+        // La venta se registra recién cuando el pedido quedó pagado por completo; una seña no es una venta completa.
+        if (updated && Number(updated.total) > 0 && Number(updated.deposit) >= Number(updated.total)) {
+          const claimSale = await Order.findOneAndUpdate({ _id: ref, isSaleRegistered: { $ne: true } }, { $set: { isSaleRegistered: true } });
+          if (claimSale) {
+            try {
+              await new Sale({
+                productName: `Pedido web: ${updated.clientName}`,
+                productId: updated._id,
+                orderId: updated._id,
+                quantity: 1,
+                price: updated.total,
+                cost: 0,
+                profit: updated.total,
+                category: 'Web',
+                tenantId: updated.tenantId,
+              }).save();
+            } catch (e) {
+              await Order.updateOne({ _id: ref }, { $set: { isSaleRegistered: false } });
+              throw e;
+            }
+          }
+        }
+        logger.info(`Pago aprobado acreditado para orden ${order.trackingCode}`);
+      } catch (e) {
+        // No se pudo aplicar: se libera el reclamo para que el reintento de MP lo vuelva a intentar.
+        await Order.updateOne({ _id: ref }, { $pull: { processedPayments: paymentKey } }).catch(() => undefined);
+        throw e;
+      }
 
       if (order.customerContact) {
         await enqueueNotification({
@@ -167,7 +198,8 @@ router.post('/webhook', webhookLimiter, async (req: Request, res: Response) => {
 // Estado de pago para el frontend (pantalla de confirmacion)
 router.get('/status/:orderId', paymentLimiter, async (req: Request, res: Response) => {
   try {
-    const order: any = await Order.findOne({ _id: req.params.orderId });
+    const oid = String(req.params.orderId);
+    const order: any = mongoose.isValidObjectId(oid) ? await Order.findOne({ _id: oid }) : null;
     if (!order) return res.status(404).json({ message: 'Orden no encontrada' });
 
     res.json({
@@ -177,7 +209,7 @@ router.get('/status/:orderId', paymentLimiter, async (req: Request, res: Respons
       deposit: order.deposit,
       total: order.total,
       status: order.status,
-      paid: !!order.isSaleRegistered,
+      paid: Number(order.total) > 0 && Number(order.deposit || 0) >= Number(order.total),
     });
   } catch (error: any) {
     logger.error('Error obteniendo estado de pago:', error);

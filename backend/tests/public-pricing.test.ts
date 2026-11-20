@@ -16,6 +16,7 @@ const makeProduct = (over: Record<string, unknown> = {}): Promise<any> =>
     cost: 1500,
     stock: 20,
     tenantId: TENANT,
+    isPublic: true, // la tienda pública solo vende lo publicado
     ...over,
   });
 

@@ -54,6 +54,10 @@ router.post('/cost', protect, withTenant, staffOrAdmin, zodValidator({ body: Cos
 router.post('/', publicWriteLimiter, async (req: Request, res: Response) => {
   try {
     const { clientName, contact, notes, fileUrl } = req.body;
+    // Solo http(s) o un archivo subido: este enlace termina en el panel del taller.
+    if (fileUrl && !(/^\/uploads\/[\w.-]+$/.test(String(fileUrl)) || /^https?:\/\/[^\s]{1,490}$/i.test(String(fileUrl)))) {
+      return res.status(400).json({ message: 'El enlace al archivo debe empezar con http:// o https://' });
+    }
     if (!clientName || !contact) {
       return res.status(400).json({ message: 'Nombre y contacto son obligatorios' });
     }

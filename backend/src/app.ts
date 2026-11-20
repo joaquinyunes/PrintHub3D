@@ -81,6 +81,25 @@ export const createApp = (): Express => {
   app.use(limiter);
   app.use(express.json({ limit: '15mb' })); // 15mb: la importación de la planilla manda cientos de filas en un POST
   app.use(cookieParser());
+
+  // CSRF: la sesión viaja en una cookie (SameSite=None en producción, porque web y API están en dominios distintos),
+  // así que otro sitio podría disparar un POST/PATCH/DELETE "simple" con la cookie de la persona logueada. Si la
+  // sesión llega por cookie (sin Authorization) y el pedido trae un Origin/Referer que no es de nuestro front, se rechaza.
+  // Los webhooks y las llamadas con Bearer no usan cookie, no se ven afectados.
+  const trustedOrigins = new Set([...appConfig.corsOrigins, new URL(appConfig.apiPublicUrl).origin]);
+  const originOf = (value: string | undefined): string | null => {
+    if (!value) return null;
+    try { return new URL(value).origin; } catch { return 'invalid'; }
+  };
+  app.use((req, res, next) => {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+    if (!req.cookies?.token || req.header('authorization')) return next();
+    const from = originOf(req.header('origin')) ?? originOf(req.header('referer'));
+    if (from && !trustedOrigins.has(from)) {
+      return res.status(403).json({ message: 'Origen no permitido.' });
+    }
+    next();
+  });
   app.use(sanitizeInput);
 
   // Archivos subidos: primero el disco (legado), después GridFS (persistente).

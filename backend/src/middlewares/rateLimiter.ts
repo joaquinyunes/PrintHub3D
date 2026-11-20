@@ -29,6 +29,16 @@ export const paymentLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
+// Código de acceso por email (6 dígitos): contador propio, para que los intentos de adivinarlo no se mezclen con los del login.
+export const magicLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: 'Demasiados intentos con el código. Probá de nuevo en unos minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+});
+
 // Escrituras públicas (pedidos de la tienda, cotizaciones, opiniones): tope por IP contra spam y relleno de la base.
 export const publicWriteLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
