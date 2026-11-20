@@ -13,6 +13,8 @@ import { verifyTotp } from '../../utils/totp';
 import { passwordProblem } from '../../utils/passwordPolicy';
 import logger from '../../config/logger';
 
+const INVALID_LOGIN = 'Email o contraseña incorrectos';
+
 const signAccessToken = (payload: object): string =>
     jwt.sign(payload, appConfig.jwtSecret, { expiresIn: appConfig.jwtExpiresIn as any });
 
@@ -80,7 +82,7 @@ export const login = async (req: Request, res: Response) => {
         const { email, password, otp } = req.body;
 
         const user = await User.findOne({ email }).select('+totpSecret') as any;
-        if (!user) return res.status(400).json({ message: 'Usuario no encontrado' });
+        if (!user) return res.status(400).json({ message: INVALID_LOGIN });
         if (user.active === false) return res.status(403).json({ message: 'Cuenta desactivada. Contactá al administrador.' });
 
         // Verificar si la cuenta está bloqueada
@@ -105,10 +107,8 @@ export const login = async (req: Request, res: Response) => {
             }
             
             await user.save();
-            return res.status(400).json({ 
-                message: 'Contraseña incorrecta',
-                attemptsRemaining: 5 - user.loginAttempts
-            });
+            // Mismo mensaje que para un email inexistente (no se revela qué cuentas existen) y sin contador de intentos.
+            return res.status(400).json({ message: INVALID_LOGIN });
         }
 
         // 2FA (TOTP): con la contraseña bien pero sin código válido no se abre sesión; el código erróneo también cuenta como intento.
@@ -247,6 +247,7 @@ export const refreshToken = async (req: Request, res: Response) => {
 export const verifyEmail = async (req: Request, res: Response) => {
     try {
         const { token } = req.body;
+        if (typeof token !== 'string') return res.status(400).json({ message: 'Token de verificación requerido' });
         
         if (!token) return res.status(400).json({ message: 'Token de verificación requerido' });
 

@@ -249,12 +249,12 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             if (status === 'in_progress' && printerId) {
                 updateData.startedAt = new Date();
                 if (printTimeMinutes) updateData.printTimeMinutes = printTimeMinutes;
-                await Printer.findByIdAndUpdate(printerId, { status: 'printing', currentOrderId: id });
+                await Printer.findOneAndUpdate({ _id: String(printerId), tenantId }, { status: 'printing', currentOrderId: id });
             }
 
             if (status === 'completed') {
                 updateData.finishedAt = new Date();
-                await Printer.updateMany({ currentOrderId: id }, { status: 'idle', $unset: { currentOrderId: "" } });
+                await Printer.updateMany({ currentOrderId: id, tenantId }, { status: 'idle', $unset: { currentOrderId: "" } });
 
                 const currentOrder = await orderRepository.findById(id, tenantId);
                 if (currentOrder && !currentOrder.adminNotified) {

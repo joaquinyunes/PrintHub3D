@@ -185,3 +185,75 @@ describe('Cotización pública: enlaces', () => {
 });
 
 void tokenFor;
+
+describe('Inyección de operadores NoSQL en los endpoints de acceso', () => {
+  it('forgot-password, verify-email y magic/verify con objetos ({$ne:null}) no abren nada ni tocan a otros usuarios', async () => {
+    const victim: any = await User.create({ name: 'Victima', email: 'victima@adv.test', password: await bcrypt.hash('x', 4), role: 'admin', tenantId: T, verified: false, verificationToken: 'tok-secreto', verificationExpires: new Date(Date.now() + 60_000), magicCode: '777777', magicCodeExpires: new Date(Date.now() + 60_000) });
+    const ne = { $ne: null };
+    const forgot = await request(app).post('/api/auth/forgot-password').send({ email: ne });
+    expect(forgot.status).toBeLessThan(500);
+    expect(((await User.findById(victim._id).select('+passwordResetToken').lean()) as any).passwordResetToken).toBeUndefined();
+
+    const verify = await request(app).post('/api/auth/verify-email').send({ token: ne });
+    expect(verify.status).not.toBe(200);
+    expect(verify.body.token).toBeUndefined();
+
+    const magic = await request(app).post('/api/auth/magic/verify').send({ identifier: ne, code: ne });
+    expect(magic.status).not.toBe(200);
+    expect(magic.body.token).toBeUndefined();
+
+    const login = await request(app).post('/api/auth/login').send({ email: ne, password: ne });
+    expect(login.status).toBe(400);
+    expect(login.body.token).toBeUndefined();
+    expect(((await User.findById(victim._id).lean()) as any).verified).toBe(false);
+  });
+});
+
+describe('Enumeración de cuentas en el login', () => {
+  it('email inexistente y contraseña equivocada responden igual (mismo status y mensaje, sin contador de intentos)', async () => {
+    await User.create({ name: 'Real', email: 'real@adv.test', password: await bcrypt.hash('Clave-Larga-Real-12', 4), role: 'staff', tenantId: T, verified: true });
+    const unknown = await request(app).post('/api/auth/login').send({ email: 'noexiste@adv.test', password: 'cualquiera123' });
+    const wrong = await request(app).post('/api/auth/login').send({ email: 'real@adv.test', password: 'cualquiera123' });
+    expect(wrong.status).toBe(unknown.status);
+    expect(wrong.body.message).toBe(unknown.body.message);
+    expect(wrong.body.attemptsRemaining).toBeUndefined();
+  });
+});
+
+describe('Aislamiento entre talleres en recursos con id (IDOR)', () => {
+  it('un admin de otro taller no puede editar ni borrar tareas ni mover una tarea a su taller', async () => {
+    const mk = await request(app).post('/api/tasks').set('Authorization', bearer('admin', 'idor_a')).send({ text: 'Tarea A' });
+    expect(mk.status).toBe(200);
+    const id = mk.body._id;
+    const put = await request(app).put(`/api/tasks/${id}`).set('Authorization', bearer('admin', 'idor_b')).send({ completed: true, tenantId: 'idor_b', text: 'robada' });
+    expect(put.status).toBe(404);
+    expect((await request(app).delete(`/api/tasks/${id}`).set('Authorization', bearer('admin', 'idor_b'))).status).toBe(404);
+    const list = await request(app).get('/api/tasks').set('Authorization', bearer('admin', 'idor_a'));
+    expect(list.body.map((t: any) => [t.text, t.completed, t.tenantId])).toContainEqual(['Tarea A', false, 'idor_a']);
+    // dentro del propio taller, no se puede reasignar el tenantId
+    const own = await request(app).put(`/api/tasks/${id}`).set('Authorization', bearer('admin', 'idor_a')).send({ completed: true, tenantId: 'idor_b' });
+    expect(own.body.tenantId).toBe('idor_a');
+    expect(own.body.completed).toBe(true);
+  });
+
+  it('ideas e impresoras de la home: otro taller no las edita ni las borra', async () => {
+    const idea = await request(app).post('/api/home/ideas').set('Authorization', bearer('admin', 'idor_a')).send({ name: 'Idea A', image: '/x.png' });
+    expect(idea.status).toBe(201);
+    expect((await request(app).put(`/api/home/ideas/${idea.body._id}`).set('Authorization', bearer('admin', 'idor_b')).send({ name: 'pisada' })).status).toBe(404);
+    expect((await request(app).delete(`/api/home/ideas/${idea.body._id}`).set('Authorization', bearer('admin', 'idor_b'))).status).toBe(404);
+    const printer = await request(app).post('/api/home/printers').set('Authorization', bearer('admin', 'idor_a')).send({ name: 'Imp A' });
+    expect(printer.status).toBe(201);
+    expect((await request(app).put(`/api/home/printers/${printer.body._id}`).set('Authorization', bearer('admin', 'idor_b')).send({ name: 'pisada' })).status).toBe(404);
+    expect((await request(app).delete(`/api/home/printers/${printer.body._id}`).set('Authorization', bearer('admin', 'idor_b'))).status).toBe(404);
+    const own = await request(app).get('/api/home/ideas').set('Authorization', bearer('admin', 'idor_a'));
+    expect(own.body.map((i: any) => i.name)).toContain('Idea A');
+  });
+
+  it('empezar un pedido propio con la impresora de OTRO taller no toca esa impresora', async () => {
+    const Printer = (await import('../src/modules/printers/printer.model')).default;
+    const foreign: any = await Printer.create({ name: 'Ajena', status: 'idle', tenantId: 'idor_b' } as any);
+    const order: any = await Order.create({ clientName: 'C', total: 1, trackingCode: 'IDOR-1', tenantId: 'idor_a', items: [{ productName: 'x', quantity: 1, price: 1 }] });
+    await request(app).put(`/api/orders/${order._id}/status`).set('Authorization', bearer('staff', 'idor_a')).send({ status: 'in_progress', printerId: String(foreign._id) });
+    expect(((await Printer.findById(foreign._id).lean()) as any).status).toBe('idle');
+  });
+});

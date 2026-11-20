@@ -9,6 +9,7 @@ import logger from '../../config/logger';
 export const requestMagicCode = async (req: Request, res: Response) => {
   try {
     const { identifier } = req.body;
+    if (typeof identifier !== 'string') return res.status(400).json({ message: 'Identificador requerido' });
     if (!identifier) return res.status(400).json({ message: 'Email o teléfono requerido' });
 
     let user = await User.findOne({ 
@@ -88,6 +89,7 @@ export const requestMagicCode = async (req: Request, res: Response) => {
 export const verifyMagicCode = async (req: Request, res: Response) => {
   try {
     const { identifier, code } = req.body;
+    if (typeof identifier !== 'string' || typeof code !== 'string') return res.status(400).json({ message: 'Identificador y código requeridos' });
 
     if (!identifier || !code) {
       return res.status(400).json({ message: 'Identificador y código requeridos' });

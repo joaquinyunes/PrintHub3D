@@ -13,7 +13,7 @@ import { sendPasswordResetEmail } from '../../config/email';
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email requerido' });
+    if (!email || typeof email !== 'string') return res.status(400).json({ message: 'Email requerido' });
 
     const user = await User.findOne({ email });
     if (!user) {
