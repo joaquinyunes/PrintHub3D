@@ -1,6 +1,6 @@
 > Archivo vivo: qué se hizo y qué falta en este proyecto. Misma base que `soluciones-repos/ESTADO-PROYECTOS/printhub3d.md` (31/10/2026). Cada sesión lo actualiza al terminar.
 
-> **Actualización 08/11/2026** — rama `feat/venta-10k`: H1, H2, H4–H9 hechos y verificados (backend 155 tests, frontend 20, `tsc`/build/lint sin errores, `npm audit` 0 críticas/altas). Parciales: H3, H10 (S2, S10, S12), V4, V7, V8. No hecho: H11. Todo lo que falta y es tuyo: `docs/PENDIENTES-DEL-USUARIO.md`. Seguridad: `docs/SEGURIDAD.md`.
+> **Actualización 19/11/2026** — backend 176 tests, frontend 20; `tsc`, build y lint sin errores; `npm audit` 0 críticas/altas. Nuevo: CSP con nonce (S2), revisión adversaria con 12 hallazgos corregidos, demo aparte (V3), pantalla de insumos. Parciales: H3 (panel de Render), S10, S12, V4, V7, V8, lectura real de Google. Todo lo tuyo: `docs/PENDIENTES-DEL-USUARIO.md`.
 
 # printhub3d (taller de impresión 3D) — rama `main` · `f12a8bf`
 

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { Archivo, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
 import CartProviderWrapper from '@/components/CartProviderWrapper';
@@ -25,7 +26,9 @@ export const metadata: Metadata = {
     'Impresión 3D en Corrientes: productos personalizados, impresoras Bambu Lab, filamentos e insumos. Cotizá tu pieza online.',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Leer los encabezados hace dinámico el renderizado: cada pedido recibe su propio nonce de CSP (src/proxy.ts).
+  await headers();
   return (
     <html
       lang="es"

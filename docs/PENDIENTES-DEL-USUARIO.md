@@ -12,15 +12,15 @@ Lo que **no** pude hacer (o no corresponde que haga yo), en orden de urgencia.
 ## Decisiones tuyas (no son técnicas)
 6. **Precios**: los tres paquetes y la página de venta tienen «Precio: a confirmar». Mirá `docs/VENTA-PAQUETES-Y-COSTO.md`: con las suposiciones escritas, **Printago sale más barato a 3 años en todos los tamaños** (USD 576 a 7.056 contra ≈ USD 14.464 del paquete Completo). USD 10.000 no se sostiene por costo; se sostiene por lo que Printago no hace (cotización, Mercado Pago, WhatsApp, factura local, datos propios), y eso hoy está sin probar en producción.
 7. **Tarifas del cotizador público** (`docs/COTIZACION-DIFERENCIAS.md`): hoy da entre 3 y 9 veces el precio de tu planilla por el costo de $1.500/h de máquina. Decidí cuál es la verdad y se ajusta con los tests ya escritos.
-8. **CSP con nonces**: hoy el bloqueo todavía permite scripts en línea (`unsafe-inline`). Quitarlo exige renderizar todo el sitio dinámico (puede afectar el rendimiento y el scroll 3D que no quise tocar).
 
 ## Cuentas y credenciales (se piden al final, como pide el plan)
 9. **Mercado Pago** (`MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET`), **WhatsApp/Twilio**, **factura con proveedor certificado**: sin probar en producción.
-10. **H11 insumos + Google Sheets**: la API y la sincronización (solo lectura, con informe previo) ya están hechas y probadas con una planilla falsa. Falta la cuenta de servicio de Google, compartir la planilla y cargar `GOOGLE_SHEETS_ID`, `GOOGLE_SHEETS_RANGE`, `GOOGLE_SERVICE_ACCOUNT_JSON`; después probar `POST /api/supplies/sync` con la planilla real (`docs/INSUMOS-SHEETS.md`). Falta también la pantalla.
+10. **H11 insumos + Google Sheets**: la API y la sincronización (solo lectura, con informe previo) ya están hechas y probadas con una planilla falsa. Falta la cuenta de servicio de Google, compartir la planilla y cargar `GOOGLE_SHEETS_ID`, `GOOGLE_SHEETS_RANGE`, `GOOGLE_SERVICE_ACCOUNT_JSON`; después probar `POST /api/supplies/sync` con la planilla real (`docs/INSUMOS-SHEETS.md`). La pantalla «Insumos» del panel ya existe.
 11. **Sentry o el webhook de alertas** (`ALERT_WEBHOOK_URL`) y **monitores de uptime** (`docs/MONITOREO.md`).
 
 ## Con otras personas o herramientas
 12. **Abogado**: política de privacidad, términos, consentimiento, contrato de licencia/mantenimiento (`docs/PRIVACIDAD-BORRADOR.md`).
 13. **Prueba de restauración real** con `mongodump`/Atlas y anotarla (`docs/BACKUP-Y-RESTAURACION.md`); hoy solo hay chequeo lógico.
 14. **Cronometrar un despliegue real** con Atlas + Render + Vercel y corregir `docs/DESPLIEGUE-REPETIBLE.md` (V4): solo está probado el arranque local desde cero.
-15. **Video de 5 minutos** de la cola (V5) y **taller piloto** (V10) — sin cliente real no hay caso real (V3 demo aparte tampoco se hizo).
+15. **Armar la demo (V3)**: el seed protegido, el cartel y los avisos apagados ya están y probados; falta crear la base `printhub_demo`, el servicio y el sitio aparte (`docs/DEMO.md`, ≈ 20 min).
+16. **Video de 5 minutos** de la cola (V5) y **taller piloto** (V10): sin cliente real no hay caso real.

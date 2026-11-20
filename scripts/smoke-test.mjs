@@ -51,11 +51,14 @@ await check("WEB: la tienda responde 200", async () => {
   must(r.status === 200, `status ${r.status}`);
 });
 
-await check("WEB: CSP en bloqueo (no solo reporte) y sin X-Powered-By", async () => {
+await check("WEB: CSP en bloqueo con nonce (sin unsafe-inline en scripts) y sin X-Powered-By", async () => {
   const r = await get(`${WEB}/`);
   must(r.headers.get("content-security-policy"), "falta Content-Security-Policy");
   must(!r.headers.get("content-security-policy-report-only"), "todavía hay CSP solo-reporte");
   must(!r.headers.get("x-powered-by"), "expone X-Powered-By");
+  const scriptSrc = (r.headers.get("content-security-policy") || "").split(";").find((d) => d.trim().startsWith("script-src")) || "";
+  must(/'nonce-/.test(scriptSrc), "script-src no usa nonce");
+  must(!/'unsafe-inline'/.test(scriptSrc), "script-src todavía permite 'unsafe-inline'");
 });
 
 await check("WEB: /.well-known/security.txt existe", async () => {

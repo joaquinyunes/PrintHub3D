@@ -1,6 +1,6 @@
 # H11 — Insumos y Google Sheets (WP-04)
 
-Estado al 08/11/2026: **el backend de insumos y la sincronización están hechos y probados con una planilla de prueba; la lectura real de Google está escrita pero SIN probar (faltan credenciales); no hay pantalla.**
+Estado al 08/11/2026: **el backend de insumos, la sincronización y la pantalla «Insumos» del panel están hechos (el backend probado con una planilla de prueba); la lectura real de Google está escrita pero SIN probar (faltan credenciales).**
 
 ## Qué está hecho (`backend/src/modules/supplies`)
 - **Insumos** (argollas, imanes, cajas, lijas): nombre, unidad, stock, mínimo. El nombre no se repite aunque cambien tildes, mayúsculas o espacios («Imán» = «iman »).
@@ -20,6 +20,6 @@ Estado al 08/11/2026: **el backend de insumos y la sincronización están hechos
 1. **Credenciales (👤)** — una cuenta de servicio de Google Cloud con la API de Sheets activada; compartir la planilla con su correo; cargar en el backend:
    - `GOOGLE_SHEETS_ID` (id de la planilla), `GOOGLE_SHEETS_RANGE` (ej. `Insumos!A:D`), `GOOGLE_SERVICE_ACCOUNT_JSON` (el JSON de la clave, **como variable de entorno, nunca en el repo**).
 2. **Probar contra Google** con la planilla real: `POST /api/supplies/sync` sin `apply` y mirar el informe. Hasta entonces `GoogleSheetsSource` es código sin probar.
-3. **Pantalla** «Insumos» en el panel (hoy solo hay API).
+3. ~~Pantalla «Insumos»~~ ✅ hecha (`/admin/insumos`: lista con aviso de mínimo, ajuste de stock y «Ver diferencias» / «Aplicar» de la planilla). No se le pasó axe (la herramienta no estaba disponible): revisar a11y con el resto del panel.
 4. **Descuento automático al producir** (el producto indica cuántos insumos usa por unidad): no se hizo; hoy los insumos se descuentan a mano con `/adjust`.
 5. Decidir si la planilla manda siempre (hoy `apply` pisa el stock del sistema con el de la planilla) o solo para la carga inicial.
