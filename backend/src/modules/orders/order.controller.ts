@@ -130,7 +130,7 @@ export const createOrder = async (req: Request, res: Response) => {
 // ==========================================
 export const createPublicOrder = async (req: Request, res: Response) => {
     try {
-        const defaultTenantId = 'global3d_hq';
+        const defaultTenantId = appConfig.defaultTenantId; // la tienda pública vende del taller por defecto de ESTA instancia
         
         const { 
             clientName, 

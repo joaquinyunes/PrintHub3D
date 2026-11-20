@@ -3,6 +3,7 @@ import { Archivo, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
 import CartProviderWrapper from '@/components/CartProviderWrapper';
 import SmoothScroll from '@/components/motion/SmoothScroll';
+import DemoBanner from '@/components/DemoBanner';
 
 // Una sola familia con eje de ancho: titulares anchos y pesados, texto normal.
 const archivo = Archivo({
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SmoothScroll>
           <CartProviderWrapper>{children}</CartProviderWrapper>
         </SmoothScroll>
+        <DemoBanner />
       </body>
     </html>
   );

@@ -24,6 +24,7 @@ import {
   Percent,
   FileSpreadsheet,
   Calculator,
+  Boxes,
   Users,
 } from "lucide-react";
 
@@ -149,6 +150,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavItem href="/admin/calculadora" icon={<Calculator size={20} />} label="Calculadora" active={pathname.includes("/calculadora")} />
           <NavItem href="/admin/products" icon={<Package size={20} />} label="Inventario" active={pathname.includes("/products")} />
           <NavItem href="/admin/filamento" icon={<Spool size={20} />} label="Filamento" active={pathname.includes("/filamento")} />
+          <NavItem href="/admin/insumos" icon={<Boxes size={20} />} label="Insumos" active={pathname.includes("/insumos")} />
           {isAdmin && (
             <>
               <NavItem href="/admin/expenses" icon={<Wallet size={20} />} label="Gastos" active={pathname.includes("/expenses")} />

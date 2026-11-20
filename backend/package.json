@@ -16,7 +16,8 @@
     "test": "jest --runInBand --detectOpenHandles --forceExit",
     "test:watch": "jest --watch",
     "seed:demo": "ts-node src/scripts/seed-demo.ts",
-    "backup:verify": "ts-node src/scripts/backup-verify.ts"
+    "backup:verify": "ts-node src/scripts/backup-verify.ts",
+    "seed:demo-taller": "ts-node src/scripts/seed-demo-taller.ts"
   },
   "keywords": [],
   "author": "",

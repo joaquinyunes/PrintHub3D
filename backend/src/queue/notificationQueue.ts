@@ -28,6 +28,12 @@ export const enqueueNotification = async (
   job: NotificationJob,
   options?: JobsOptions,
 ): Promise<void> => {
+  // Entorno de demostración (V3): nunca se manda un aviso real a un teléfono.
+  if (process.env.DEMO_MODE === 'true') {
+    logger.info(`[NotificationQueue] DEMO_MODE: se omite el aviso "${job.type}"`);
+    return;
+  }
+
   if (!notificationQueue) {
     // En entornos sin Redis configurado, evitamos romper el flujo
     logger.warn(`[NotificationQueue] Cola no configurada, se omite job "${job.type}"`);
