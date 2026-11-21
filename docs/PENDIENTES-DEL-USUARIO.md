@@ -23,4 +23,5 @@ Lo que **no** pude hacer (o no corresponde que haga yo), en orden de urgencia.
 13. **Prueba de restauración real** con `mongodump`/Atlas y anotarla (`docs/BACKUP-Y-RESTAURACION.md`); hoy solo hay chequeo lógico.
 14. **Cronometrar un despliegue real** con Atlas + Render + Vercel y corregir `docs/DESPLIEGUE-REPETIBLE.md` (V4): solo está probado el arranque local desde cero.
 15. **Armar la demo (V3)**: el seed protegido, el cartel y los avisos apagados ya están y probados; falta crear la base `printhub_demo`, el servicio y el sitio aparte (`docs/DEMO.md`, ≈ 20 min).
-16. **Video de 5 minutos** de la cola (V5) y **taller piloto** (V10): sin cliente real no hay caso real.
+16. **Video de 5 minutos** de la cola (V5): el guion está en `docs/GUION-VIDEO.md`; hay que grabarlo con la demo.
+17. **Taller piloto** (V10): el kit (checklist y borrador de acuerdo, para revisar con abogado) está en `docs/KIT-PILOTO.md`; sin cliente real no hay caso real.
